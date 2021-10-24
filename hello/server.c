@@ -13,8 +13,11 @@
 #define PORT	 8080
 #define MAXLINE 1024
 
-// Driver code
-int main() {
+// Kill daemonised server
+// lsof -i:8080
+// kill -9 $(lsof -t -i:8080)
+
+int driver() {
 	int sockfd;
 	char buffer[MAXLINE];
 	char *hello = "Hello from server";
@@ -25,38 +28,76 @@ int main() {
 		perror("socket creation failed");
 		exit(EXIT_FAILURE);
 	}
-	
 	memset(&servaddr, 0, sizeof(servaddr));
 	memset(&cliaddr, 0, sizeof(cliaddr));
-	
 	// Filling server information
 	servaddr.sin_family = AF_INET; // IPv4
 	servaddr.sin_addr.s_addr = INADDR_ANY;
 	servaddr.sin_port = htons(PORT);
 	
 	// Bind the socket with the server address
-	if ( bind(sockfd, (const struct sockaddr *)&servaddr,
-			sizeof(servaddr)) < 0 )
-	{
+	if (bind(sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
 		perror("bind failed");
 		exit(EXIT_FAILURE);
 	}
 	
 	int len, n;
-
 	len = sizeof(cliaddr); //len is value/resuslt
 
   while (1) {
-    n = recvfrom(sockfd, (char *)buffer, MAXLINE,
-          MSG_WAITALL, ( struct sockaddr *) &cliaddr,
-          &len);
+    n = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL,
+                 (struct sockaddr *) &cliaddr, &len);
     buffer[n] = '\0';
     printf("Client : %s\n", buffer);
-    sendto(sockfd, (const char *)hello, strlen(hello),
-      MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
-        len);
+    sendto(sockfd, (const char *)hello, strlen(hello), MSG_CONFIRM,
+           (const struct sockaddr *) &cliaddr, len);
     printf("Hello message sent.\n");
   }
 	
 	return 0;
+}
+
+int main(int argc, char* argv[]) {
+
+  int daemonise = 0;
+
+  int opt;
+  while ((opt = getopt(argc, argv, "d")) != -1) {
+    switch (opt) {
+      case 'd': daemonise = 1; break;
+      default:
+        fprintf(stderr, "Usage: %s [-d]\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+  }
+
+  if (daemonise) {
+    pid_t process_id = 0;
+    pid_t sid = 0;
+    process_id = fork();
+
+    if (process_id < 0) {
+      exit(EXIT_FAILURE);
+    }
+
+    // Parent process
+    if (process_id > 0) {
+      exit(EXIT_SUCCESS);
+    }
+
+    sid = setsid();
+    if (sid < 0) {
+      exit(EXIT_FAILURE);
+    }
+
+    chdir("/");
+    close(STDIN_FILENO);
+    close(STDOUT_FILENO);
+    close(STDERR_FILENO);
+  }
+
+
+
+
+  return driver(argc, argv);
 }
