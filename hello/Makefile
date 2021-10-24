@@ -10,12 +10,18 @@ BUILDDIR = build
 # DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
 
-_OBJ = main.o
-OBJ = $(patsubst %,$(BUILDDIR)/%,$(_OBJ))
+_CLIENTOBJ = client.o
+CLIENTOBJ = $(patsubst %,$(BUILDDIR)/%,$(_CLIENTOBJ))
 
-all: $(BUILDDIR) main
+_SERVEROBJ = server.o
+SERVEROBJ = $(patsubst %,$(BUILDDIR)/%,$(_SERVEROBJ))
 
-main: $(OBJ)
+all: $(BUILDDIR) client server
+
+client: $(CLIENTOBJ)
+	$(CC) -o $(BUILDDIR)/$@ $^ $(CFLAGS)
+
+server: $(SERVEROBJ)
 	$(CC) -o $(BUILDDIR)/$@ $^ $(CFLAGS)
 
 $(BUILDDIR)/%.o: %.c $(DEPS)
