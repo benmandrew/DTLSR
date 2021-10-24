@@ -46,15 +46,17 @@ int main() {
 
 	len = sizeof(cliaddr); //len is value/resuslt
 
-	n = recvfrom(sockfd, (char *)buffer, MAXLINE,
-				MSG_WAITALL, ( struct sockaddr *) &cliaddr,
-				&len);
-	buffer[n] = '\0';
-	printf("Client : %s\n", buffer);
-	sendto(sockfd, (const char *)hello, strlen(hello),
-		MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
-			len);
-	printf("Hello message sent.\n");
+  while (1) {
+    n = recvfrom(sockfd, (char *)buffer, MAXLINE,
+          MSG_WAITALL, ( struct sockaddr *) &cliaddr,
+          &len);
+    buffer[n] = '\0';
+    printf("Client : %s\n", buffer);
+    sendto(sockfd, (const char *)hello, strlen(hello),
+      MSG_CONFIRM, (const struct sockaddr *) &cliaddr,
+        len);
+    printf("Hello message sent.\n");
+  }
 	
 	return 0;
 }
