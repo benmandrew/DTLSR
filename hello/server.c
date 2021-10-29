@@ -10,8 +10,11 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-#define PORT	 8080
+#define PORT 8080
 #define MAXLINE 1024
+
+// #define CONF_FILENAME "/hello.conf"
+#define CONF_FILENAME "test.conf"
 
 // Kill daemonised server
 // lsof -i:8080
@@ -19,34 +22,43 @@
 
 char* read_file(char* filename) {
   int read_size = -1;
-  char* buf = malloc(sizeof(char) * 1024);
-  FILE* file = fopen(filename, "r");
-  if (file) {
-    read_size = fread(buf, sizeof(char), sizeof(buf), file);
-    if (read_size == 1024) {
-      buf[read_size] = '\0';
-    }
+  char* buf = malloc(sizeof(char) * MAXLINE);
+  if (buf == NULL) {
+    return NULL;
   }
+  FILE* file = fopen(filename, "r");
+  if (file == NULL) {
+    free(buf);
+    return NULL;
+  }
+  read_size = fread(buf, sizeof(char), MAXLINE, file);
   fclose(file);
-  if (read_size == 1024) {
+  buf[read_size] = '\0';
+  if (read_size < MAXLINE) {
     return buf;
   } else {
+    free(buf);
     return NULL;
   }
 }
 
-void parse_hello_conf(char* filename, struct sockaddr_in* servaddr) {
-  char* contents = read_file(filename);
+void set_destination_ip(struct sockaddr_in* addr) {
+  /*
+   * Parsing example:
+   * interface eth0
+   * ip address 10.0.0.1/24
+   * !
+   */
+  char* contents = read_file(CONF_FILENAME);
   char* pch = NULL;
-  pch = strtok(contents, "\n");
-  // pch = strtok(NULL, "\n");
-  pch = strtok(NULL, " ");
-  pch = strtok(NULL, " ");
+  strtok(contents, "\n");
+  strtok(NULL, " ");
+  strtok(NULL, " ");
   pch = strtok(NULL, "/");
-  inet_pton(AF_INET, pch, &(servaddr->sin_addr));
+  inet_pton(AF_INET, pch, &(addr->sin_addr));
 }
 
-int driver() {
+int driver(int argc, char** argv) {
 	int sockfd;
 	char buffer[MAXLINE];
 	char *hello = "Hello from server";
@@ -65,7 +77,7 @@ int driver() {
 	servaddr.sin_port = htons(PORT);
 
   cliaddr.sin_family = AF_INET;
-  parse_hello_conf("/hello.conf", &cliaddr);
+  set_destination_ip(&cliaddr);
   cliaddr.sin_port = htons(PORT);
 	
 	// Bind the socket with the server address
@@ -90,7 +102,7 @@ int driver() {
 	return 0;
 }
 
-void make_daemon() {
+void make_daemon(void) {
 	pid_t process_id = 0;
 	pid_t sid = 0;
 	process_id = fork();
@@ -107,8 +119,8 @@ void make_daemon() {
 	}
 	chdir("/");
 	close(STDIN_FILENO);
-	// close(STDOUT_FILENO);
-	// close(STDERR_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
 }
 
 int main(int argc, char* argv[]) {

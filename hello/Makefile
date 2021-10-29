@@ -6,6 +6,8 @@ CC = gcc
 
 BUILDDIR = build
 
+CFLAGS = -g3 -O2 -Wfloat-equal -Wstrict-prototypes -Wno-unused-result
+
 # _DEPS =
 # DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
@@ -19,10 +21,10 @@ SERVEROBJ = $(patsubst %,$(BUILDDIR)/%,$(_SERVEROBJ))
 all: $(BUILDDIR) client server
 
 client: $(CLIENTOBJ)
-	$(CC) -o $(BUILDDIR)/$@ $^ $(CFLAGS)
+	$(CC) $(CFLAGS) -o $(BUILDDIR)/$@ $^
 
 server: $(SERVEROBJ)
-	$(CC) -o $(BUILDDIR)/$@ $^ $(CFLAGS)
+	$(CC) $(CFLAGS) -o $(BUILDDIR)/$@ $^
 
 $(BUILDDIR)/%.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CFLAGS)

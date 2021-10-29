@@ -14,6 +14,18 @@ from core.nodes.physical import Rj45Node
 from core.services.coreservices import CoreService
 
 
+def addrstr(ip: netaddr.IPNetwork) -> str:
+  """
+  helper for mapping IP addresses to config statements
+  """
+  address = str(ip.ip)
+  if netaddr.valid_ipv4(address):
+      return "ip address %s" % ip
+  elif netaddr.valid_ipv6(address):
+      return "ipv6 address %s" % ip
+  else:
+      raise ValueError("invalid address: %s", ip)
+
 class Hello(CoreService):
   name: str = "Hello"
   group: str = "Networking"
@@ -39,22 +51,9 @@ class Hello(CoreService):
     cfg = ""
     for iface in node.get_ifaces():
       cfg += "interface %s\n" % iface.name
-      cfg += "\n".join(map(cls.addrstr, iface.ip4s))
+      cfg += "\n".join(map(addrstr, iface.ip4s))
       cfg += "\n!\n"
     return cfg
-
-  @staticmethod
-  def addrstr(ip: netaddr.IPNetwork) -> str:
-    """
-    helper for mapping IP addresses to zebra config statements
-    """
-    address = str(ip.ip)
-    if netaddr.valid_ipv4(address):
-        return "ip address %s" % ip
-    elif netaddr.valid_ipv6(address):
-        return "ipv6 address %s" % ip
-    else:
-        raise ValueError("invalid address: %s", ip)
 
   @classmethod
   def generate_hello_boot(cls, node: CoreNode) -> str:
@@ -69,3 +68,4 @@ class Hello(CoreService):
 /home/ben/projects/routing/hello/build/client -d
 
 """
+
