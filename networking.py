@@ -1,7 +1,6 @@
 """
 routing.py: defines services provided by the collection of protocols
 """
-
 from typing import Tuple
 
 import netaddr
@@ -16,20 +15,46 @@ from core.services.coreservices import CoreService
 
 
 class Hello(CoreService):
-  name: str = "hello"
+  name: str = "Hello"
   group: str = "Networking"
 
-  configs: Tuple[str, ...] = ("helloboot.sh", )
+  configs: Tuple[str, ...] = ("hello.conf", "helloboot.sh")
 
   startup: Tuple[str, ...] = ("bash helloboot.sh", )
+
+  shutdown: Tuple[str, ...] = ("killall server", "killall client")
 
   @classmethod
   def generate_config(cls, node: CoreNode, filename: str) -> None:
     if filename == cls.configs[0]:
+      return cls.generate_hello_conf(node)
+    elif filename == cls.configs[1]:
       return cls.generate_hello_boot(node)
     else:
       raise ValueError("file name (%s) is not a known configuration: %s",
                        filename, cls.configs)
+
+  @classmethod
+  def generate_hello_conf(cls, node: CoreNode) -> str:
+    cfg = ""
+    for iface in node.get_ifaces():
+      cfg += "interface %s\n" % iface.name
+      cfg += "\n  ".join(map(cls.addrstr, iface.ip4s))
+      cfg += "\n!\n"
+    return cfg
+
+  @staticmethod
+  def addrstr(ip: netaddr.IPNetwork) -> str:
+    """
+    helper for mapping IP addresses to zebra config statements
+    """
+    address = str(ip.ip)
+    if netaddr.valid_ipv4(address):
+        return "ip address %s" % ip
+    elif netaddr.valid_ipv6(address):
+        return "ipv6 address %s" % ip
+    else:
+        raise ValueError("invalid address: %s", ip)
 
   @classmethod
   def generate_hello_boot(cls, node: CoreNode) -> str:
@@ -43,4 +68,3 @@ class Hello(CoreService):
 /home/ben/projects/routing/hello/build/server -d
 
 """
-

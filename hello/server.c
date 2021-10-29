@@ -42,7 +42,7 @@ int driver() {
 	}
 	
 	int len, n;
-	len = sizeof(cliaddr); //len is value/resuslt
+	len = sizeof(cliaddr); //len is value/result
 
   while (1) {
     n = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL,
@@ -57,10 +57,29 @@ int driver() {
 	return 0;
 }
 
+void make_daemon() {
+	pid_t process_id = 0;
+	pid_t sid = 0;
+	process_id = fork();
+	if (process_id < 0) {
+		exit(EXIT_FAILURE);
+	}
+	// Parent process
+	if (process_id > 0) {
+		exit(EXIT_SUCCESS);
+	}
+	sid = setsid();
+	if (sid < 0) {
+		exit(EXIT_FAILURE);
+	}
+	chdir("/");
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+}
+
 int main(int argc, char* argv[]) {
-
-  int daemonise = 0;
-
+	int daemonise = 0;
   int opt;
   while ((opt = getopt(argc, argv, "d")) != -1) {
     switch (opt) {
@@ -70,34 +89,8 @@ int main(int argc, char* argv[]) {
         exit(EXIT_FAILURE);
     }
   }
-
   if (daemonise) {
-    pid_t process_id = 0;
-    pid_t sid = 0;
-    process_id = fork();
-
-    if (process_id < 0) {
-      exit(EXIT_FAILURE);
-    }
-
-    // Parent process
-    if (process_id > 0) {
-      exit(EXIT_SUCCESS);
-    }
-
-    sid = setsid();
-    if (sid < 0) {
-      exit(EXIT_FAILURE);
-    }
-
-    chdir("/");
-    close(STDIN_FILENO);
-    close(STDOUT_FILENO);
-    close(STDERR_FILENO);
+    make_daemon();
   }
-
-
-
-
   return driver(argc, argv);
 }

@@ -31,22 +31,59 @@ int driver() {
 	servaddr.sin_port = htons(PORT);
 	servaddr.sin_addr.s_addr = INADDR_ANY;
   
-	int n, len;
-	sendto(sockfd, (const char *)hello, strlen(hello),
-		MSG_CONFIRM, (const struct sockaddr *) &servaddr,
-			sizeof(servaddr));
-	printf("Hello message sent.\n");
-		
-	n = recvfrom(sockfd, (char *)buffer, MAXLINE,
-				MSG_WAITALL, (struct sockaddr *) &servaddr,
-				&len);
-	buffer[n] = '\0';
-	printf("Server : %s\n", buffer);
+	while (1) {
+		int n, len;
+		sendto(sockfd, (const char *)hello, strlen(hello),
+			MSG_CONFIRM, (const struct sockaddr *) &servaddr,
+				sizeof(servaddr));
+		printf("Hello message sent.\n");
+			
+		n = recvfrom(sockfd, (char *)buffer, MAXLINE,
+					MSG_WAITALL, (struct sockaddr *) &servaddr,
+					&len);
+		buffer[n] = '\0';
+		printf("Server : %s\n", buffer);
+		sleep(0.1);
+	}
 
 	close(sockfd);
 	return 0;
 }
 
+void make_daemon() {
+	pid_t process_id = 0;
+	pid_t sid = 0;
+	process_id = fork();
+	if (process_id < 0) {
+		exit(EXIT_FAILURE);
+	}
+	// Parent process
+	if (process_id > 0) {
+		exit(EXIT_SUCCESS);
+	}
+	sid = setsid();
+	if (sid < 0) {
+		exit(EXIT_FAILURE);
+	}
+	chdir("/");
+	close(STDIN_FILENO);
+	close(STDOUT_FILENO);
+	close(STDERR_FILENO);
+}
+
 int main(int argc, char* argv[]) {
+	int daemonise = 0;
+  int opt;
+  while ((opt = getopt(argc, argv, "d")) != -1) {
+    switch (opt) {
+      case 'd': daemonise = 1; break;
+      default:
+        fprintf(stderr, "Usage: %s [-d]\n", argv[0]);
+        exit(EXIT_FAILURE);
+    }
+  }
+  if (daemonise) {
+    make_daemon();
+  }
   return driver(argc, argv);
 }
