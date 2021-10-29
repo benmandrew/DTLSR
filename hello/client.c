@@ -13,23 +13,56 @@
 #define PORT	 8080
 #define MAXLINE 1024
 
+// Kill daemonised server
+// lsof -i:8080
+// kill -9 $(lsof -t -i:8080)
+
+char* read_file(char* filename) {
+  int read_size = -1;
+  char* buf = malloc(sizeof(char) * 1024);
+  FILE* file = fopen(filename, "r");
+  if (file) {
+    read_size = fread(buf, sizeof(char), sizeof(buf), file);
+    if (read_size == 1024) {
+      buf[read_size] = '\0';
+    }
+  }
+  fclose(file);
+  if (read_size == 1024) {
+    return buf;
+  } else {
+    return NULL;
+  }
+}
+
+void parse_hello_conf(char* filename, struct sockaddr_in* servaddr) {
+  char* contents = read_file(filename);
+  char* pch = NULL;
+  pch = strtok(contents, "\n");
+  // pch = strtok(NULL, "\n");
+  pch = strtok(NULL, " ");
+  pch = strtok(NULL, " ");
+  pch = strtok(NULL, "/");
+  inet_pton(AF_INET, pch, &(servaddr->sin_addr));
+}
+
 // Driver code
 int driver() {
 	int sockfd;
 	char buffer[MAXLINE];
 	char *hello = "Hello from client";
-	struct sockaddr_in	 servaddr;
+	struct sockaddr_in servaddr;
 
 	// Creating socket file descriptor
-	if ( (sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0 ) {
+	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		perror("socket creation failed");
 		exit(EXIT_FAILURE);
 	}
 	memset(&servaddr, 0, sizeof(servaddr));
 	// Filling server information
 	servaddr.sin_family = AF_INET;
-	servaddr.sin_port = htons(PORT);
-	servaddr.sin_addr.s_addr = INADDR_ANY;
+  parse_hello_conf("/hello.conf", &servaddr);
+  servaddr.sin_port = htons(PORT);
   
 	while (1) {
 		int n, len;
@@ -67,8 +100,8 @@ void make_daemon() {
 	}
 	chdir("/");
 	close(STDIN_FILENO);
-	close(STDOUT_FILENO);
-	close(STDERR_FILENO);
+	// close(STDOUT_FILENO);
+	// close(STDERR_FILENO);
 }
 
 int main(int argc, char* argv[]) {
