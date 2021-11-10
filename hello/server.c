@@ -10,11 +10,16 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
+#include "logging.h"
+
 #define PORT 8080
 #define MAXLINE 1024
 
-// #define CONF_FILENAME "/hello.conf"
+#ifdef DEBUG
 #define CONF_FILENAME "test.conf"
+#else
+#define CONF_FILENAME "/hello.conf"
+#endif
 
 // Kill daemonised server
 // lsof -i:8080
@@ -118,12 +123,14 @@ void make_daemon(void) {
 		exit(EXIT_FAILURE);
 	}
 	chdir("/");
-	close(STDIN_FILENO);
-	close(STDOUT_FILENO);
-	close(STDERR_FILENO);
+	// close(STDIN_FILENO);
+	// close(STDOUT_FILENO);
+	// close(STDERR_FILENO);
 }
 
 int main(int argc, char* argv[]) {
+  log_f("Hello from server\n");
+  log_f("What the hell\n");
 	int daemonise = 0;
   int opt;
   while ((opt = getopt(argc, argv, "d")) != -1) {
@@ -137,5 +144,12 @@ int main(int argc, char* argv[]) {
   if (daemonise) {
     make_daemon();
   }
-  return driver(argc, argv);
+  log_f("Hello from server\n");
+  log_f("What the hell\n");
+  while (1) {
+    sleep(1);
+    printf("Hello\n");
+    log_f("logg\n");
+  }
+  // return driver(argc, argv);
 }
