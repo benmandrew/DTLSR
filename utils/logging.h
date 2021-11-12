@@ -44,6 +44,7 @@ int log_f(const char* format, ...) {
   va_start(argptr, format);
   vfprintf(file, format, argptr);
   va_end(argptr);
+  fprintf(file, "\n");
   int status = fclose(file);
   free(time_buf);
   return status;

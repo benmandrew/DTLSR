@@ -48,7 +48,7 @@ char* read_file(char* filename) {
   }
 }
 
-void set_destination_ip(struct sockaddr_in* addr) {
+void set_own_ip(struct sockaddr_in* addr) {
   /*
    * Parsing example:
    * interface eth0
@@ -64,6 +64,27 @@ void set_destination_ip(struct sockaddr_in* addr) {
   inet_pton(AF_INET, pch, &(addr->sin_addr));
 }
 
+void set_ips(struct sockaddr_in* servaddr, struct sockaddr_in* cliaddr) {
+  /*
+   * Parsing example:
+   * interface eth0
+   * ip address 10.0.0.2/24
+   * !
+   */
+  char* contents = read_file(CONF_FILENAME);
+  char* pch = NULL;
+  strtok(contents, "\n");
+  strtok(NULL, " ");
+  strtok(NULL, " ");
+  pch = strtok(NULL, "/");
+  if (strcmp(pch, "10.0.0.1") == 0) {
+    inet_pton(AF_INET, "10.0.0.2", &(cliaddr->sin_addr));
+  } else {
+    inet_pton(AF_INET, "10.0.0.1", &(cliaddr->sin_addr));
+  }
+  inet_pton(AF_INET, pch, &(servaddr->sin_addr));
+}
+
 int driver(int argc, char** argv) {
 	int sockfd;
 	char buffer[MAXLINE];
@@ -72,23 +93,29 @@ int driver(int argc, char** argv) {
 	
 	// Creating socket file descriptor
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		log_f("socket creation failed");
+		log_f("Socket creation failed");
 		exit(EXIT_FAILURE);
 	}
 	memset(&servaddr, 0, sizeof(servaddr));
 	memset(&cliaddr, 0, sizeof(cliaddr));
 	// Filling server information
 	servaddr.sin_family = AF_INET; // IPv4
-	servaddr.sin_addr.s_addr = INADDR_ANY;
+	// set_own_ip(&servaddr);
 	servaddr.sin_port = htons(PORT);
 
   cliaddr.sin_family = AF_INET;
-  set_destination_ip(&cliaddr);
+  // inet_pton(AF_INET, "10.0.0.2", &(cliaddr.sin_addr));
   cliaddr.sin_port = htons(PORT);
+
+
+	set_ips(&servaddr, &cliaddr);
 	
+  log_f("Server IP: %s", inet_ntoa(servaddr.sin_addr));
+  log_f("Client IP: %s", inet_ntoa(cliaddr.sin_addr));
+
 	// Bind the socket with the server address
 	if (bind(sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
-		perror("bind failed");
+		log_f("Bind failed");
 		exit(EXIT_FAILURE);
 	}
 	
@@ -99,31 +126,30 @@ int driver(int argc, char** argv) {
     n = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL,
                  (struct sockaddr *) &cliaddr, &len);
     buffer[n] = '\0';
-    printf("Client : %s\n", buffer);
+    log_f("Client : %s", buffer);
     sendto(sockfd, (const char *)hello, strlen(hello), MSG_CONFIRM,
            (const struct sockaddr *) &cliaddr, len);
-    printf("Hello message sent.\n");
+    log_f("Hello message sent.");
   }
-	
 	return 0;
 }
 
 int main(int argc, char* argv[]) {
   set_logfile_name("server");
-  log_f("Server Started\n");
+  log_f("Server Started");
 	int daemonise = 0;
   int opt;
   while ((opt = getopt(argc, argv, "d")) != -1) {
     switch (opt) {
       case 'd': daemonise = 1; break;
       default:
-        fprintf(stderr, "Usage: %s [-d]\n", argv[0]);
+        log_f("Server usage: %s [-d]", argv[0]);
         exit(EXIT_FAILURE);
     }
   }
   if (daemonise) {
     make_daemon();
-    log_f("Daemonisation successful\n");
+    log_f("Daemonisation successful");
   }
   return driver(argc, argv);
 }

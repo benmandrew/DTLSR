@@ -71,8 +71,8 @@ touch server.log
 chmod 777 server.log
 /home/ben/projects/routing/hello/build/server -d
 
-# touch client.log
-# chmod 777 client.log
-# /home/ben/projects/routing/hello/build/client -d
+touch client.log
+chmod 777 client.log
+/home/ben/projects/routing/hello/build/client -d
 
 """
