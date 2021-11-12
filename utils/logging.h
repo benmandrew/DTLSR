@@ -14,8 +14,8 @@ void set_logfile_name(char* name) {
   if (logfile_name == NULL) {
     logfile_name = (char*)malloc(BUF_LEN * sizeof(char));
   }
-  // 'log_<name>'
-  sprintf(logfile_name, "log_%s", name);
+  // '<name>.log'
+  sprintf(logfile_name, "%s.log", name);
 }
 
 char* get_time_str(void) {
