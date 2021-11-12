@@ -8,7 +8,7 @@ class Node:
     self.path = "/tmp/{}/{}".format(pycore_dir, node_dir)
 
   def get_log_path(self) -> str:
-    return "{}/log".format(self.path)
+    return "{}/log_server".format(self.path)
 
   def get_log(self) -> str:
     s = ""

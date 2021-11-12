@@ -11,8 +11,9 @@
 #include <netinet/in.h>
 
 #include "logging.h"
+#include "daemonise.h"
 
-#define PORT	 8080
+#define PORT 8080
 #define MAXLINE 1024
 
 #ifdef DEBUG
@@ -100,28 +101,8 @@ int driver(int argc, char** argv) {
 	return 0;
 }
 
-void make_daemon(void) {
-	pid_t process_id = 0;
-	pid_t sid = 0;
-	process_id = fork();
-	if (process_id < 0) {
-		exit(EXIT_FAILURE);
-	}
-	// Parent process
-	if (process_id > 0) {
-		exit(EXIT_SUCCESS);
-	}
-	sid = setsid();
-	if (sid < 0) {
-		exit(EXIT_FAILURE);
-	}
-	chdir("/");
-	// close(STDIN_FILENO);
-	// close(STDOUT_FILENO);
-	// close(STDERR_FILENO);
-}
-
 int main(int argc, char* argv[]) {
+  set_logfile_name("client");
   log_f("Hello from client");
 	int daemonise = 0;
   int opt;

@@ -11,6 +11,7 @@
 #include <netinet/in.h>
 
 #include "logging.h"
+#include "daemonise.h"
 
 #define PORT 8080
 #define MAXLINE 1024
@@ -18,7 +19,7 @@
 #ifdef DEBUG
 #define CONF_FILENAME "test.conf"
 #else
-#define CONF_FILENAME "/hello.conf"
+#define CONF_FILENAME "hello.conf"
 #endif
 
 // Kill daemonised server
@@ -71,7 +72,7 @@ int driver(int argc, char** argv) {
 	
 	// Creating socket file descriptor
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		perror("socket creation failed");
+		log_f("socket creation failed");
 		exit(EXIT_FAILURE);
 	}
 	memset(&servaddr, 0, sizeof(servaddr));
@@ -107,30 +108,9 @@ int driver(int argc, char** argv) {
 	return 0;
 }
 
-void make_daemon(void) {
-	pid_t process_id = 0;
-	pid_t sid = 0;
-	process_id = fork();
-	if (process_id < 0) {
-		exit(EXIT_FAILURE);
-	}
-	// Parent process
-	if (process_id > 0) {
-		exit(EXIT_SUCCESS);
-	}
-	sid = setsid();
-	if (sid < 0) {
-		exit(EXIT_FAILURE);
-	}
-	chdir("/");
-	// close(STDIN_FILENO);
-	// close(STDOUT_FILENO);
-	// close(STDERR_FILENO);
-}
-
 int main(int argc, char* argv[]) {
-  log_f("Hello from server\n");
-  log_f("What the hell\n");
+  set_logfile_name("server");
+  log_f("Server Started\n");
 	int daemonise = 0;
   int opt;
   while ((opt = getopt(argc, argv, "d")) != -1) {
@@ -143,13 +123,7 @@ int main(int argc, char* argv[]) {
   }
   if (daemonise) {
     make_daemon();
+    log_f("Daemonisation successful\n");
   }
-  log_f("Hello from server\n");
-  log_f("What the hell\n");
-  while (1) {
-    sleep(1);
-    printf("Hello\n");
-    log_f("logg\n");
-  }
-  // return driver(argc, argv);
+  return driver(argc, argv);
 }

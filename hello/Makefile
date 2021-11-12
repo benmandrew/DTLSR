@@ -11,7 +11,7 @@ CFLAGS = -g3 -O2 -Wfloat-equal -Wstrict-prototypes \
 # CFLAGS = -DDEBUG -g3 -O2 -Wfloat-equal -Wstrict-prototypes \
 # 				 -Wno-unused-result
 
-INCLUDE=-I$(BASEDIR)/logging
+INCLUDE=-I$(BASEDIR)/utils
 
 # _DEPS =
 # DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
