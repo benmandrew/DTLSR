@@ -10,18 +10,12 @@ CFLAGS = -g3 -O2 -Wfloat-equal -Wstrict-prototypes \
 
 INCLUDE=-I$(BASEDIR)/utils
 
-_CLIENTOBJ = client.o
-CLIENTOBJ = $(patsubst %,$(BUILDDIR)/%,$(_CLIENTOBJ))
+_OBJ = main.o
+OBJ = $(patsubst %,$(BUILDDIR)/%,$(_OBJ))
 
-_SERVEROBJ = server.o
-SERVEROBJ = $(patsubst %,$(BUILDDIR)/%,$(_SERVEROBJ))
+all: $(BUILDDIR) arp-monitor
 
-all: $(BUILDDIR) client server
-
-client: $(CLIENTOBJ)
-	$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILDDIR)/$@ $^
-
-server: $(SERVEROBJ)
+arp-monitor: $(OBJ)
 	$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILDDIR)/$@ $^
 
 $(BUILDDIR)/%.o: %.c $(DEPS)

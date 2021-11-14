@@ -1,10 +1,10 @@
 
-.PHONY: all clean hello helloclean
+.PHONY: all clean hello helloclean arp arpclean
 
 
-all: hello
+all: hello arp
 
-clean: helloclean
+clean: helloclean arpclean
 
 
 hello:
@@ -12,3 +12,9 @@ hello:
 
 helloclean:
 	$(MAKE) -C hello clean
+
+arp:
+	$(MAKE) -C arp all
+
+arpclean:
+	$(MAKE) -C arp clean

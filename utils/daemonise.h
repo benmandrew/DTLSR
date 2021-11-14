@@ -1,6 +1,6 @@
 
 #ifndef DAEMONISE_H
-#define DAEMONISE_G
+#define DAEMONISE_H
 
 #include <stdlib.h>
 #include <unistd.h>
