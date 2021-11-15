@@ -11,21 +11,19 @@
 
 #define ARP_BUF_LEN 1024
 
-typedef struct sockaddr_in sockaddr_in;
-
-static size_t _read_arp_file(char* buffer) {
+static size_t _read_arp_file(char** buffer) {
   FILE* file = fopen("/proc/net/arp", "r");
   if (file == NULL) {
     return 0;
   }
-  buffer = (char*) malloc(ARP_BUF_LEN * sizeof(char));
-  size_t end = fread(buffer, sizeof(char), ARP_BUF_LEN-1, file);
-  buffer[end] = '\0';
+  *buffer = (char*) malloc(ARP_BUF_LEN * sizeof(char));
+  size_t end = fread(*buffer, sizeof(char), ARP_BUF_LEN-1, file);
+  (*buffer)[end] = '\0';
   fclose(file);
   return end;
 }
 
-static u_int8_t _split_into_rows(char* table, size_t size, char** rows) {
+static u_int8_t _split_into_rows(char* table, size_t size, char*** rows) {
   // Detect the number of rows in the
   // table (including the header) so
   // that we know what to allocate
@@ -34,12 +32,12 @@ static u_int8_t _split_into_rows(char* table, size_t size, char** rows) {
     if (table[i] == '\n') n_rows++;
   }
   // Allocate space for n rows plus a null terminator
-  rows = (char**) malloc(n_rows * sizeof(char*));
+  *rows = (char**) malloc(n_rows * sizeof(char*));
   // Split the table into rows
   char* row = strtok(table, "\n");
   u_int8_t i = 0;
   while (row != NULL) {
-    rows[i++] = row;
+    (*rows)[i++] = row;
     row = strtok(NULL, "\n");
   }
   // Return the number of rows without the header
@@ -58,27 +56,25 @@ static void _parse_ip(char* row, char* out) {
   out[i] = '\0';
 }
 
-static sockaddr_in* _parse_neighbour_ips(char** rows, u_int8_t n_ips) {
+static long* _parse_neighbour_ips(char** rows, u_int8_t n_ips) {
   char ip[16];
-  sockaddr_in* addrs = (sockaddr_in*) malloc(n_ips * sizeof(sockaddr_in*));
-  memset(addrs, 0, n_ips * sizeof(sockaddr_in*));
+  long* addrs = (long*) malloc(n_ips * sizeof(long*));
+  memset(addrs, 0, n_ips * sizeof(long*));
 
   for (u_int8_t i = 0; i < n_ips; i++) {
-    sockaddr_in addr = addrs[i];
+    long addr = addrs[i];
     _parse_ip(rows[i + 1], ip);
-    addr.sin_family = AF_INET;
-    inet_pton(AF_INET, ip, &(addr.sin_addr));
-    addr.sin_port = 0;
+    inet_pton(AF_INET, ip, &(addr));
   }
   return addrs;
 }
 
- u_int8_t get_neighbour_ips(sockaddr_in* ips) {
+ u_int8_t get_neighbour_ips(long** ips) {
   char* table;
   char** rows;
-  size_t len = _read_arp_file(table);
-  u_int8_t n_ips = _split_into_rows(table, len, rows);
-  ips = _parse_neighbour_ips(rows, n_ips);
+  size_t len = _read_arp_file(&table);
+  u_int8_t n_ips = _split_into_rows(table, len, &rows);
+  *ips = _parse_neighbour_ips(rows, n_ips);
   free(table);
   free(rows);
   return n_ips;

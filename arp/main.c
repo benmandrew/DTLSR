@@ -7,13 +7,13 @@
 #include "arp.h"
 
 int driver(int argc, char** argv) {
-  sockaddr_in* arp;
+  long* arp;
   char ip[16];
   while (1) {
-    sleep(8);
-    u_int8_t n = get_neighbour_ips(arp);
+    sleep(3);
+    u_int8_t n = get_neighbour_ips(&arp);
     for (u_int8_t i = 0; i < n; i++) {
-      inet_ntop(AF_INET, &(arp[i].sin_addr), ip, INET_ADDRSTRLEN);
+      inet_ntop(AF_INET, &(arp[i]), ip, INET_ADDRSTRLEN);
       ip[15] = '\0';
       log_f("%s", ip);
     }
