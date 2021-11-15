@@ -58,7 +58,7 @@ static void _parse_ip(char* row, char* out) {
 
 static long* _parse_neighbour_ips(char** rows, u_int8_t n_ips) {
   char ip[16];
-  long* addrs = (long*) malloc(n_ips * sizeof(long*));
+  long* addrs = (long*) malloc(n_ips * sizeof(long));
   memset(addrs, 0, n_ips * sizeof(long*));
 
   for (u_int8_t i = 0; i < n_ips; i++) {

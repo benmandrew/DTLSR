@@ -18,6 +18,7 @@ int driver(int argc, char** argv) {
       log_f("%s", ip);
     }
     free(arp);
+    log_f("");
   }
 }
 
