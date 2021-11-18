@@ -10,7 +10,11 @@
 typedef struct Node {
   long ip;
   long* neighbour_ips;
+  // Whether the link is alive or we have detected a breakage (hello protocol?)
+  u_int8_t* neighbour_links_alive;
   u_int8_t n_neighbours;
+
+  long timestamp;
 } Node;
 
 /* Take two sorted sets and merge them together to form another sorted set

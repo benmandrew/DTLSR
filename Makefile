@@ -1,20 +1,26 @@
 
-.PHONY: all clean hello helloclean arp arpclean
+.PHONY: all clean clientserver clientserverclean arp arpclean hello helloclean
 
 
-all: hello arp
+all: clientserver arp hello
 
-clean: helloclean arpclean
+clean: clientserverclean arpclean helloclean
 
 
-hello:
-	$(MAKE) -C hello all
+clientserver:
+	$(MAKE) -C clientserver all
 
-helloclean:
-	$(MAKE) -C hello clean
+clientserverclean:
+	$(MAKE) -C clientserver clean
 
 arp:
 	$(MAKE) -C arp all
 
 arpclean:
 	$(MAKE) -C arp clean
+
+hello:
+	$(MAKE) -C hello all
+
+helloclean:
+	$(MAKE) -C hello clean
