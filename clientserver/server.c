@@ -34,6 +34,7 @@ char* read_file(char* filename) {
   }
   FILE* file = fopen(filename, "r");
   if (file == NULL) {
+    log_f("Reading of '%s' failed", filename);
     free(buf);
     return NULL;
   }
@@ -72,6 +73,9 @@ void set_ips(struct sockaddr_in* servaddr, struct sockaddr_in* cliaddr) {
    * !
    */
   char* contents = read_file(CONF_FILENAME);
+  if (contents == NULL) {
+    exit(EXIT_FAILURE);
+  }
   char* pch = NULL;
   strtok(contents, "\n");
   strtok(NULL, " ");
@@ -91,6 +95,8 @@ int driver(int argc, char** argv) {
 	char *hello = "Hello from server";
 	struct sockaddr_in servaddr, cliaddr;
 	
+
+  log_f("Server initialising");
 	// Creating socket file descriptor
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		log_f("Socket creation failed");

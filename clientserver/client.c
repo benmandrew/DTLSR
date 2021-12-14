@@ -12,6 +12,7 @@
 
 #include "logging.h"
 #include "daemonise.h"
+#include "event.h"
 
 #define PORT 8080
 #define MAXLINE 1024
@@ -117,9 +118,16 @@ int driver(int argc, char** argv) {
 
   log_f("Server IP: %s", inet_ntoa(servaddr.sin_addr));
   log_f("Client IP: %s", inet_ntoa(myaddr.sin_addr));
-  
+
+  event_init();
+  int timer = timer_add(3, 0);
+
 	while (1) {
-    sleep(3);
+    if (timer_wait(timer) < 0) {
+      continue;
+    }
+    timer_reset(timer);
+    // sleep(3);
 		int n, len;
 		sendto(sockfd, (const char *)hello, strlen(hello),
 			MSG_CONFIRM, (const struct sockaddr *) &servaddr,
@@ -133,6 +141,7 @@ int driver(int argc, char** argv) {
 		log_f("Server : %s", buffer);
 	}
 	close(sockfd);
+  timer_dealloc(timer);
 	return 0;
 }
 
