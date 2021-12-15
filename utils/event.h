@@ -1,3 +1,7 @@
+
+#ifndef EVENT_H
+#define EVENT_H
+
 #include <sys/types.h>
 #include <sys/timerfd.h>
 #include <unistd.h>
@@ -42,3 +46,5 @@ int timer_wait(int timer) {
 void timer_dealloc(int timer) {
   close(timer);
 }
+
+#endif

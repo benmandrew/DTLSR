@@ -29,7 +29,7 @@
 
 char* read_file(char* filename) {
   int read_size = -1;
-  char* buf = malloc(sizeof(char) * MAXLINE);
+  char* buf = (char*)malloc(sizeof(char) * MAXLINE);
   if (buf == NULL) {
     return NULL;
   }
@@ -49,25 +49,25 @@ char* read_file(char* filename) {
   }
 }
 
-void set_own_ip(struct sockaddr_in* addr) {
-  /*
-   * Parsing example:
-   * interface eth0
-   * ip address 10.0.0.2/24
-   * !
-   */
-  char* contents = read_file(CONF_FILENAME);
-  char* pch = NULL;
-  strtok(contents, "\n");
-  strtok(NULL, " ");
-  strtok(NULL, " ");
-  pch = strtok(NULL, "/");
-  if (strcmp(pch, "10.0.0.1") == 0) {
-    log_f("Client exited");
-    exit(EXIT_FAILURE);
-  }
-  inet_pton(AF_INET, pch, &(addr->sin_addr));
-}
+// void set_own_ip(struct sockaddr_in* addr) {
+//   /*
+//    * Parsing example:
+//    * interface eth0
+//    * ip address 10.0.0.2/24
+//    * !
+//    */
+//   char* contents = read_file(CONF_FILENAME);
+//   char* pch = NULL;
+//   strtok(contents, "\n");
+//   strtok(NULL, " ");
+//   strtok(NULL, " ");
+//   pch = strtok(NULL, "/");
+//   if (strcmp(pch, "10.0.0.1") == 0) {
+//     log_f("Client exited");
+//     exit(EXIT_FAILURE);
+//   }
+//   inet_pton(AF_INET, pch, &(addr->sin_addr));
+// }
 
 void set_ips(struct sockaddr_in* servaddr, struct sockaddr_in* cliaddr) {
   /*

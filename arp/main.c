@@ -10,15 +10,14 @@ int driver(int argc, char** argv) {
   long* arp;
   char ip[16];
   while (1) {
-    sleep(3);
+    sleep(5);
     u_int8_t n = get_neighbour_ips(&arp);
     for (u_int8_t i = 0; i < n; i++) {
       inet_ntop(AF_INET, &(arp[i]), ip, INET_ADDRSTRLEN);
       ip[15] = '\0';
-      log_f("%s", ip);
+      log_f("n%d : %s", i+1, ip);
     }
     free(arp);
-    log_f("");
   }
 }
 

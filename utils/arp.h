@@ -49,7 +49,7 @@ static u_int8_t _split_into_rows(char* table, size_t size, char*** rows) {
  */
 static void _parse_ip(char* row, char* out) {
   int i = 0;
-  while (i < 15 || row[i] != ' ') {
+  while (i < 15 && row[i] != ' ' && row[i] != '\t') {
     out[i] = row[i];
     i++;
   }
@@ -60,11 +60,9 @@ static long* _parse_neighbour_ips(char** rows, u_int8_t n_ips) {
   char ip[16];
   long* addrs = (long*) malloc(n_ips * sizeof(long));
   memset(addrs, 0, n_ips * sizeof(long*));
-
   for (u_int8_t i = 0; i < n_ips; i++) {
-    long addr = addrs[i];
     _parse_ip(rows[i + 1], ip);
-    inet_pton(AF_INET, ip, &(addr));
+    inet_pton(AF_INET, ip, &(addrs[i]));
   }
   return addrs;
 }
