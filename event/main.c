@@ -1,4 +1,3 @@
-
 #include <sys/types.h>
 #include <sys/timerfd.h>
 #include <unistd.h>
@@ -15,8 +14,8 @@ int main(int argc, char** argv) {
   FD_ZERO(&s);
 
   struct itimerspec v = {
-    .it_value    = {1, 0},
     .it_interval = {0, 0},
+    .it_value    = {1, 0},
   };
 
   timerfd_settime(timer, 0, &v, NULL);

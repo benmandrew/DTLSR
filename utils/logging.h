@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 #include <time.h>
+#include <stdlib.h>
 
 #define LOG_BUF_LEN 80
 
