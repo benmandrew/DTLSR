@@ -13,9 +13,9 @@
 #include "logging.h"
 #include "daemonise.h"
 #include "event.h"
+#include "packetsend.h"
 
 #define PORT 8080
-#define MAXLINE 1024
 
 #ifdef DEBUG
 #define CONF_FILENAME "test.conf"
@@ -27,55 +27,13 @@
 // lsof -i:8080
 // kill -9 $(lsof -t -i:8080)
 
-char* read_file(char* filename) {
-  int read_size = -1;
-  char* buf = (char*)malloc(sizeof(char) * MAXLINE);
-  if (buf == NULL) {
-    return NULL;
-  }
-  FILE* file = fopen(filename, "r");
-  if (file == NULL) {
-    free(buf);
-    return NULL;
-  }
-  read_size = fread(buf, sizeof(char), MAXLINE, file);
-  fclose(file);
-  buf[read_size] = '\0';
-  if (read_size < MAXLINE) {
-    return buf;
-  } else {
-    free(buf);
-    return NULL;
-  }
-}
-
-// void set_own_ip(struct sockaddr_in* addr) {
-//   /*
-//    * Parsing example:
-//    * interface eth0
-//    * ip address 10.0.0.2/24
-//    * !
-//    */
-//   char* contents = read_file(CONF_FILENAME);
-//   char* pch = NULL;
-//   strtok(contents, "\n");
-//   strtok(NULL, " ");
-//   strtok(NULL, " ");
-//   pch = strtok(NULL, "/");
-//   if (strcmp(pch, "10.0.0.1") == 0) {
-//     log_f("Client exited");
-//     exit(EXIT_FAILURE);
-//   }
-//   inet_pton(AF_INET, pch, &(addr->sin_addr));
-// }
-
+/*
+ * Parsing example:
+ * interface eth0
+ * ip address 10.0.0.2/24
+ * !
+ */
 void set_ips(struct sockaddr_in* servaddr, struct sockaddr_in* cliaddr) {
-  /*
-   * Parsing example:
-   * interface eth0
-   * ip address 10.0.0.2/24
-   * !
-   */
   char* contents = read_file(CONF_FILENAME);
   char* pch = NULL;
   strtok(contents, "\n");
@@ -103,14 +61,12 @@ int driver(int argc, char** argv) {
 		log_f("Socket creation failed");
 		exit(EXIT_FAILURE);
 	}
-
-	memset(&myaddr, 0, sizeof(myaddr));
 	// Filling server information
+	memset(&myaddr, 0, sizeof(myaddr));
 	myaddr.sin_family = AF_INET; // IPv4
 	myaddr.sin_port = htons(PORT);
-
-	memset(&servaddr, 0, sizeof(servaddr));
 	// Filling server information
+	memset(&servaddr, 0, sizeof(servaddr));
 	servaddr.sin_family = AF_INET;
   servaddr.sin_port = htons(PORT);
 
@@ -148,6 +104,11 @@ int driver(int argc, char** argv) {
 int main(int argc, char* argv[]) {
   set_logfile_name("client");
   log_f("Client started");
+
+  struct rtentry* entries;
+  int n = get_neighbours(&entries, "hello");
+
+
 	int daemonise = 0;
   int opt;
   while ((opt = getopt(argc, argv, "d")) != -1) {

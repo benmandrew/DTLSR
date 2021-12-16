@@ -9,99 +9,77 @@
 #include <net/route.h>
 
 #include "logging.h"
+#include "fileio.h"
 
 #define MAXLINE 1024
-#define CONF_FILENAME "n1"
+#define CONFIG_PATH "/home/ben/projects/routing/configs"
 
-int get_node_id(void) {
-  return NULL;
+char* _read_node_conf_file(char* protocol) {
+  log_f("%s.id", protocol);
+  // Get node ID
+  char filename[FILENAME_MAX];
+  sprintf(filename, "%s.id", protocol);
+  log_f("%s", filename);
+  char* node_id = read_file(filename);
+  // Use node ID to find the corresponding config file
+  sprintf(filename, "%s/%s/n%s", CONFIG_PATH, protocol, node_id);
+  free(node_id);
+  log_f("%s", filename);
+  return read_file(filename);
 }
 
-char* read_node_conf_file(char* filename) {
-  int read_size = -1;
-  char* buf = (char*)malloc(sizeof(char) * MAXLINE);
-  if (buf == NULL) {
-    return NULL;
-  }
-  FILE* file = fopen(filename, "r");
-  if (file == NULL) {
-    free(buf);
-    return NULL;
-  }
-  read_size = fread(buf, sizeof(char), MAXLINE, file);
-  fclose(file);
-  buf[read_size] = '\0';
-  if (read_size < MAXLINE) {
-    return buf;
-  } else {
-    free(buf);
-    return NULL;
-  }
+int _parse_neighbour(char* pch, struct rtentry* entry) {
+  char* saved;
+  char* interface = strtok_r(pch, " - ", &saved);
+  char* address = strtok_r(NULL, " - ", &saved);
+
+  log_f("%s %s", interface, address);
+  struct rtentry route = *entry;
+  memset(&route, 0, sizeof(route));
+
+  struct sockaddr_in *addr = (struct sockaddr_in*)&route.rt_gateway;
+  addr->sin_family = AF_INET;
+  addr->sin_addr.s_addr = inet_addr(address);
+
+  addr = (struct sockaddr_in*) &route.rt_dst;
+  addr->sin_family = AF_INET;
+  addr->sin_addr.s_addr = inet_addr(address);
+
+  addr = (struct sockaddr_in*) &route.rt_genmask;
+  addr->sin_family = AF_INET;
+  addr->sin_addr.s_addr = INADDR_ANY;
+  
+  route.rt_dev = interface;
+  route.rt_flags = RTF_UP | RTF_GATEWAY;
+  route.rt_metric = 0;
 }
 
-int get_neighbours(struct rtentry** entries) {
-  /*
-   * Parsing example:
-   * interface eth0
-   * ip address 10.0.0.2/24
-   * !
-   */
-  char* contents = read_node_conf_file(CONF_FILENAME);
-  char* pch = NULL;
-  strtok(contents, "\n");
-  strtok(NULL, " ");
-  strtok(NULL, " ");
-  pch = strtok(NULL, "/");
-  log_f("pch: %s", pch);
-
+/*
+ * Parsing example:
+ * eth0 - 10.0.0.1
+ * eth1 - 10.0.1.2
+ */
+int get_neighbours(struct rtentry** entries, char* protocol) {
+  char* contents = _read_node_conf_file(protocol);
   // Get number of neighbours
-  int n = 0;
-  char* start = contents;
-  pch = strsep(&contents, "\n");
-  while (pch != NULL) {
-    n++;
-    pch = strsep(&contents, "\n");
-  }
-
-  *entries = (struct rtentry*) malloc(n * sizeof(struct rtentry));
-
-  contents = start;
-  int i = 0;
-  pch = strsep(&contents, "\n");
-  while(pch != NULL) {
-
-    struct rtentry route = (*entries)[i];
-    memset( &route, 0, sizeof( route ) );
-
-    struct sockaddr_in *addr = (struct sockaddr_in *)&route.rt_gateway;
-    addr->sin_family = AF_INET;
-    addr->sin_addr.s_addr = inet_addr( "10.0.2.2" );
-
-    addr = (struct sockaddr_in*) &route.rt_dst;
-    addr->sin_family = AF_INET;
-    addr->sin_addr.s_addr = INADDR_ANY;
-
-    addr = (struct sockaddr_in*) &route.rt_genmask;
-    addr->sin_family = AF_INET;
-    addr->sin_addr.s_addr = INADDR_ANY;
-
-    // TODO Add the interface name to the request
-    route.rt_flags = RTF_UP | RTF_GATEWAY;
-    route.rt_metric = 0;
-
-
-
-
-
-    pch = strsep(&contents, "\n");
+  int n = 0, i = 0;
+  while (contents[i] != '\0') {
+    if (contents[i] == '\n') n++;
     i++;
   }
-  
-
-
-
-  inet_pton(AF_INET, pch, &(destaddrs->sin_addr));
+  *entries = (struct rtentry*)malloc(n * sizeof(struct rtentry));
+  // Save start so contents can be freed
+  char* start = contents;
+  i = 0;
+  char* saved;
+  char* pch = strtok_r(contents, "\n", &saved);
+  while(pch != NULL) {
+    _parse_neighbour(pch, &((*entries)[i]));
+    pch = strtok_r(NULL, "\n", &saved);
+    i++;
+  }
   free(start);
+  return n;
 }
 
 #endif

@@ -30,27 +30,32 @@ class Hello(CoreService):
   name: str = "Hello"
   group: str = "Networking"
 
-  configs: Tuple[str, ...] = ("hello.conf", "helloboot.sh")
+  configs: Tuple[str, ...] = ("hello.id", "helloboot.sh")
 
   startup: Tuple[str, ...] = ("bash helloboot.sh", )
 
   @classmethod
   def generate_config(cls, node: CoreNode, filename: str) -> None:
     if filename == cls.configs[0]:
-      return cls.generate_hello_conf(node)
+      return cls.generate_hello_id(node)
     elif filename == cls.configs[1]:
       return cls.generate_hello_boot()
     else:
       raise ValueError("file name (%s) is not a known configuration: %s",
                        filename, cls.configs)
 
+  # @classmethod
+  # def generate_hello_conf(cls, node: CoreNode) -> str:
+  #   cfg = ""
+  #   for iface in node.get_ifaces():
+  #     cfg += "interface %s\n" % iface.name
+  #     cfg += "\n".join(map(addrstr, iface.ip4s))
+  #     cfg += "\n!\n"
+  #   return cfg
+
   @classmethod
-  def generate_hello_conf(cls, node: CoreNode) -> str:
-    cfg = ""
-    for iface in node.get_ifaces():
-      cfg += "interface %s\n" % iface.name
-      cfg += "\n".join(map(addrstr, iface.ip4s))
-      cfg += "\n!\n"
+  def generate_hello_id(cls, node: CoreNode) -> str:
+    cfg = "{}".format(node.id)
     return cfg
 
   @classmethod
