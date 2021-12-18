@@ -10,12 +10,18 @@ CFLAGS = -g3 -O2 -Wfloat-equal -Wstrict-prototypes \
 
 INCLUDE=-I$(BASEDIR)/utils
 
-_OBJ = main.o
-OBJ = $(patsubst %,$(BUILDDIR)/%,$(_OBJ))
+_CLIENTOBJ = client.o
+CLIENTOBJ = $(patsubst %,$(BUILDDIR)/%,$(_CLIENTOBJ))
 
-all: $(BUILDDIR) event
+_SERVEROBJ = server.o
+SERVEROBJ = $(patsubst %,$(BUILDDIR)/%,$(_SERVEROBJ))
 
-event: $(OBJ)
+all: $(BUILDDIR) client server
+
+client: $(CLIENTOBJ)
+	$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILDDIR)/$@ $^
+
+server: $(SERVEROBJ)
 	$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILDDIR)/$@ $^
 
 $(BUILDDIR)/%.o: %.c $(DEPS)
@@ -26,4 +32,3 @@ $(BUILDDIR):
 
 clean:
 	rm -rf $(BUILDDIR)
-

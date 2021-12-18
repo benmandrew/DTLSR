@@ -1,6 +1,3 @@
-// https://www.geeksforgeeks.org/udp-server-client-implementation-c/
-
-// Client side implementation of UDP client-server model
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -16,6 +13,7 @@
 #include "packetsend.h"
 
 #define PORT 8080
+#define HEARTBEAT_T 2
 
 struct rtentry* neighbours;
 
@@ -24,7 +22,6 @@ int driver(int argc, char** argv) {
 	int sockfd;
 	char buffer[MAXLINE];
 	char *hello = "Hello from client";
-	// struct sockaddr_in servaddr, myaddr;
 
 	// Creating socket file descriptor
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -32,33 +29,25 @@ int driver(int argc, char** argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	int n = get_neighbours(&neighbours, "hello");
-
-	struct sockaddr_in* servaddr = (struct sockaddr_in*)&(neighbours[0].rt_dst);
-	
-	servaddr->sin_port = htons(PORT);
-
-	// neighbours_log(neighbours, n);
+	int n = get_neighbours(&neighbours, "graph_update");
 
 	event_init();
-	int timer = timer_add(2, 0);
+	int timer = timer_add(HEARTBEAT_T, 0);
 
 	while (1) {
 		if (timer_wait(timer) < 0) {
 			continue;
 		}
 		timer_reset(timer);
-		// sleep(3);
-		int addr_len = sizeof(*servaddr);
-		sendto(sockfd, (const char *)hello, strlen(hello),
-			MSG_CONFIRM, (const struct sockaddr *) servaddr, addr_len);
-		log_f("Hello message sent.");
-			
-		int n = recvfrom(sockfd, (char *)buffer, MAXLINE,
-					MSG_WAITALL, (struct sockaddr *) servaddr,
-					&addr_len);
-		buffer[n] = '\0';
-		log_f("Server : %s", buffer);
+
+		for (int i = 0; i < n; i++) {
+			struct sockaddr_in* servaddr = (struct sockaddr_in*)&(neighbours[i].rt_dst);
+			servaddr->sin_port = htons(PORT);
+			int addr_len = sizeof(*servaddr);
+			sendto(sockfd, (char)1, sizeof(char), MSG_CONFIRM,
+				(const struct sockaddr *) servaddr, addr_len);
+		}
+		log_f("Heartbeat sent.");
 	}
 	close(sockfd);
 	timer_dealloc(timer);
@@ -66,9 +55,8 @@ int driver(int argc, char** argv) {
 }
 
 int main(int argc, char* argv[]) {
-	set_logfile_name("client");
-	log_f("Client started");
-
+	set_logfile_name("heartbeat");
+	log_f("Heartbeat started");
 	int daemonise = 0;
 	int opt;
 	while ((opt = getopt(argc, argv, "d")) != -1) {
