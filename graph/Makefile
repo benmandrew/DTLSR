@@ -10,15 +10,15 @@ CFLAGS = -g3 -O2 -Wfloat-equal -Wstrict-prototypes \
 
 INCLUDE=-I$(BASEDIR)/utils
 
-_CLIENTOBJ = client.o
-CLIENTOBJ = $(patsubst %,$(BUILDDIR)/%,$(_CLIENTOBJ))
+_HBOBJ = heartbeat.o
+HBOBJ = $(patsubst %,$(BUILDDIR)/%,$(_CLIENTOBJ))
 
 _SERVEROBJ = server.o
 SERVEROBJ = $(patsubst %,$(BUILDDIR)/%,$(_SERVEROBJ))
 
-all: $(BUILDDIR) client server
+all: $(BUILDDIR) heartbeat server
 
-client: $(CLIENTOBJ)
+heartbeat: $(CLIENTOBJ)
 	$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILDDIR)/$@ $^
 
 server: $(SERVEROBJ)

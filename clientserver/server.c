@@ -16,62 +16,11 @@
 #define PORT 8080
 #define MAXLINE 1024
 
-#ifdef DEBUG
-#define CONF_FILENAME "test.conf"
-#else
-#define CONF_FILENAME "hello.conf"
-#endif
-
-// Kill daemonised server
-// lsof -i:8080
-// kill -9 $(lsof -t -i:8080)
-
-char* read_file(char* filename) {
-	int read_size = -1;
-	char* buf = malloc(sizeof(char) * MAXLINE);
-	if (buf == NULL) {
-		return NULL;
-	}
-	FILE* file = fopen(filename, "r");
-	if (file == NULL) {
-		log_f("Reading of '%s' failed", filename);
-		free(buf);
-		return NULL;
-	}
-	read_size = fread(buf, sizeof(char), MAXLINE, file);
-	fclose(file);
-	buf[read_size] = '\0';
-	if (read_size < MAXLINE) {
-		return buf;
-	} else {
-		free(buf);
-		return NULL;
-	}
-}
-
-void set_own_ip(struct sockaddr_in* addr) {
-	/*
-	 * Parsing example:
-	 * interface eth0
-	 * ip address 10.0.0.1/24
-	 * !
-	 */
-	char* contents = read_file(CONF_FILENAME);
-	char* pch = NULL;
-	strtok(contents, "\n");
-	strtok(NULL, " ");
-	strtok(NULL, " ");
-	pch = strtok(NULL, "/");
-	inet_pton(AF_INET, pch, &(addr->sin_addr));
-}
-
 int driver(int argc, char** argv) {
 	int sockfd;
 	char buffer[MAXLINE];
 	char *hello = "Hello from server";
-	struct sockaddr_in servaddr, cliaddr;
 	
-
 	log_f("Server initialising");
 	// Creating socket file descriptor
 	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
