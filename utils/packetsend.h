@@ -86,45 +86,40 @@ int get_neighbours(struct rtentry** entries, char* protocol) {
 	return n;
 }
 
-// void neighbours_log(struct rtentry* entries, int n) {
-// 	for (int i = 0; i < n; i++) {
-// 		struct sockaddr_in* addr = (struct sockaddr_in*)&(entries[i].rt_dst);
-// 		log_f("N%d: fam=%hu, ip=%s", i+1, addr->sin_family, inet_ntoa(addr->sin_addr));
-// 	}
-// }
-
-ps_socket get_open_socket(int port) {
-	ps_socket s;
+int get_open_socket(int port) {
+	int fd;
 	// Creating socket file descriptor
-	if ((s.fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+	if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
 		log_f("Socket creation failed");
 		exit(EXIT_FAILURE);
 	}
-
 	// Accept on any incoming
 	struct sockaddr_in anyaddr;
 	memset(&anyaddr, 0, sizeof(anyaddr));
 	anyaddr.sin_family = AF_INET;
 	anyaddr.sin_addr.s_addr = INADDR_ANY;
 	anyaddr.sin_port = htons(port);
-	if (bind(s.fd, (struct sockaddr*)&anyaddr, sizeof(anyaddr)) < 0) {
+	if (bind(fd, (struct sockaddr*)&anyaddr, sizeof(anyaddr)) < 0) {
 		log_f("Bind failed");
 		exit(EXIT_FAILURE);
 	}
-	setsockopt(s.fd, SOL_SOCKET, SO_REUSEADDR, (const void*)1, sizeof(int));
-	s.addr = anyaddr;
-	s.len = sizeof(anyaddr);
-	return s;
+	int on = 1;
+	setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, (const void*)&on, sizeof(on));
+	return fd;
 }
 
-int ps_receive(ps_socket s, char* buffer) {
-	return recvfrom(s.fd, (char *)buffer, MAXLINE, MSG_WAITALL,
-									(struct sockaddr *) &s.addr, &s.len);
+int get_socket(void) {
+	int sockfd;
+	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+		log_f("Socket creation failed");
+		exit(EXIT_FAILURE);
+	}
+	return sockfd;
 }
 
-void ps_send(ps_socket s, const void* msg, size_t len) {
-	sendto(s.fd, msg, len, MSG_CONFIRM,
-				(const struct sockaddr *) &s.addr, s.len);
+int ps_receive(int sockfd, void* buffer, size_t n, struct sockaddr* from) {
+	int len = sizeof(struct sockaddr);
+	return recvfrom(sockfd, buffer, n, MSG_WAITALL, from, &len);
 }
 
 #endif

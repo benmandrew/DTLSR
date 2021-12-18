@@ -11,25 +11,26 @@
 #include "logging.h"
 #include "daemonise.h"
 #include "packetsend.h"
+#include "event.h"
 #include "graph.h"
 
 #define PORT 8080
-#define MAXLINE 1024
+#define HB_SIZE sizeof(int)
 
 int driver(int argc, char** argv) {
-	char buffer[MAXLINE];
-	char *hello = "Hello from server";
-	
-	log_f("Server initialising");
-	
-	ps_socket s = get_open_socket(PORT);
-
+	char buffer[HB_SIZE];
+	int sockfd = get_open_socket(PORT);
+	event_append(sockfd);
+	int active_fd;
 	while (1) {
-		int n = ps_receive(s, buffer);
-		buffer[n] = '\0';
-		log_f("Client : %s", buffer);
-		ps_send(s, hello, strlen(hello));
-		log_f("Hello message sent.");
+		if ((active_fd = event_wait(&sockfd, 1)) < 0) {
+			continue;
+		}
+		if (active_fd == sockfd) {
+			struct sockaddr_in from;
+			int n = ps_receive(sockfd, (void*)buffer, HB_SIZE, (struct sockaddr*)&from);
+			log_f("Heartbeat from %s", inet_ntoa(from.sin_addr));
+		}
 	}
 	return 0;
 }
@@ -51,5 +52,6 @@ int main(int argc, char* argv[]) {
 		make_daemon();
 		log_f("Daemonisation successful");
 	}
+	event_init();
 	return driver(argc, argv);
 }

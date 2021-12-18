@@ -9,6 +9,8 @@
 #include <stdio.h>
 #include <sys/time.h>
 
+#include "logging.h"
+
 fd_set s;
 struct itimerspec v;
 
@@ -16,34 +18,40 @@ void event_init(void) {
 	FD_ZERO(&s);
 }
 
-void timer_reset(int);
+void event_append(int fd) {
+	FD_SET(fd, &s);
+}
 
-int timer_add(int sec, int nsec) {
+void event_timer_reset(int);
+
+int event_timer_append(int sec, int nsec) {
 	int timer = timerfd_create(CLOCK_REALTIME, 0);
 	v = (struct itimerspec) {
 		.it_interval = {0, 0},
 		.it_value    = {sec, nsec},
 	};
-	timer_reset(timer);
-	FD_SET(timer, &s);
+	event_timer_reset(timer);
+	event_append(timer);
 	return timer;
 }
 
-void timer_reset(int timer) {
+void event_timer_reset(int timer) {
 	timerfd_settime(timer, 0, &v, NULL);
 }
 
-int timer_wait(int timer) {
+int event_wait(int* fds, int n_fds) {
 	if (select(FD_SETSIZE, &s, NULL, NULL, NULL) < 0) {
 		exit(EXIT_FAILURE);
 	}
-	if(!FD_ISSET(timer, &s)) {
-		return -1;
+	for (int i = 0; i < n_fds; i++) {
+		if(FD_ISSET(fds[i], &s)) {
+			return fds[i];
+		}
 	}
-	return 0;
-} 
+	return -1;
+}
 
-void timer_dealloc(int timer) {
+void event_timer_dealloc(int timer) {
 	close(timer);
 }
 

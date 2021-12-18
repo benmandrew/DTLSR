@@ -10,18 +10,18 @@ CFLAGS = -g3 -O2 -Wfloat-equal -Wstrict-prototypes \
 
 INCLUDE=-I$(BASEDIR)/utils
 
-_HBOBJ = heartbeat.o
-HBOBJ = $(patsubst %,$(BUILDDIR)/%,$(_CLIENTOBJ))
+_HEARTBEATOBJ = heartbeat.o
+HEARTBEATOBJ = $(patsubst %,$(BUILDDIR)/%,$(_HEARTBEATOBJ))
 
-_SERVEROBJ = server.o
-SERVEROBJ = $(patsubst %,$(BUILDDIR)/%,$(_SERVEROBJ))
+_GRAPHOBJ = graph.o
+GRAPHOBJ = $(patsubst %,$(BUILDDIR)/%,$(_GRAPHOBJ))
 
-all: $(BUILDDIR) heartbeat server
+all: $(BUILDDIR) heartbeat graph
 
-heartbeat: $(CLIENTOBJ)
+heartbeat: $(HEARTBEATOBJ)
 	$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILDDIR)/$@ $^
 
-server: $(SERVEROBJ)
+graph: $(GRAPHOBJ)
 	$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILDDIR)/$@ $^
 
 $(BUILDDIR)/%.o: %.c $(DEPS)

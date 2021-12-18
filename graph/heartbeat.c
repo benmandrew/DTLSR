@@ -13,49 +13,44 @@
 #include "packetsend.h"
 
 #define PORT 8080
-#define HEARTBEAT_T 2
+#define HEARTBEAT_T 3
 
-struct rtentry* neighbours;
-
-// Driver code
 int driver(int argc, char** argv) {
-	int sockfd;
-	char buffer[MAXLINE];
-	char *hello = "Hello from client";
-
 	// Creating socket file descriptor
-	if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-		log_f("Socket creation failed");
-		exit(EXIT_FAILURE);
-	}
+	int sockfd = get_socket();
+	// Read neighbours
+	struct rtentry* neighbours;
+	int n = get_neighbours(&neighbours, "graph");
+	// Create heartbeat timer
+	int timer = event_timer_append(HEARTBEAT_T, 0);
 
-	int n = get_neighbours(&neighbours, "graph_update");
-
-	event_init();
-	int timer = timer_add(HEARTBEAT_T, 0);
-
+	int active_fd;
+	// Event loop
 	while (1) {
-		if (timer_wait(timer) < 0) {
+		if ((active_fd = event_wait(&timer, 1)) < 0) {
 			continue;
 		}
-		timer_reset(timer);
-
-		for (int i = 0; i < n; i++) {
-			struct sockaddr_in* servaddr = (struct sockaddr_in*)&(neighbours[i].rt_dst);
-			servaddr->sin_port = htons(PORT);
-			int addr_len = sizeof(*servaddr);
-			sendto(sockfd, (char)1, sizeof(char), MSG_CONFIRM,
-				(const struct sockaddr *) servaddr, addr_len);
+		if (active_fd == timer) {
+			event_timer_reset(timer);
+			// Send heartbeat to every neighbour
+			for (int i = 0; i < n; i++) {
+				struct sockaddr_in* neighbour_addr = (struct sockaddr_in*)&(neighbours[i].rt_dst);
+				neighbour_addr->sin_port = htons(PORT);
+				int addr_len = sizeof(*neighbour_addr);
+				// Send 'addr_len' just in case 'sendto' dereferences it even with zero length
+				sendto(sockfd, &addr_len, sizeof(addr_len), MSG_CONFIRM,
+					(const struct sockaddr *) neighbour_addr, addr_len);
+			}
+			log_f("Heartbeats sent");
 		}
-		log_f("Heartbeat sent.");
 	}
 	close(sockfd);
-	timer_dealloc(timer);
+	close(timer);
 	return 0;
 }
 
 int main(int argc, char* argv[]) {
-	set_logfile_name("heartbeat");
+	set_logfile_name("hbt");
 	log_f("Heartbeat started");
 	int daemonise = 0;
 	int opt;
@@ -71,5 +66,6 @@ int main(int argc, char* argv[]) {
 		make_daemon();
 		log_f("Daemonisation successful");
 	}
+	event_init();
 	return driver(argc, argv);
 }
