@@ -15,16 +15,13 @@
 #define CONFIG_PATH "/home/ben/projects/routing/configs"
 
 char* _read_node_conf_file(char* protocol) {
-  log_f("%s.id", protocol);
   // Get node ID
   char filename[FILENAME_MAX];
   sprintf(filename, "%s.id", protocol);
-  log_f("%s", filename);
   char* node_id = read_file(filename);
   // Use node ID to find the corresponding config file
   sprintf(filename, "%s/%s/n%s", CONFIG_PATH, protocol, node_id);
   free(node_id);
-  log_f("%s", filename);
   return read_file(filename);
 }
 
@@ -33,11 +30,10 @@ int _parse_neighbour(char* pch, struct rtentry* entry) {
   char* interface = strtok_r(pch, " - ", &saved);
   char* address = strtok_r(NULL, " - ", &saved);
 
-  log_f("%s %s", interface, address);
-  struct rtentry route = *entry;
+  struct rtentry route;
   memset(&route, 0, sizeof(route));
 
-  struct sockaddr_in *addr = (struct sockaddr_in*)&route.rt_gateway;
+  struct sockaddr_in *addr = (struct sockaddr_in*) &route.rt_gateway;
   addr->sin_family = AF_INET;
   addr->sin_addr.s_addr = inet_addr(address);
 
@@ -52,6 +48,8 @@ int _parse_neighbour(char* pch, struct rtentry* entry) {
   route.rt_dev = interface;
   route.rt_flags = RTF_UP | RTF_GATEWAY;
   route.rt_metric = 0;
+
+  *entry = route;
 }
 
 /*
@@ -70,16 +68,23 @@ int get_neighbours(struct rtentry** entries, char* protocol) {
   *entries = (struct rtentry*)malloc(n * sizeof(struct rtentry));
   // Save start so contents can be freed
   char* start = contents;
-  i = 0;
   char* saved;
   char* pch = strtok_r(contents, "\n", &saved);
+  i = 0;
   while(pch != NULL) {
-    _parse_neighbour(pch, &((*entries)[i]));
+    _parse_neighbour(pch, *entries + i);
     pch = strtok_r(NULL, "\n", &saved);
     i++;
   }
   free(start);
   return n;
+}
+
+void neighbours_log(struct rtentry* entries, int n) {
+  for (int i = 0; i < n; i++) {
+    struct sockaddr_in* addr = (struct sockaddr_in*)&(entries[i].rt_dst);
+    log_f("N%d: fam=%hu, ip=%s", i+1, addr->sin_family, inet_ntoa(addr->sin_addr));
+  }
 }
 
 #endif

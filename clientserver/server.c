@@ -102,39 +102,52 @@ int driver(int argc, char** argv) {
 		log_f("Socket creation failed");
 		exit(EXIT_FAILURE);
 	}
-	memset(&servaddr, 0, sizeof(servaddr));
-	memset(&cliaddr, 0, sizeof(cliaddr));
-	// Filling server information
-	servaddr.sin_family = AF_INET; // IPv4
-	// set_own_ip(&servaddr);
-	servaddr.sin_port = htons(PORT);
+	// memset(&servaddr, 0, sizeof(servaddr));
+	// memset(&cliaddr, 0, sizeof(cliaddr));
+	// // Filling server information
+	// servaddr.sin_family = AF_INET; // IPv4
+	// // set_own_ip(&servaddr);
+	// servaddr.sin_port = htons(PORT);
 
-  cliaddr.sin_family = AF_INET;
-  // inet_pton(AF_INET, "10.0.0.2", &(cliaddr.sin_addr));
-  cliaddr.sin_port = htons(PORT);
+  // cliaddr.sin_family = AF_INET;
+  // // inet_pton(AF_INET, "10.0.0.2", &(cliaddr.sin_addr));
+  // cliaddr.sin_port = htons(PORT);
 
 
-	set_ips(&servaddr, &cliaddr);
+	// set_ips(&servaddr, &cliaddr);
 	
-  log_f("Server IP: %s", inet_ntoa(servaddr.sin_addr));
-  log_f("Client IP: %s", inet_ntoa(cliaddr.sin_addr));
-
+  // log_f("Server IP: %s", inet_ntoa(servaddr.sin_addr));
+  // log_f("Client IP: %s", inet_ntoa(cliaddr.sin_addr));
 	// Bind the socket with the server address
-	if (bind(sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+	// if (bind(sockfd, (const struct sockaddr *)&servaddr, sizeof(servaddr)) < 0) {
+	// 	log_f("Bind failed");
+	// 	exit(EXIT_FAILURE);
+	// }
+
+  // Accept on any incoming
+  struct sockaddr_in anyaddr;
+  memset(&anyaddr, 0, sizeof(anyaddr));
+  anyaddr.sin_family = AF_INET;
+  // anyaddr.sin_addr.s_addr = INADDR_ANY;
+  anyaddr.sin_addr.s_addr = inet_addr("10.0.0.1");
+  anyaddr.sin_port = htons(PORT);
+  if (bind(sockfd, (struct sockaddr*)&anyaddr, sizeof(anyaddr)) < 0) {
 		log_f("Bind failed");
 		exit(EXIT_FAILURE);
 	}
+  setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, (const void*)1, sizeof(int));
 	
 	int len, n;
-	len = sizeof(cliaddr); //len is value/result
+	len = sizeof(anyaddr); //len is value/result
 
   while (1) {
+    log_f("Attempt receive");
     n = recvfrom(sockfd, (char *)buffer, MAXLINE, MSG_WAITALL,
-                 (struct sockaddr *) &cliaddr, &len);
+                 (struct sockaddr *) &anyaddr, &len);
     buffer[n] = '\0';
     log_f("Client : %s", buffer);
     sendto(sockfd, (const char *)hello, strlen(hello), MSG_CONFIRM,
-           (const struct sockaddr *) &cliaddr, len);
+           (const struct sockaddr *) &anyaddr, len);
     log_f("Hello message sent.");
   }
 	return 0;
