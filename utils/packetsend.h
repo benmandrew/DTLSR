@@ -35,11 +35,11 @@ int _parse_neighbour(char* pch, struct rtentry* entry) {
 
   struct sockaddr_in *addr = (struct sockaddr_in*) &route.rt_gateway;
   addr->sin_family = AF_INET;
-  addr->sin_addr.s_addr = inet_addr(address);
+  inet_pton(AF_INET, address, &(addr->sin_addr));
 
   addr = (struct sockaddr_in*) &route.rt_dst;
   addr->sin_family = AF_INET;
-  addr->sin_addr.s_addr = inet_addr(address);
+  inet_pton(AF_INET, address, &(addr->sin_addr));
 
   addr = (struct sockaddr_in*) &route.rt_genmask;
   addr->sin_family = AF_INET;
