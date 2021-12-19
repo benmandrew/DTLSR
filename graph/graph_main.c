@@ -1,24 +1,35 @@
 
+#include "def.h"
 #include "graph.h"
 
+char buffer[HB_SIZE];
+
+char receive_heartbeat(int hb_sockfd) {
+	struct sockaddr_in from;
+	ps_receive(hb_sockfd, (void*)buffer, HB_SIZE, (struct sockaddr*)&from);
+	return register_heartbeat((long)from.sin_addr.s_addr);
+}
+
 int driver(int argc, char** argv) {
-	char buffer[HB_SIZE];
-	int sockfd = get_open_socket(PORT);
-	event_append(sockfd);
+	char graph_updated = 0;
+	int hb_sockfd = get_open_socket(HB_PORT);
+	event_append(hb_sockfd);
 	init_node();
-	int* fds = init_fds(sockfd);
+	int* fds = init_fds(&hb_sockfd, 1);
 	int n_fds = get_n_neighbours() + 1;
 	int active_fd;
 	while (1) {
 		if ((active_fd = event_wait(fds, n_fds)) < 0) {
 			continue;
 		}
-		if (active_fd == sockfd) {
-			struct sockaddr_in from;
-			int n = ps_receive(sockfd, (void*)buffer, HB_SIZE, (struct sockaddr*)&from);
-			register_heartbeat((long)from.sin_addr.s_addr);
+		if (active_fd == hb_sockfd) {
+			graph_updated = receive_heartbeat(active_fd);
 		} else {
-			timeout_heartbeat(active_fd);
+			graph_updated = timeout_heartbeat(active_fd);
+		}
+
+		if (graph_updated) {
+			graph_updated = 0;
 		}
 	}
 	// Close timer sockets pls

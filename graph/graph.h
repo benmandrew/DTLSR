@@ -18,11 +18,6 @@
 #include "fd_event.h"
 #include "node.h"
 
-#define PORT 8080
-#define HB_SIZE sizeof(int)
-#define HEARTBEAT_T 5
-#define HEARTBEAT_TIMEOUT HEARTBEAT_T + 3
-
 typedef struct Graph {
   Node* nodes;
   size_t n_nodes;
@@ -32,10 +27,10 @@ int get_n_neighbours(void);
 
 void init_node(void);
 
-void register_heartbeat(long source_addr);
+char register_heartbeat(long source_addr);
 
-void timeout_heartbeat(int active_fd);
+char timeout_heartbeat(int active_fd);
 
-int* init_fds(int sockfd);
+int* init_fds(int* sockfds, int n_sockfds);
 
 #endif

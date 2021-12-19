@@ -41,13 +41,15 @@ Timer event_timer_append(int sec, int nsec) {
 }
 
 int event_wait(int* fds, int n_fds) {
-	// 'select' modifies the 'fd_set'
+	// 'select' modifies the 'fd_set', so make a copy and pass that
 	fd_set copy = s;
-	if (select(FD_SETSIZE, &copy, NULL, NULL, NULL) < 0) {
+	int n_ready;
+	if ((n_ready = select(FD_SETSIZE, &copy, NULL, NULL, NULL)) < 0) {
 		exit(EXIT_FAILURE);
+	} else if (n_ready == 0) {
+		return -1;
 	}
 	for (int i = 0; i < n_fds; i++) {
-		log_f("%d %d", fds[i], FD_ISSET(fds[i], &s));
 		if(FD_ISSET(fds[i], &copy)) {
 			return fds[i];
 		}
