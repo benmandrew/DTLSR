@@ -9,11 +9,11 @@
 
 #include "logging.h"
 #include "daemonise.h"
-#include "event.h"
+#include "fd_event.h"
 #include "packetsend.h"
 
 #define PORT 8080
-#define HEARTBEAT_T 3
+#define HEARTBEAT_T 5
 
 int driver(int argc, char** argv) {
 	// Creating socket file descriptor
@@ -22,16 +22,16 @@ int driver(int argc, char** argv) {
 	struct rtentry* neighbours;
 	int n = get_neighbours(&neighbours, "graph");
 	// Create heartbeat timer
-	int timer = event_timer_append(HEARTBEAT_T, 0);
+	Timer timer = event_timer_append(HEARTBEAT_T, 0);
 
 	int active_fd;
 	// Event loop
 	while (1) {
-		if ((active_fd = event_wait(&timer, 1)) < 0) {
+		if ((active_fd = event_wait(&timer.fd, 1)) < 0) {
 			continue;
 		}
-		if (active_fd == timer) {
-			event_timer_reset(timer);
+		if (active_fd == timer.fd) {
+			event_timer_reset(&timer);
 			// Send heartbeat to every neighbour
 			for (int i = 0; i < n; i++) {
 				struct sockaddr_in* neighbour_addr = (struct sockaddr_in*)&(neighbours[i].rt_dst);
@@ -45,7 +45,7 @@ int driver(int argc, char** argv) {
 		}
 	}
 	close(sockfd);
-	close(timer);
+	close(timer.fd);
 	return 0;
 }
 

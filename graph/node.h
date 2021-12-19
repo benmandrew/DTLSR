@@ -8,11 +8,11 @@
  * 'neighbour_ips' must be sorted
  */
 typedef struct Node {
-  long ip;
-  long* neighbour_ips;
+  uint32_t ip;
+  uint32_t* neighbour_ips;
   // Whether the link is alive or we have detected a breakage (hello protocol?)
-  u_int8_t* neighbour_links_alive;
-  u_int8_t n_neighbours;
+  char* neighbour_links_alive;
+  int n_neighbours;
 
   long timestamp;
 } Node;
