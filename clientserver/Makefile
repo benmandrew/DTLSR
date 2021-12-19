@@ -9,6 +9,7 @@ CFLAGS = -g3 -O2 -Wfloat-equal -Wstrict-prototypes \
 				 -Wno-unused-result
 
 INCLUDE=-I$(BASEDIR)/utils
+LIB=-L$(BASEDIR)/utils/build -lutils
 
 _CLIENTOBJ = client.o
 CLIENTOBJ = $(patsubst %,$(BUILDDIR)/%,$(_CLIENTOBJ))
@@ -19,10 +20,10 @@ SERVEROBJ = $(patsubst %,$(BUILDDIR)/%,$(_SERVEROBJ))
 all: $(BUILDDIR) client server
 
 client: $(CLIENTOBJ)
-	$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILDDIR)/$@ $^
+	$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILDDIR)/$@ $^ $(LIB)
 
 server: $(SERVEROBJ)
-	$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILDDIR)/$@ $^
+	$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILDDIR)/$@ $^ $(LIB)
 
 $(BUILDDIR)/%.o: %.c $(DEPS)
 	$(CC) -c $(CFLAGS) $(INCLUDE) -o $@ $<

@@ -12,10 +12,11 @@
 
 #include "logging.h"
 #include "daemonise.h"
-#include "event.h"
+#include "fd_event.h"
 #include "packetsend.h"
 
 #define PORT 8080
+#define MAXLINE 1024
 
 struct rtentry* neighbours;
 
@@ -39,15 +40,14 @@ int driver(int argc, char** argv) {
 	servaddr->sin_port = htons(PORT);
 
 	// neighbours_log(neighbours, n);
-
 	event_init();
-	int timer = timer_add(2, 0);
+	Timer timer = event_timer_append(2, 0);
 
 	while (1) {
-		if (timer_wait(timer) < 0) {
+		if (event_wait(&timer.fd, 1) < 0) {
 			continue;
 		}
-		timer_reset(timer);
+		event_timer_reset(&timer);
 		// sleep(3);
 		int addr_len = sizeof(*servaddr);
 		sendto(sockfd, (const char *)hello, strlen(hello),
@@ -61,7 +61,7 @@ int driver(int argc, char** argv) {
 		log_f("Server : %s", buffer);
 	}
 	close(sockfd);
-	timer_dealloc(timer);
+	close(timer.fd);
 	return 0;
 }
 

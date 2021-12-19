@@ -9,20 +9,21 @@ CFLAGS = -g3 -O2 -Wfloat-equal -Wstrict-prototypes \
 				 -Wno-unused-result
 
 INCLUDE=-I$(BASEDIR)/utils
+LIB=-L$(BASEDIR)/utils/build -lutils
 
 _HEARTBEATOBJ = heartbeat.o
 HEARTBEATOBJ = $(patsubst %,$(BUILDDIR)/%,$(_HEARTBEATOBJ))
 
-_GRAPHOBJ = graph.o
+_GRAPHOBJ = graph.o graph_main.o
 GRAPHOBJ = $(patsubst %,$(BUILDDIR)/%,$(_GRAPHOBJ))
 
 all: $(BUILDDIR) heartbeat graph
 
 heartbeat: $(HEARTBEATOBJ)
-	$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILDDIR)/$@ $^
+	$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILDDIR)/$@ $^ $(LIB)
 
 graph: $(GRAPHOBJ)
-	$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILDDIR)/$@ $^
+	$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILDDIR)/$@ $^ $(LIB)
 
 $(BUILDDIR)/%.o: %.c $(DEPS)
 	$(CC) -c $(CFLAGS) $(INCLUDE) -o $@ $<

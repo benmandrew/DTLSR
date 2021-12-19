@@ -9,15 +9,13 @@ CFLAGS = -g3 -O2 -Wfloat-equal -Wstrict-prototypes \
 				 -Wno-unused-result
 
 INCLUDE=-I$(BASEDIR)/utils
-LIB=-L$(BASEDIR)/utils/build -lutils
 
-_OBJ = main.o
+_OBJ = arp.o daemonise.o fd_event.o fileio.o logging.o packetsend.o
 OBJ = $(patsubst %,$(BUILDDIR)/%,$(_OBJ))
 
-all: $(BUILDDIR) arp-monitor
-
-arp-monitor: $(OBJ)
-	$(CC) $(CFLAGS) $(INCLUDE) -o $(BUILDDIR)/$@ $^ $(LIB)
+all: $(BUILDDIR) $(OBJ)
+	ar -rc $(BUILDDIR)/libutils.a $(OBJ)
+	ranlib $(BUILDDIR)/libutils.a
 
 $(BUILDDIR)/%.o: %.c $(DEPS)
 	$(CC) -c $(CFLAGS) $(INCLUDE) -o $@ $<

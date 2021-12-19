@@ -1,3 +1,4 @@
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -41,7 +42,7 @@ int driver(int argc, char** argv) {
 				sendto(sockfd, &addr_len, sizeof(addr_len), MSG_CONFIRM,
 					(const struct sockaddr *) neighbour_addr, addr_len);
 			}
-			log_f("Heartbeats sent");
+			log_f("heartbeats sent");
 		}
 	}
 	close(sockfd);
@@ -51,7 +52,7 @@ int driver(int argc, char** argv) {
 
 int main(int argc, char* argv[]) {
 	set_logfile_name("hbt");
-	log_f("Heartbeat started");
+	log_f("heartbeat started");
 	int daemonise = 0;
 	int opt;
 	while ((opt = getopt(argc, argv, "d")) != -1) {
@@ -64,7 +65,7 @@ int main(int argc, char* argv[]) {
 	}
 	if (daemonise) {
 		make_daemon();
-		log_f("Daemonisation successful");
+		log_f("daemonisation successful");
 	}
 	event_init();
 	return driver(argc, argv);

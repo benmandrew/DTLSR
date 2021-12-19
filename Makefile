@@ -1,11 +1,16 @@
 
-.PHONY: all clean clientserver clientserverclean arp arpclean hello helloclean
+.PHONY: all clean utils utilsclean clientserver clientserverclean arp arpclean graph graphclean
+
+all: utils clientserver arp graph
+
+clean: utilsclean clientserverclean arpclean graphclean
 
 
-all: clientserver arp hello
+utils:
+	$(MAKE) -C utils all
 
-clean: clientserverclean arpclean helloclean
-
+utilsclean:
+	$(MAKE) -C utils clean
 
 clientserver:
 	$(MAKE) -C clientserver all
@@ -19,8 +24,8 @@ arp:
 arpclean:
 	$(MAKE) -C arp clean
 
-hello:
-	$(MAKE) -C hello all
+graph:
+	$(MAKE) -C graph all
 
-helloclean:
-	$(MAKE) -C hello clean
+graphclean:
+	$(MAKE) -C graph clean
