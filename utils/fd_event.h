@@ -32,6 +32,6 @@ Timer event_timer_append(int sec, int nsec);
 
 int event_wait(int* fds, int n_fds);
 
-void event_timer_dealloc(int timer);
+void event_timer_dealloc(Timer timer);
 
 #endif

@@ -38,7 +38,7 @@ int driver(int argc, char** argv) {
 
 int main(int argc, char* argv[]) {
 	set_logfile_name("graph");
-	log_f("Graph Started");
+	log_f("graph started");
 	int daemonise = 0;
 	int opt;
 	while ((opt = getopt(argc, argv, "d")) != -1) {
@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
 	}
 	if (daemonise) {
 		make_daemon();
-		log_f("Daemonisation successful");
+		log_f("daemonisation successful");
 	}
 	event_init();
 	return driver(argc, argv);

@@ -57,6 +57,6 @@ int event_wait(int* fds, int n_fds) {
 	return -1;
 }
 
-void event_timer_dealloc(int timer) {
-	close(timer);
+void event_timer_dealloc(Timer timer) {
+	close(timer.fd);
 }

@@ -62,7 +62,7 @@ int get_neighbours(struct rtentry** entries, char* protocol) {
 	char* pch = strtok_r(contents, "\n", &saved);
 	i = 0;
 	while(pch != NULL) {
-		_parse_neighbour(pch, *entries + i);
+		_parse_neighbour(pch, &((*entries)[i]));
 		pch = strtok_r(NULL, "\n", &saved);
 		i++;
 	}
