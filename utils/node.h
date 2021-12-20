@@ -2,20 +2,34 @@
 #ifndef NODE_H
 #define NODE_H
 
+#include <stdint.h>
 #include <stdlib.h>
+
+#include "fd_event.h"
 
 /* Graph representation of an IP node
  * 'neighbour_ips' must be sorted
  */
-typedef struct Node {
-  uint32_t ip;
+typedef struct node {
+  int id;
+  uint32_t* source_ips;
   uint32_t* neighbour_ips;
-  // Whether the link is alive or we have detected a breakage (hello protocol?)
+  // Whether the link is alive or we have detected a breakage
   char* neighbour_links_alive;
   int n_neighbours;
 
   long timestamp;
 } Node;
+
+typedef struct local_node {
+  Node node;
+  Timer* timers;
+  char** interfaces;
+} LocalNode;
+
+Node alloc_node(int n);
+
+LocalNode alloc_local_node(int n);
 
 // /* Take two sorted sets and merge them together to form another sorted set
 //  * Assuming no common values between the sets, n1 ∩ n2 = ∅

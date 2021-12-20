@@ -12,15 +12,18 @@
 #include "daemonise.h"
 #include "fd_event.h"
 #include "packetsend.h"
+#include "core_node.h"
 
 #include "def.h"
+
+LocalNode this;
 
 int driver(int argc, char** argv) {
 	// Creating socket file descriptor
 	int sockfd = get_socket();
 	// Read neighbours
-	struct rtentry* neighbours;
-	int n = get_neighbours(&neighbours, "graph");
+	int n = get_neighbours(&this, "graph");
+	struct rtentry* routes = get_routes(&this);
 	// Create heartbeat timer
 	Timer timer = event_timer_append(HEARTBEAT_T, 0);
 
@@ -34,7 +37,7 @@ int driver(int argc, char** argv) {
 			event_timer_reset(&timer);
 			// Send heartbeat to every neighbour
 			for (int i = 0; i < n; i++) {
-				struct sockaddr_in* neighbour_addr = (struct sockaddr_in*)&(neighbours[i].rt_dst);
+				struct sockaddr_in* neighbour_addr = (struct sockaddr_in*)&(routes[i].rt_dst);
 				neighbour_addr->sin_port = htons(HB_PORT);
 				int addr_len = sizeof(*neighbour_addr);
 				// Send 'addr_len' just in case 'sendto' dereferences it even with zero length

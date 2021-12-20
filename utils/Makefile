@@ -10,7 +10,7 @@ CFLAGS = -g3 -O2 -Wfloat-equal -Wstrict-prototypes \
 
 INCLUDE=-I$(BASEDIR)/utils
 
-_OBJ = arp.o daemonise.o fd_event.o fileio.o logging.o packetsend.o
+_OBJ = arp.o daemonise.o fd_event.o fileio.o logging.o packetsend.o node.o core_node.o
 OBJ = $(patsubst %,$(BUILDDIR)/%,$(_OBJ))
 
 all: $(BUILDDIR) $(OBJ)

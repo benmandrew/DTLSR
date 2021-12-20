@@ -14,7 +14,7 @@ LIB=-L$(BASEDIR)/utils/build -lutils
 _HEARTBEATOBJ = heartbeat.o
 HEARTBEATOBJ = $(patsubst %,$(BUILDDIR)/%,$(_HEARTBEATOBJ))
 
-_GRAPHOBJ = graph.o graph_main.o
+_GRAPHOBJ = local_graph.o ls_graph.o graph_main.o
 GRAPHOBJ = $(patsubst %,$(BUILDDIR)/%,$(_GRAPHOBJ))
 
 all: $(BUILDDIR) heartbeat graph

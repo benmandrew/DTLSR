@@ -3,10 +3,9 @@
 #include "graph.h"
 
 char buffer[HB_SIZE];
-
 char receive_heartbeat(int hb_sockfd) {
 	struct sockaddr_in from;
-	ps_receive(hb_sockfd, (void*)buffer, HB_SIZE, (struct sockaddr*)&from);
+	receive(hb_sockfd, (void*)buffer, HB_SIZE, (struct sockaddr*)&from);
 	return register_heartbeat((long)from.sin_addr.s_addr);
 }
 
@@ -14,7 +13,6 @@ int driver(int argc, char** argv) {
 	char graph_updated = 0;
 	int hb_sockfd = get_open_socket(HB_PORT);
 	event_append(hb_sockfd);
-	init_node();
 	int* fds = init_fds(&hb_sockfd, 1);
 	int n_fds = get_n_neighbours() + 1;
 	int active_fd;

@@ -1,75 +1,6 @@
 
 #include "packetsend.h"
 
-#define MAXLINE 1024
-#define CONFIG_PATH "/home/ben/projects/routing/configs"
-
-char* _read_node_conf_file(char* protocol) {
-	// Get node ID
-	char filename[FILENAME_MAX];
-	sprintf(filename, "%s.id", protocol);
-	char* node_id = read_file(filename);
-	// Use node ID to find the corresponding config file
-	sprintf(filename, "%s/%s/n%s", CONFIG_PATH, protocol, node_id);
-	free(node_id);
-	return read_file(filename);
-}
-
-int _parse_neighbour(char* pch, struct rtentry* entry) {
-	char* saved;
-	char* interface = strtok_r(pch, " - ", &saved);
-	char* address = strtok_r(NULL, " - ", &saved);
-
-	struct rtentry route;
-	memset(&route, 0, sizeof(route));
-
-	struct sockaddr_in *addr = (struct sockaddr_in*) &route.rt_gateway;
-	addr->sin_family = AF_INET;
-	inet_pton(AF_INET, address, &(addr->sin_addr));
-
-	addr = (struct sockaddr_in*) &route.rt_dst;
-	addr->sin_family = AF_INET;
-	inet_pton(AF_INET, address, &(addr->sin_addr));
-
-	addr = (struct sockaddr_in*) &route.rt_genmask;
-	addr->sin_family = AF_INET;
-	addr->sin_addr.s_addr = INADDR_ANY;
-	
-	route.rt_dev = interface;
-	route.rt_flags = RTF_UP | RTF_GATEWAY;
-	route.rt_metric = 0;
-
-	*entry = route;
-}
-
-/*
- * Parsing example:
- * eth0 - 10.0.0.1
- * eth1 - 10.0.1.2
- */
-int get_neighbours(struct rtentry** entries, char* protocol) {
-	char* contents = _read_node_conf_file(protocol);
-	// Get number of neighbours
-	int n = 0, i = 0;
-	while (contents[i] != '\0') {
-		if (contents[i] == '\n') n++;
-		i++;
-	}
-	*entries = (struct rtentry*)malloc(n * sizeof(struct rtentry));
-	// Save start so contents can be freed
-	char* start = contents;
-	char* saved;
-	char* pch = strtok_r(contents, "\n", &saved);
-	i = 0;
-	while(pch != NULL) {
-		_parse_neighbour(pch, &((*entries)[i]));
-		pch = strtok_r(NULL, "\n", &saved);
-		i++;
-	}
-	free(start);
-	return n;
-}
-
 int get_open_socket(int port) {
 	int fd;
 	// Creating socket file descriptor
@@ -101,7 +32,7 @@ int get_socket(void) {
 	return sockfd;
 }
 
-int ps_receive(int sockfd, void* buffer, size_t n, struct sockaddr* from) {
+int receive(int sockfd, void* buffer, size_t n, struct sockaddr* from) {
 	int len = sizeof(struct sockaddr);
 	return recvfrom(sockfd, buffer, n, MSG_WAITALL, from, &len);
 }
@@ -110,4 +41,30 @@ char* ip_to_str(long ip) {
 	struct in_addr a;
 	a.s_addr = ip;
 	return inet_ntoa(a);
+}
+
+struct rtentry* get_routes(LocalNode* this) {
+	int n = this->node.n_neighbours;
+	struct rtentry* routes = (struct rtentry*)
+		malloc(n * sizeof(struct rtentry));
+	memset(routes, 0, n * sizeof(struct rtentry));
+
+	for (int i = 0; i < n; i++) {
+		struct sockaddr_in *addr = (struct sockaddr_in*) &routes[i].rt_gateway;
+		addr->sin_family = AF_INET;
+		addr->sin_addr.s_addr = this->node.neighbour_ips[i];
+
+		addr = (struct sockaddr_in*) &routes[i].rt_dst;
+		addr->sin_family = AF_INET;
+		addr->sin_addr.s_addr = this->node.neighbour_ips[i];
+
+		addr = (struct sockaddr_in*) &routes[i].rt_genmask;
+		addr->sin_family = AF_INET;
+		addr->sin_addr.s_addr = INADDR_ANY;
+		
+		routes[i].rt_dev = this->interfaces[i];
+		routes[i].rt_flags = RTF_UP | RTF_GATEWAY;
+		routes[i].rt_metric = 0;
+	}
+	return routes;
 }

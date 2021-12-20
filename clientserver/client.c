@@ -18,7 +18,7 @@
 #define PORT 8080
 #define MAXLINE 1024
 
-struct rtentry* neighbours;
+LocalNode this;
 
 // Driver code
 int driver(int argc, char** argv) {
@@ -33,13 +33,14 @@ int driver(int argc, char** argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	int n = get_neighbours(&neighbours, "hello");
+	int n = get_neighbours(&this, "hello");
+	struct rtentry* routes = get_routes(&this);
 
-	struct sockaddr_in* servaddr = (struct sockaddr_in*)&(neighbours[0].rt_dst);
+
+	struct sockaddr_in* servaddr = (struct sockaddr_in*)&(routes[0].rt_dst);
 	
 	servaddr->sin_port = htons(PORT);
-
-	// neighbours_log(neighbours, n);
+	
 	event_init();
 	Timer timer = event_timer_append(2, 0);
 
