@@ -14,6 +14,7 @@ typedef struct node {
   int id;
   uint32_t* source_ips;
   uint32_t* neighbour_ips;
+  int* neighbour_ids;
   // Whether the link is alive or we have detected a breakage
   char* neighbour_links_alive;
   int n_neighbours;

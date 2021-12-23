@@ -29,10 +29,12 @@ int _parse_link(char* pch, LocalNode* this, int i) {
 	char* interface = strtok_r(pch, " - ", &saved);
 	char* src_addr = strtok_r(NULL, " - ", &saved);
 	char* dst_addr = strtok_r(NULL, " - ", &saved);
+	char* dst_id = strtok_r(NULL, " - ", &saved);
 
 	strcpy(this->interfaces[i], interface);
 	inet_pton(AF_INET, src_addr, &(this->node.source_ips[i]));
 	inet_pton(AF_INET, dst_addr, &(this->node.neighbour_ips[i]));
+	this->node.neighbour_ids[i] = atoi(dst_id);
 }
 
 int get_node_id(char* protocol) {
@@ -51,10 +53,10 @@ int _parse_n_neighbours(char* contents) {
 
 /*
  * Format:
- * Interface - Source - Destination
+ * Interface - Src IP - Dst IP - Dst ID
  * Example:
- * eth0 - 10.0.0.2 - 10.0.0.1
- * eth1 - 10.0.1.1 - 10.0.1.2
+ * eth0 - 10.0.0.2 - 10.0.0.1 - 1
+ * eth1 - 10.0.1.1 - 10.0.1.2 - 2
  */
 int get_neighbours(LocalNode* this, char* protocol) {
 	this->node.id = get_node_id(protocol);

@@ -33,4 +33,6 @@ char timeout_heartbeat(int active_fd);
 
 int* init_fds(int* sockfds, int n_sockfds);
 
+char receive_lsa(int ls_sockfd);
+
 #endif
