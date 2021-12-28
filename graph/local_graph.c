@@ -35,10 +35,12 @@ void timeout_heartbeat(int active_fd, LSSockets* socks) {
 	char updated = 0;
 	for (int i = 0; i < this.node.n_neighbours; i++) {
 		if (this.timers[i].fd == active_fd) {
-			this.node.neighbour_links_alive[i] = 0;
-			log_f("%s DOWN", ip_to_str(this.node.neighbour_ips[i]));
-			event_timer_disarm(&this.timers[i]);
-			updated = 1;
+			if (this.node.neighbour_links_alive[i]) {
+				this.node.neighbour_links_alive[i] = 0;
+				log_f("%s DOWN", ip_to_str(this.node.neighbour_ips[i]));
+				event_timer_disarm(&this.timers[i]);
+				updated = 1;
+			}
 			break;
 		}
 	}
@@ -47,14 +49,13 @@ void timeout_heartbeat(int active_fd, LSSockets* socks) {
 	}
 }
 
-int* init_fds(int* sockfds, int n_sockfds) {
+void aggregate_fds(LSSockets* socks, int n_sockfds) {
+	socks->n_event_fds = this.node.n_neighbours + n_sockfds;
+	socks->event_fds = (int*)malloc(socks->n_event_fds * sizeof(int));
 	int i;
-	int* fds = (int*)malloc((this.node.n_neighbours + n_sockfds) * sizeof(int));
 	for (i = 0; i < this.node.n_neighbours; i++) {
-		fds[i] = this.timers[i].fd;
+		socks->event_fds[i] = this.timers[i].fd;
 	}
-	for (i = 0; i < n_sockfds; i++) {
-		fds[i + this.node.n_neighbours] = sockfds[i];
-	}
-	return fds;
+	socks->event_fds[this.node.n_neighbours] = socks->hb_sock;
+	socks->event_fds[this.node.n_neighbours + 1] = socks->lsa_rec_sock;
 }

@@ -35,7 +35,7 @@ typedef struct local_node {
 
 Node alloc_node(int n);
 
-LocalNode alloc_local_node(int n);
+LocalNode alloc_local_node(int n, int hb_timeout);
 
 void dealloc_node(Node* n);
 

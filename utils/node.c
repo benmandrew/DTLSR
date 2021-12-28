@@ -1,5 +1,6 @@
 
 #include "node.h"
+#include "string.h"
 
 Node alloc_node(int n) {
 	Node node;
@@ -14,13 +15,14 @@ Node alloc_node(int n) {
 // 'eth' + max 2 digit ID + null terminator
 #define IFACE_STR_MAX_LEN 6
 
-LocalNode alloc_local_node(int n) {
+LocalNode alloc_local_node(int n, int hb_timeout) {
 	LocalNode node;
 	node.node = alloc_node(n);
 	node.timers = (Timer*)malloc(n * sizeof(Timer));
 	node.interfaces = (char**)malloc(n * sizeof(char*));
 	node.if_arena_ptr = (char*)malloc(IFACE_STR_MAX_LEN * n * sizeof(char));
 	for (int i = 0; i < n; i++) {
+		node.timers[i] = event_timer_append(hb_timeout, 0);
 		node.interfaces[i] = node.if_arena_ptr + i * (IFACE_STR_MAX_LEN * sizeof(char));
 	}
 	return node;

@@ -13,6 +13,7 @@
 
 int get_node_id(char* protocol);
 
-int get_neighbours(LocalNode* neighbours, char* protocol);
+// Initialise 'this' node, allocating and populating neighbour information
+void init_this_node(LocalNode* this, char* protocol, int hb_timeout);
 
 #endif

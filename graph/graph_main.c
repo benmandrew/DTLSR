@@ -4,16 +4,12 @@
 
 LSSockets init_sockets(void) {
 	LSSockets socks;
-	int sock_arr[N_EVENT_SOCKS];
 	socks.hb_sock = get_open_socket(HB_PORT);
 	socks.lsa_rec_sock = get_open_socket(LSA_PORT);
 	socks.lsa_snd_sock = get_socket();
 	event_append(socks.hb_sock);
 	event_append(socks.lsa_rec_sock);
-	sock_arr[0] = socks.hb_sock;
-	sock_arr[1] = socks.lsa_rec_sock;
-	socks.event_fds = init_fds(sock_arr, N_EVENT_SOCKS);
-	socks.n_event_fds = N_EVENT_SOCKS;
+	aggregate_fds(&socks, N_EVENT_SOCKS);
 	return socks;
 }
 
@@ -24,24 +20,21 @@ void close_sockets(LSSockets* socks) {
 }
 
 int driver(int argc, char** argv) {
-	this = alloc_local_node(MAX_NODE_NUM);
-	get_neighbours(&this, "graph");
-	log_f("neighbours read");
+	init_this_node(&this, "graph", HEARTBEAT_TIMEOUT);
 	LSSockets socks = init_sockets();
-	log_f("sockets initialised");
 	while (1) {
 		int active_fd;
-		if ((active_fd = event_wait(socks.event_fds, socks.n_event_fds)) < 0)
+		if ((active_fd = event_wait(socks.event_fds, socks.n_event_fds)) < 0) {
 			continue;
+		}
 
-		log_f("event %d", active_fd);
-
-		if (active_fd == socks.hb_sock)
+		if (active_fd == socks.hb_sock) {
 			receive_heartbeat(&socks);
-		else if (active_fd == socks.lsa_rec_sock)
+		} else if (active_fd == socks.lsa_rec_sock) {
 			receive_lsa(&socks);
-		else
+		} else {
 			timeout_heartbeat(active_fd, &socks);
+		}
 	}
 	close_sockets(&socks);
 	return 0;

@@ -3,12 +3,6 @@
 
 #define CONFIG_PATH "/home/ben/projects/routing/configs"
 
-/*
- * Format:
- * ID
- * Example:
- * 1
- */
 char* _read_node_id_str(char* protocol) {
 	char filename[FILENAME_MAX];
 	sprintf(filename, "%s.id", protocol);
@@ -25,6 +19,8 @@ char* _read_node_conf_file(char* protocol) {
 }
 
 int _parse_link(char* pch, LocalNode* this, int i) {
+	// Format:
+	// iface - src_addr - dst_addr - dst_id
 	char* saved;
 	char* interface = strtok_r(pch, " - ", &saved);
 	char* src_addr = strtok_r(NULL, " - ", &saved);
@@ -51,19 +47,12 @@ int _parse_n_neighbours(char* contents) {
 	return n;
 }
 
-/*
- * Format:
- * Interface - Src IP - Dst IP - Dst ID
- * Example:
- * eth0 - 10.0.0.2 - 10.0.0.1 - 1
- * eth1 - 10.0.1.1 - 10.0.1.2 - 2
- */
-int get_neighbours(LocalNode* this, char* protocol) {
+void init_this_node(LocalNode* this, char* protocol, int hb_timeout) {
 	this->node.id = get_node_id(protocol);
 	char* contents = _read_node_conf_file(protocol);
 	// Get number of neighbours
 	int n = _parse_n_neighbours(contents);
-	*this = alloc_local_node(n);
+	*this = alloc_local_node(n, hb_timeout);
 	// Save start so contents can be freed
 	char* start = contents;
 	char* saved;
@@ -72,8 +61,10 @@ int get_neighbours(LocalNode* this, char* protocol) {
 	while(pch != NULL) {
 		_parse_link(pch, this, i);
 		pch = strtok_r(NULL, "\n", &saved);
+		// Links start DOWN
+		this->node.neighbour_links_alive[i] = 0;
+		event_timer_disarm(&this->timers[i]);
 		i++;
 	}
 	free(start);
-	return n;
 }

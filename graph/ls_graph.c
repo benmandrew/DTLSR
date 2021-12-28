@@ -18,9 +18,8 @@ void init_graph(void) {
 void local_update(Node* this) {
 	memcpy(&g.nodes[this->id], this, sizeof(Node));
 
-	// Not sure if neighbour back-links should be updated (or even need to be)
+	// Not sure if neighbour back-links need to be updated
 
-	// Update neighbour back-links
 	// for (int i = 0; i < this->n_neighbours; i++) {
 	// 	int id = this->neighbour_ids[i];
 	// 	Node* n = &g.nodes[id];

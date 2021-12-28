@@ -48,7 +48,7 @@ void receive_heartbeat(LSSockets* socks);
 
 void timeout_heartbeat(int active_fd, LSSockets* socks);
 
-int* init_fds(int* sockfds, int n_sockfds);
+void aggregate_fds(LSSockets* socks, int n_sockfds);
 
 void receive_lsa(LSSockets* socks);
 
