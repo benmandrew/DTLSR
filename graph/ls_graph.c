@@ -2,6 +2,8 @@
 #include "def.h"
 #include "graph.h"
 
+#include <errno.h>
+
 #define LSA_SIZE MAX_NODE_NUM * sizeof(Node)
 
 Graph g;
@@ -15,10 +17,10 @@ void init_graph(void) {
 	}
 }
 
-void local_update(Node* this) {
-	memcpy(&g.nodes[this->id], this, sizeof(Node));
+void update_global_this(Node* this) {
+	memcpy(&g.nodes[this->id - 1], this, sizeof(Node));
 
-	// Not sure if neighbour back-links need to be updated
+	// I don't think neighbour back-links need to be updated
 
 	// for (int i = 0; i < this->n_neighbours; i++) {
 	// 	int id = this->neighbour_ids[i];
@@ -29,9 +31,9 @@ void local_update(Node* this) {
 
 char merge_in(Node* nodes) {
 	char updated = 0;
-	for (int id = 0; id < MAX_NODE_NUM; id++) {
-		Node* this = &g.nodes[id];
-		Node* other = &nodes[id];
+	for (int i = 0; i < MAX_NODE_NUM; i++) {
+		Node* this = &g.nodes[i];
+		Node* other = &nodes[i];
 		// Node exists in neither graph, or only exists in our graph
 		if (other->id == -1) {
 			continue;
@@ -58,7 +60,6 @@ void receive_lsa(LSSockets* socks) {
 
 // Send LSA to all neighbours except one
 void send_lsa_except(LSSockets* socks, long source_addr) {
-	struct rtentry* routes = get_routes(&this);
 	for (int i = 0; i < this.node.n_neighbours; i++) {
 		// Skip neighbour from which LSA was originally received
 		if (this.node.neighbour_ips[i] == source_addr) continue;
@@ -67,10 +68,9 @@ void send_lsa_except(LSSockets* socks, long source_addr) {
 		neighbour_addr->sin_port = htons(LSA_PORT);
 		int addr_len = sizeof(*neighbour_addr);
 		// Send LSA to neighbour
-		sendto(socks->lsa_snd_sock, g.nodes, LSA_SIZE, MSG_CONFIRM,
-			(const struct sockaddr *) neighbour_addr, addr_len);
+		sendto(socks->lsa_snd_sock, (const void*)g.nodes, LSA_SIZE, MSG_CONFIRM,
+			(const struct sockaddr*)neighbour_addr, addr_len);
 	}
-	free(routes);
 }
 
 // Send LSA to all neighbours

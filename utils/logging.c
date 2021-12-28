@@ -17,7 +17,6 @@ static char* _get_time_str(void) {
 	time_t now;
 	struct tm ts;
 	char* time_buf = (char*)malloc(LOG_BUF_LEN * sizeof(char));
-
 	time(&now);
 	ts = *localtime(&now);
 	int l = strftime(time_buf, LOG_BUF_LEN * sizeof(char), "[%H:%M:%S]- ", &ts);

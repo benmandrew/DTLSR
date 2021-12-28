@@ -20,14 +20,15 @@ void close_sockets(LSSockets* socks) {
 }
 
 int driver(int argc, char** argv) {
+	init_graph();
 	init_this_node(&this, "graph", HEARTBEAT_TIMEOUT);
+	routes = get_routes(&this);
 	LSSockets socks = init_sockets();
 	while (1) {
 		int active_fd;
 		if ((active_fd = event_wait(socks.event_fds, socks.n_event_fds)) < 0) {
 			continue;
 		}
-
 		if (active_fd == socks.hb_sock) {
 			receive_heartbeat(&socks);
 		} else if (active_fd == socks.lsa_rec_sock) {

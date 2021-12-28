@@ -37,12 +37,14 @@ int driver(int argc, char** argv) {
 			event_timer_reset(&timer);
 			// Send heartbeat to every neighbour
 			for (int i = 0; i < this.node.n_neighbours; i++) {
-				struct sockaddr_in* neighbour_addr = (struct sockaddr_in*)&(routes[i].rt_dst);
+				struct sockaddr_in* neighbour_addr =
+					(struct sockaddr_in*)&(routes[i].rt_dst);
 				neighbour_addr->sin_port = htons(HB_PORT);
 				int addr_len = sizeof(*neighbour_addr);
-				// Send 'addr_len' just in case 'sendto' dereferences it even with zero length
+				// Send 'addr_len' just in case 'sendto'
+				// dereferences it even with zero length
 				sendto(sockfd, &addr_len, sizeof(addr_len), MSG_CONFIRM,
-					(const struct sockaddr *) neighbour_addr, addr_len);
+					(const struct sockaddr*)neighbour_addr, addr_len);
 			}
 			log_f("heartbeats sent");
 		}

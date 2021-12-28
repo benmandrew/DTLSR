@@ -19,6 +19,7 @@
 #include "node.h"
 
 LocalNode this;
+struct rtentry* routes;
 
 // Link-State Graph representation
 typedef struct Graph {
@@ -41,10 +42,11 @@ typedef struct LSSockets {
   int n_event_fds;
 } LSSockets;
 
-
-void init_node(void);
+void init_graph(void);
 
 void receive_heartbeat(LSSockets* socks);
+
+void update_global_this(Node* this);
 
 void timeout_heartbeat(int active_fd, LSSockets* socks);
 

@@ -41,3 +41,11 @@ void dealloc_local_node(LocalNode* n) {
 	free(n->interfaces);
 	free(n->if_arena_ptr);
 }
+
+void node_update_time(Node* n) {
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	n->timestamp =
+		(unsigned long long)(tv.tv_sec) * 1000 +
+    (unsigned long long)(tv.tv_usec) / 1000;
+}

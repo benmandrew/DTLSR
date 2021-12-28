@@ -18,8 +18,8 @@ typedef struct node {
   // Whether the link is alive or we have detected a breakage
   char* neighbour_links_alive;
   int n_neighbours;
-
-  long timestamp;
+  // Node last update time
+  unsigned long long timestamp;
 } Node;
 
 typedef struct local_node {
@@ -40,6 +40,8 @@ LocalNode alloc_local_node(int n, int hb_timeout);
 void dealloc_node(Node* n);
 
 void dealloc_local_node(LocalNode* n);
+
+void node_update_time(Node* n);
 
 // /* Take two sorted sets and merge them together to form another sorted set
 //  * Assuming no common values between the sets, n1 ∩ n2 = ∅

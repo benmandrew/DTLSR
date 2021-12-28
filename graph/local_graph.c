@@ -25,8 +25,12 @@ char buffer[HB_SIZE];
 void receive_heartbeat(LSSockets* socks) {
 	struct sockaddr_in from;
 	receive(socks->hb_sock, (void*)buffer, HB_SIZE, (struct sockaddr*)&from);
+	// Update node timestamp to now
+	node_update_time(&this.node);
 	char updated = register_heartbeat((long)from.sin_addr.s_addr);
 	if (updated) {
+		// Update global graph
+		update_global_this(&this.node);
 		send_lsa(socks);
 	}
 }
@@ -45,10 +49,13 @@ void timeout_heartbeat(int active_fd, LSSockets* socks) {
 		}
 	}
 	if (updated) {
+		// Update global graph
+		update_global_this(&this.node);
 		send_lsa(socks);
 	}
 }
 
+// Aggregate timer and socket file descriptors into a single array
 void aggregate_fds(LSSockets* socks, int n_sockfds) {
 	socks->n_event_fds = this.node.n_neighbours + n_sockfds;
 	socks->event_fds = (int*)malloc(socks->n_event_fds * sizeof(int));
