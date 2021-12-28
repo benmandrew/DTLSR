@@ -2,8 +2,6 @@
 #include "def.h"
 #include "graph.h"
 
-LocalNode this;
-
 char register_heartbeat(long source_addr) {
 	char updated = 0;
 	for (int i = 0; i < this.node.n_neighbours; i++) {
@@ -22,7 +20,18 @@ char register_heartbeat(long source_addr) {
 	return updated;
 }
 
-char timeout_heartbeat(int active_fd) {
+char buffer[HB_SIZE];
+
+void receive_heartbeat(LSSockets* socks) {
+	struct sockaddr_in from;
+	receive(socks->hb_sock, (void*)buffer, HB_SIZE, (struct sockaddr*)&from);
+	char updated = register_heartbeat((long)from.sin_addr.s_addr);
+	if (updated) {
+		send_lsa(socks);
+	}
+}
+
+void timeout_heartbeat(int active_fd, LSSockets* socks) {
 	char updated = 0;
 	for (int i = 0; i < this.node.n_neighbours; i++) {
 		if (this.timers[i].fd == active_fd) {
@@ -33,7 +42,9 @@ char timeout_heartbeat(int active_fd) {
 			break;
 		}
 	}
-	return updated;
+	if (updated) {
+		send_lsa(socks);
+	}
 }
 
 int* init_fds(int* sockfds, int n_sockfds) {
@@ -46,8 +57,4 @@ int* init_fds(int* sockfds, int n_sockfds) {
 		fds[i + this.node.n_neighbours] = sockfds[i];
 	}
 	return fds;
-}
-
-int get_n_neighbours(void) {
-	return this.node.n_neighbours;
 }

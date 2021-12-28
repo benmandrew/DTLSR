@@ -4,7 +4,7 @@
 
 #define HB_PORT 45000
 #define HB_SIZE sizeof(int)
-#define LS_PORT 45001
+#define LSA_PORT 45001
 
 #define HEARTBEAT_T 2
 // A bit of fudge factor

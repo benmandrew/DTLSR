@@ -18,21 +18,42 @@
 #include "fd_event.h"
 #include "node.h"
 
+LocalNode this;
+
+// Link-State Graph representation
 typedef struct Graph {
   Node* nodes;
   size_t n_nodes;
 } Graph;
 
-int get_n_neighbours(void);
+#define N_EVENT_SOCKS 2
+
+// Sockets required for Graph + event file descriptors
+typedef struct LSSockets {
+  // Heartbeat
+	int hb_sock;
+  // LSA receiving
+  int lsa_rec_sock;
+  // LSA sending
+  int lsa_snd_sock;
+  // Event system file descriptors
+  int* event_fds;
+  int n_event_fds;
+} LSSockets;
+
 
 void init_node(void);
 
-char register_heartbeat(long source_addr);
+void receive_heartbeat(LSSockets* socks);
 
-char timeout_heartbeat(int active_fd);
+void timeout_heartbeat(int active_fd, LSSockets* socks);
 
 int* init_fds(int* sockfds, int n_sockfds);
 
-char receive_lsa(int ls_sockfd);
+void receive_lsa(LSSockets* socks);
+
+void send_lsa_except(LSSockets* socks, int received_id);
+
+void send_lsa(LSSockets* socks);
 
 #endif

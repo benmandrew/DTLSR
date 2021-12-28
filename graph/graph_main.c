@@ -2,50 +2,43 @@
 #include "def.h"
 #include "graph.h"
 
-#define N_SOCKS 2
-
-char buffer[HB_SIZE];
-
-char receive_heartbeat(int hb_sockfd) {
-	struct sockaddr_in from;
-	receive(hb_sockfd, (void*)buffer, HB_SIZE, (struct sockaddr*)&from);
-	return register_heartbeat((long)from.sin_addr.s_addr);
+LSSockets init_sockets(void) {
+	LSSockets socks;
+	int sock_arr[N_EVENT_SOCKS];
+	socks.hb_sock = get_open_socket(HB_PORT);
+	socks.lsa_rec_sock = get_open_socket(LSA_PORT);
+	socks.lsa_snd_sock = get_socket();
+	event_append(socks.hb_sock);
+	event_append(socks.lsa_rec_sock);
+	sock_arr[0] = socks.hb_sock;
+	sock_arr[1] = socks.lsa_rec_sock;
+	socks.event_fds = init_fds(sock_arr, N_EVENT_SOCKS);
+	socks.n_event_fds = N_EVENT_SOCKS;
+	return socks;
 }
 
-void inner_loop(int* fds, int n_fds, int hb_sock, int ls_sock) {
-	int active_fd;
-	char graph_updated = 0;
-	if ((active_fd = event_wait(fds, n_fds)) < 0)
-		return;
-
-	if (active_fd == hb_sock)
-		graph_updated = receive_heartbeat(active_fd);
-	else if (active_fd == ls_sock)
-		graph_updated = receive_lsa(active_fd);
-	else
-		graph_updated = timeout_heartbeat(active_fd);
-
-	if (graph_updated) {
-		graph_updated = 0;
-	}
+void close_sockets(LSSockets* socks) {
+	close(socks->hb_sock);
+	close(socks->lsa_rec_sock);
+	close(socks->lsa_snd_sock);
 }
 
 int driver(int argc, char** argv) {
-	int socks[N_SOCKS];
-	int hb_sock = get_open_socket(HB_PORT);
-	int ls_sock = get_open_socket(LS_PORT);
-	socks[0] = hb_sock;
-	socks[1] = ls_sock;
-
-	event_append(hb_sock);
-	int* fds = init_fds(socks, N_SOCKS);
-	int n_fds = get_n_neighbours() + N_SOCKS;
+	get_neighbours(&this, "graph");
+	LSSockets socks = init_sockets();
 	while (1) {
-		inner_loop(fds, n_fds, hb_sock, ls_sock);
+		int active_fd;
+		if ((active_fd = event_wait(socks.event_fds, socks.n_event_fds)) < 0)
+			continue;
+
+		if (active_fd == socks.hb_sock)
+			receive_heartbeat(&socks);
+		else if (active_fd == socks.lsa_rec_sock)
+			receive_lsa(&socks);
+		else
+			timeout_heartbeat(active_fd, &socks);
 	}
-	// Close timer sockets pls
-	close(hb_sock);
-	close(ls_sock);
+	close_sockets(&socks);
 	return 0;
 }
 
