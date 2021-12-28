@@ -10,4 +10,6 @@
 // A bit of fudge factor
 #define HEARTBEAT_TIMEOUT HEARTBEAT_T + 2
 
+#define MAX_NODE_NUM 64
+
 #endif

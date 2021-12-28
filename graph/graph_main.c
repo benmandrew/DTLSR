@@ -24,12 +24,17 @@ void close_sockets(LSSockets* socks) {
 }
 
 int driver(int argc, char** argv) {
+	this = alloc_local_node(MAX_NODE_NUM);
 	get_neighbours(&this, "graph");
+	log_f("neighbours read");
 	LSSockets socks = init_sockets();
+	log_f("sockets initialised");
 	while (1) {
 		int active_fd;
 		if ((active_fd = event_wait(socks.event_fds, socks.n_event_fds)) < 0)
 			continue;
+
+		log_f("event %d", active_fd);
 
 		if (active_fd == socks.hb_sock)
 			receive_heartbeat(&socks);

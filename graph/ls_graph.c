@@ -2,9 +2,7 @@
 #include "def.h"
 #include "graph.h"
 
-#define MAX_NODE_NUM 64
-#define NODES_SIZE MAX_NODE_NUM * sizeof(Node)
-#define LSA_SIZE NODES_SIZE + sizeof(int)
+#define LSA_SIZE MAX_NODE_NUM * sizeof(Node)
 
 Graph g;
 
@@ -55,27 +53,22 @@ void receive_lsa(LSSockets* socks) {
 	receive(socks->lsa_rec_sock, (void*)buffer, LSA_SIZE, (struct sockaddr*)&from);
 	char updated = merge_in((Node*)buffer);
 	if (updated) {
-		int sending_node_id = buffer[NODES_SIZE];
-		send_lsa_except(socks, sending_node_id);
+		send_lsa_except(socks, (long)from.sin_addr.s_addr);
 	}
 }
 
 // Send LSA to all neighbours except one
-void send_lsa_except(LSSockets* socks, int received_id) {
-	// Store nodes
-	memcpy(buffer, g.nodes, NODES_SIZE);
-	// Store sending node ID at the end of the buffer
-	buffer[NODES_SIZE] = this.node.id;
+void send_lsa_except(LSSockets* socks, long source_addr) {
 	struct rtentry* routes = get_routes(&this);
 	for (int i = 0; i < this.node.n_neighbours; i++) {
 		// Skip neighbour from which LSA was originally received
-		if (this.node.neighbour_ids[i] == received_id) continue;
+		if (this.node.neighbour_ips[i] == source_addr) continue;
 		// Populate address struct
 		struct sockaddr_in* neighbour_addr = (struct sockaddr_in*)&(routes[i].rt_dst);
 		neighbour_addr->sin_port = htons(LSA_PORT);
 		int addr_len = sizeof(*neighbour_addr);
 		// Send LSA to neighbour
-		sendto(socks->lsa_snd_sock, buffer, LSA_SIZE, MSG_CONFIRM,
+		sendto(socks->lsa_snd_sock, g.nodes, LSA_SIZE, MSG_CONFIRM,
 			(const struct sockaddr *) neighbour_addr, addr_len);
 	}
 	free(routes);
@@ -83,5 +76,5 @@ void send_lsa_except(LSSockets* socks, int received_id) {
 
 // Send LSA to all neighbours
 void send_lsa(LSSockets* socks) {
-	send_lsa_except(socks, -1);
+	send_lsa_except(socks, 0);
 }

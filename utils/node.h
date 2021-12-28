@@ -23,14 +23,23 @@ typedef struct node {
 } Node;
 
 typedef struct local_node {
+  // Global node
   Node node;
+  // Heartbeat timer array
   Timer* timers;
+  // Outgoing interfaces
   char** interfaces;
+  // Book-keeping pointer for interface string arena
+  char* if_arena_ptr;
 } LocalNode;
 
 Node alloc_node(int n);
 
 LocalNode alloc_local_node(int n);
+
+void dealloc_node(Node* n);
+
+void dealloc_local_node(LocalNode* n);
 
 // /* Take two sorted sets and merge them together to form another sorted set
 //  * Assuming no common values between the sets, n1 ∩ n2 = ∅

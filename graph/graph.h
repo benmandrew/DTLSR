@@ -52,7 +52,7 @@ int* init_fds(int* sockfds, int n_sockfds);
 
 void receive_lsa(LSSockets* socks);
 
-void send_lsa_except(LSSockets* socks, int received_id);
+void send_lsa_except(LSSockets* socks, long source_addr);
 
 void send_lsa(LSSockets* socks);
 

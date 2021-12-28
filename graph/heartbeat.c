@@ -19,6 +19,7 @@
 LocalNode this;
 
 int driver(int argc, char** argv) {
+	this = alloc_local_node(MAX_NODE_NUM);
 	// Creating socket file descriptor
 	int sockfd = get_socket();
 	// Read neighbours
@@ -43,6 +44,7 @@ int driver(int argc, char** argv) {
 				// Send 'addr_len' just in case 'sendto' dereferences it even with zero length
 				sendto(sockfd, &addr_len, sizeof(addr_len), MSG_CONFIRM,
 					(const struct sockaddr *) neighbour_addr, addr_len);
+				log_f("");
 			}
 			log_f("heartbeats sent");
 		}
