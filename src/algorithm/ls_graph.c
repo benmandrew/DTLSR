@@ -1,8 +1,8 @@
 
-#include "graph/def.h"
-#include "graph/graph.h"
-
 #include <errno.h>
+
+#include "algorithm/def.h"
+#include "algorithm/graph.h"
 
 #define LSA_SIZE MAX_NODE_NUM * sizeof(Node)
 

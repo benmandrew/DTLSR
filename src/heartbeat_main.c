@@ -13,8 +13,7 @@
 #include "process/fd_event.h"
 #include "process/core_node.h"
 #include "network/packetsend.h"
-
-#include "graph/def.h"
+#include "algorithm/def.h"
 
 LocalNode this;
 

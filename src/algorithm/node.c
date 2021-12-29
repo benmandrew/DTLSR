@@ -1,6 +1,7 @@
 
-#include "graph/node.h"
 #include <string.h>
+
+#include "algorithm/node.h"
 
 Node alloc_node(int n) {
 	Node node;

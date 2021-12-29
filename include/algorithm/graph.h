@@ -16,7 +16,7 @@
 #include "process/daemonise.h"
 #include "process/fd_event.h"
 #include "network/packetsend.h"
-#include "graph/node.h"
+#include "algorithm/node.h"
 
 LocalNode this;
 struct rtentry* routes;

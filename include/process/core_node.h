@@ -8,7 +8,7 @@
 #include <string.h>
 #include <net/route.h>
 
-#include "graph/node.h"
+#include "algorithm/node.h"
 #include "process/fileio.h"
 
 int get_node_id(char* protocol);

@@ -1,6 +1,6 @@
 
-#include "graph/def.h"
-#include "graph/graph.h"
+#include "algorithm/def.h"
+#include "algorithm/graph.h"
 
 char register_heartbeat(long source_addr) {
 	char updated = 0;
