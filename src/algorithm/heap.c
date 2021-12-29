@@ -7,15 +7,15 @@ void swap(kv* a, kv* b) {
 	*b = c;
 }
 
-inline int parent(int i) {
+int parent(int i) {
 	return (i - 1) / 2;
 }
 
-inline int left(int i) {
+int left(int i) {
 	return 2 * i + 1;
 }
 
-inline int right(int i) {
+int right(int i) {
 	return 2 * i + 2;
 }
 
