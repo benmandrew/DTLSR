@@ -8,9 +8,9 @@
 #include <string.h>
 #include <net/route.h>
 
-#include "logging.h"
-#include "fileio.h"
-#include "core_node.h"
+#include "process/logging.h"
+#include "process/fileio.h"
+#include "process/core_node.h"
 
 int get_open_socket(int port);
 

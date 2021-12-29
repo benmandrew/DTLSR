@@ -12,11 +12,11 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-#include "logging.h"
-#include "daemonise.h"
-#include "packetsend.h"
-#include "fd_event.h"
-#include "node.h"
+#include "process/logging.h"
+#include "process/daemonise.h"
+#include "process/fd_event.h"
+#include "network/packetsend.h"
+#include "graph/node.h"
 
 LocalNode this;
 struct rtentry* routes;

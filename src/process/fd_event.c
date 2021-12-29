@@ -1,7 +1,9 @@
 
-#include "fd_event.h"
+#include "process/fd_event.h"
 
 #define DISARM_T __INT64_MAX__
+
+fd_set s;
 
 void event_init(void) {
 	FD_ZERO(&s);

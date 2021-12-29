@@ -1,5 +1,5 @@
 
-#include "heap.h"
+#include "graph/heap.h"
 
 void swap(kv* a, kv* b) {
 	kv c = *a;

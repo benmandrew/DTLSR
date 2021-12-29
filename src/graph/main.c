@@ -1,6 +1,6 @@
 
-#include "def.h"
-#include "graph.h"
+#include "graph/def.h"
+#include "graph/graph.h"
 
 LSSockets init_sockets(void) {
 	LSSockets socks;

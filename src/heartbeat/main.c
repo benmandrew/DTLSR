@@ -8,13 +8,13 @@
 #include <arpa/inet.h>
 #include <netinet/in.h>
 
-#include "logging.h"
-#include "daemonise.h"
-#include "fd_event.h"
-#include "packetsend.h"
-#include "core_node.h"
+#include "process/logging.h"
+#include "process/daemonise.h"
+#include "process/fd_event.h"
+#include "process/core_node.h"
+#include "network/packetsend.h"
 
-#include "def.h"
+#include "graph/def.h"
 
 LocalNode this;
 

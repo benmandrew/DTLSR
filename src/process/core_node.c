@@ -1,5 +1,5 @@
 
-#include "core_node.h"
+#include "process/core_node.h"
 
 #define CONFIG_PATH "/home/ben/projects/routing/configs"
 

@@ -1,19 +1,14 @@
 
-.PHONY: all clean utils utilsclean graph graphclean
+.PHONY: all clean
 
-all: utils graph
+OUTDIR = out
 
-clean: utilsclean graphclean
+all: $(OUTDIR)
+	$(MAKE) -C src all
 
+$(OUTDIR):
+	mkdir -p $(OUTDIR)
 
-utils:
-	$(MAKE) -C utils all
-
-utilsclean:
-	$(MAKE) -C utils clean
-
-graph:
-	$(MAKE) -C graph all
-
-graphclean:
-	$(MAKE) -C graph clean
+clean:
+	$(MAKE) -C src clean
+	rm -rf $(OUTDIR)

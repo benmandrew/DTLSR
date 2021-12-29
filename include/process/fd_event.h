@@ -9,9 +9,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-#include "logging.h"
-
-fd_set s;
+#include "process/logging.h"
 
 typedef struct Timer {
 	int fd;

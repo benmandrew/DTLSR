@@ -52,5 +52,6 @@ Mkfile.old
 dkms.conf
 
 */build/
+out/*
 
 .vscode/*

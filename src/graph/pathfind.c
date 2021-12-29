@@ -1,5 +1,5 @@
 
-#include "graph.h"
+#include "graph/graph.h"
 
 void pathfind(Graph* g) {
 	Node source = this.node;
