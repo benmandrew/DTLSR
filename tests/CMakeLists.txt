@@ -5,7 +5,9 @@ find_package(Check REQUIRED)
 include_directories(${CHECK_INCLUDE_DIRS})
 
 set(TEST_SOURCES
-  check_heap.c
+  algorithm/check_heap.c
+  algorithm/check_node.c
+  check.c
 )
 
 set(LINK_LIBS algorithm ${CHECK_LIBRARIES})

@@ -51,7 +51,7 @@ void init_this_node(LocalNode* this, char* protocol, int hb_timeout) {
 	char* contents = _read_node_conf_file(protocol);
 	// Get number of neighbours
 	int n = _parse_n_neighbours(contents);
-	*this = alloc_local_node(n, hb_timeout);
+	*this = node_local_alloc(n, hb_timeout);
 	this->node.id = get_node_id(protocol);
 	// Save start so contents can be freed
 	char* start = contents;

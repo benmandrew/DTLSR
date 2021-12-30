@@ -1,9 +1,11 @@
 
+#ifndef TEST_INCLUDES
+#define TEST_INCLUDES
 #include <stdlib.h>
 #include <check.h>
-#include "algorithm/heap.h"
+#endif
 
-#include <stdio.h>
+#include "algorithm/heap.h"
 
 START_TEST(test_heap_alloc) {
 	MinHeap h = minheap_alloc(64);
@@ -96,33 +98,3 @@ START_TEST(test_heap_decrease_dist) {
 	minheap_dealloc(&h);
 }
 END_TEST
-
-Suite * heap_suite(void) {
-	Suite *s;
-	TCase *tc_core;
-	s = suite_create("Heap");
-	/* Core test case */
-	tc_core = tcase_create("Core");
-	tcase_add_test(tc_core, test_heap_alloc);
-	tcase_add_test(tc_core, test_heap_build_heap);
-	tcase_add_test(tc_core, test_heap_pop);
-	tcase_add_test(tc_core, test_heap_insert);
-	tcase_add_test(tc_core, test_heap_decrease_dist);
-	suite_add_tcase(s, tc_core);
-	return s;
-}
-
-int main(void) {
-	int number_failed;
-	Suite *s;
-	SRunner *sr;
-
-	s = heap_suite();
-	sr = srunner_create(s);
-
-	// srunner_run_all(sr, CK_NORMAL);
-	srunner_run_all(sr, CK_VERBOSE);
-	number_failed = srunner_ntests_failed(sr);
-	srunner_free(sr);
-	return (number_failed == 0) ? EXIT_SUCCESS : EXIT_FAILURE;
-}

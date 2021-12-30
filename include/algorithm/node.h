@@ -33,13 +33,13 @@ typedef struct local_node {
   char* if_arena_ptr;
 } LocalNode;
 
-Node alloc_node(int n);
+Node node_alloc(int n);
 
-LocalNode alloc_local_node(int n, int hb_timeout);
+LocalNode node_local_alloc(int n, int hb_timeout);
 
-void dealloc_node(Node* n);
+void node_dealloc(Node* n);
 
-void dealloc_local_node(LocalNode* n);
+void node_local_dealloc(LocalNode* n);
 
 void node_update_time(Node* n);
 

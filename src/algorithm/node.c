@@ -3,7 +3,7 @@
 
 #include "algorithm/node.h"
 
-Node alloc_node(int n) {
+Node node_alloc(int n) {
 	Node node;
 	node.n_neighbours = n;
 	node.neighbour_ids = (int*)malloc(n * sizeof(int));
@@ -16,9 +16,9 @@ Node alloc_node(int n) {
 // 'eth' + max 2 digit ID + null terminator
 #define IFACE_STR_MAX_LEN 6
 
-LocalNode alloc_local_node(int n, int hb_timeout) {
+LocalNode node_local_alloc(int n, int hb_timeout) {
 	LocalNode node;
-	node.node = alloc_node(n);
+	node.node = node_alloc(n);
 	node.timers = (Timer*)malloc(n * sizeof(Timer));
 	node.interfaces = (char**)malloc(n * sizeof(char*));
 	node.if_arena_ptr = (char*)malloc(IFACE_STR_MAX_LEN * n * sizeof(char));
@@ -29,15 +29,15 @@ LocalNode alloc_local_node(int n, int hb_timeout) {
 	return node;
 };
 
-void dealloc_node(Node* n) {
+void node_dealloc(Node* n) {
 	free(n->neighbour_ids);
 	free(n->neighbour_ips);
 	free(n->source_ips);
 	free(n->neighbour_links_alive);
 }
 
-void dealloc_local_node(LocalNode* n) {
-	dealloc_node(&n->node);
+void node_local_dealloc(LocalNode* n) {
+	node_dealloc(&n->node);
 	free(n->timers);
 	free(n->interfaces);
 	free(n->if_arena_ptr);
