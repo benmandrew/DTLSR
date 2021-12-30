@@ -1,6 +1,8 @@
 
 #include "algorithm/heap.h"
 
+#include <stdio.h>
+
 void swap(kv* a, kv* b) {
 	kv c = *a;
 	*a = *b;
@@ -56,6 +58,12 @@ void minheap_decrease_dist(MinHeap* h, int id, int new_dist) {
 	while (i != 0 && h->nodes[parent(i)].dist > h->nodes[i].dist) {
 		swap(&h->nodes[i], &h->nodes[parent(i)]);
 		i = parent(i);
+	}
+}
+
+void minheap_build_heap(MinHeap* h) {
+	for (int i = h->size / 2 - 1; i >= 0; i--) {
+		minheap_heapify(h, i);
 	}
 }
 

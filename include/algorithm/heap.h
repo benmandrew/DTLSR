@@ -23,7 +23,7 @@ void minheap_insert(MinHeap* h, int id, int dist);
 
 void minheap_decrease_dist(MinHeap* h, int id, int new_dist);
 
-void minheap_heapify(MinHeap* h, int i);
+void minheap_build_heap(MinHeap* h);
 
 kv minheap_pop(MinHeap* h);
 

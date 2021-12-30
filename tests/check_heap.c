@@ -3,6 +3,8 @@
 #include <check.h>
 #include "algorithm/heap.h"
 
+#include <stdio.h>
+
 START_TEST(test_heap_alloc) {
 	MinHeap h = minheap_alloc(64);
 
@@ -13,29 +15,27 @@ START_TEST(test_heap_alloc) {
 }
 END_TEST
 
-START_TEST(test_heap_heapify) {
+START_TEST(test_heap_build_heap) {
 	MinHeap h = minheap_alloc(4);
+	h.size = 4;
 	for (int i = 0; i < 4; i++) {
-		h.nodes[i].node_id = i;
+		h.nodes[i].node_id = i + 1;
 		h.nodes[i].dist = 4 - i;
 	}
-	minheap_heapify(&h, 0);
+	minheap_build_heap(&h);
 
 	kv v = minheap_pop(&h);
+	ck_assert_int_eq(v.node_id, 4);
+	ck_assert_int_eq(v.dist, 1);
+	v = minheap_pop(&h);
 	ck_assert_int_eq(v.node_id, 3);
-	ck_assert_int_eq(v.dist, 0);
-
+	ck_assert_int_eq(v.dist, 2);
 	v = minheap_pop(&h);
 	ck_assert_int_eq(v.node_id, 2);
-	ck_assert_int_eq(v.dist, 1);
-
+	ck_assert_int_eq(v.dist, 3);
 	v = minheap_pop(&h);
 	ck_assert_int_eq(v.node_id, 1);
-	ck_assert_int_eq(v.dist, 2);
-
-	v = minheap_pop(&h);
-	ck_assert_int_eq(v.node_id, 0);
-	ck_assert_int_eq(v.dist, 3);
+	ck_assert_int_eq(v.dist, 4);
 
 	minheap_dealloc(&h);
 }
@@ -104,7 +104,7 @@ Suite * heap_suite(void) {
 	/* Core test case */
 	tc_core = tcase_create("Core");
 	tcase_add_test(tc_core, test_heap_alloc);
-	tcase_add_test(tc_core, test_heap_heapify);
+	tcase_add_test(tc_core, test_heap_build_heap);
 	tcase_add_test(tc_core, test_heap_pop);
 	tcase_add_test(tc_core, test_heap_insert);
 	tcase_add_test(tc_core, test_heap_decrease_dist);
