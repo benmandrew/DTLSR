@@ -42,7 +42,9 @@ typedef struct LSSockets {
   int n_event_fds;
 } LSSockets;
 
-void init_graph(void);
+void graph_init(void);
+
+void graph_dealloc(void);
 
 void receive_heartbeat(LSSockets* socks);
 

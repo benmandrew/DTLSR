@@ -8,13 +8,17 @@
 
 Graph g;
 
-void init_graph(void) {
+void graph_init(void) {
 	g.n_nodes = MAX_NODE_NUM;
 	g.nodes = (Node*)malloc(MAX_NODE_NUM * sizeof(Node));
 	for (int i = 0; i < MAX_NODE_NUM; i++) {
 		// This is how we show a node with id=i doesn't exist
 		g.nodes[i].id = -1;
 	}
+}
+
+void graph_dealloc(void) {
+	free(g.nodes);
 }
 
 void update_global_this(Node* this) {

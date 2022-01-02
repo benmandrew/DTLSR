@@ -1,8 +1,9 @@
 
 #include "algorithm/check_heap.c"
 #include "algorithm/check_node.c"
+#include "algorithm/check_pathfind.c"
 
-TCase* heap_case(void) {
+TCase* case_heap(void) {
 	TCase* tc = tcase_create("Heap");
 	tcase_add_test(tc, test_heap_alloc);
 	tcase_add_test(tc, test_heap_build_heap);
@@ -12,7 +13,7 @@ TCase* heap_case(void) {
 	return tc;
 }
 
-TCase* node_case(void) {
+TCase* case_node(void) {
 	TCase* tc = tcase_create("Node");
 	tcase_add_test(tc, test_node_alloc);
 	tcase_add_test(tc, test_node_local_alloc);
@@ -20,10 +21,17 @@ TCase* node_case(void) {
 	return tc;
 }
 
-Suite* graph_suite(void) {
+TCase* case_pathfind(void) {
+	TCase* tc = tcase_create("Pathfind");
+	tcase_add_test(tc, test_pathfind);
+	return tc;
+}
+
+Suite* suite_graph(void) {
 	Suite* s = suite_create("Graph");
-	suite_add_tcase(s, heap_case());
-	suite_add_tcase(s, node_case());
+	suite_add_tcase(s, case_heap());
+	suite_add_tcase(s, case_node());
+	suite_add_tcase(s, case_pathfind());
 	return s;
 }
 
@@ -32,8 +40,9 @@ int main(void) {
 	Suite *s_graph;
 	SRunner *sr;
 
-	s_graph = graph_suite();
+	s_graph = suite_graph();
 	sr = srunner_create(s_graph);
+	srunner_set_fork_status(sr, CK_NOFORK);
 
 	// srunner_run_all(sr, CK_NORMAL);
 	srunner_run_all(sr, CK_VERBOSE);

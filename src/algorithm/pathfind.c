@@ -19,12 +19,12 @@ DijkstraNode* dijkstra_init(Graph* g, int src_id) {
 	return nodes;
 }
 
-MinHeap* heap_init(DijkstraNode* nodes) {
+MinHeap heap_init(DijkstraNode* nodes) {
 	MinHeap h = minheap_alloc(MAX_NODE_NUM);
 	for (int i = 0; i < MAX_NODE_NUM; i++) {
 		minheap_insert(&h, &nodes[i]);
 	}
-	return &h;
+	return h;
 }
 
 int get_next_hop(DijkstraNode* nodes, int src_id, int dst_id) {
@@ -57,19 +57,19 @@ int* get_next_hops(DijkstraNode* nodes, int src_id) {
 
 DijkstraNode* dijkstra(Graph* g, int src_id) {
 	DijkstraNode* nodes = dijkstra_init(g, src_id);
-	MinHeap* h = heap_init(nodes);
-	while (h->size > 0) {
-		DijkstraNode* curr_node = minheap_pop(h);
+	MinHeap h = heap_init(nodes);
+	while (h.size > 0) {
+		DijkstraNode* curr_node = minheap_pop(&h);
 		for (int i = 0; i < curr_node->n_neighbours; i++) {
 			int alt = curr_node->tent_dist + 1;
 			DijkstraNode* neighbour = &nodes[curr_node->neighbour_ids[i]];
 			if (alt < neighbour->tent_dist) {
-				minheap_decrease_dist(h, neighbour->id, alt);
+				minheap_decrease_dist(&h, neighbour->id, alt);
 				neighbour->prev_id = curr_node->id;
 			}
 		}
 	}
-	minheap_dealloc(h);
+	minheap_dealloc(&h);
 	return nodes;
 }
 

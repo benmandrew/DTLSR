@@ -65,12 +65,6 @@ void minheap_decrease_dist(MinHeap* h, int id, int new_dist) {
 	}
 }
 
-void minheap_build_heap(MinHeap* h) {
-	for (int i = h->size / 2 - 1; i >= 0; i--) {
-		minheap_heapify(h, i);
-	}
-}
-
 void minheap_heapify(MinHeap* h, int i) {
     int l = left(i);
     int r = right(i);
@@ -87,6 +81,12 @@ void minheap_heapify(MinHeap* h, int i) {
         swap(&h->node_ptrs[i], &h->node_ptrs[smallest]);
         minheap_heapify(h, smallest);
     }
+}
+
+void minheap_build_heap(MinHeap* h) {
+	for (int i = h->size / 2 - 1; i >= 0; i--) {
+		minheap_heapify(h, i);
+	}
 }
 
 DijkstraNode* minheap_pop(MinHeap* h) {

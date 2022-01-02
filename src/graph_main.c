@@ -20,7 +20,7 @@ void close_sockets(LSSockets* socks) {
 }
 
 int driver(int argc, char** argv) {
-	init_graph();
+	graph_init();
 	init_this_node(&this, "graph", HEARTBEAT_TIMEOUT);
 	routes = get_routes(&this);
 	LSSockets socks = init_sockets();
