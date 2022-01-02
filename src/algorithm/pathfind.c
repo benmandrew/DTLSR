@@ -1,14 +1,5 @@
 
-#include "algorithm/def.h"
-#include "algorithm/graph.h"
-#include "algorithm/heap.h"
-
-void pathfind(Graph* g) {
-	Node source = this.node;
-	for (int i = 0; i < g->n_nodes; i++) {
-
-	}
-}
+#include "algorithm/pathfind.h"
 
 DijkstraNode* dijkstra_init(Graph* g, int src_id) {
 	DijkstraNode* nodes = (DijkstraNode*)malloc(MAX_NODE_NUM * sizeof(DijkstraNode));
@@ -36,13 +27,13 @@ MinHeap* heap_init(DijkstraNode* nodes) {
 	return &h;
 }
 
-int get_next_hop(DijkstraNode** node_ptrs, int src_id, int dst_id) {
+int get_next_hop(DijkstraNode* nodes, int src_id, int dst_id) {
 	DijkstraNode* next;
-	DijkstraNode* this = node_ptrs[dst_id];
+	DijkstraNode* this = &nodes[dst_id];
 	// Backtrace the route, keeping track of the 'next' hop
 	while (this->prev_id != -1) {
 		next = this;
-		this = node_ptrs[this->prev_id];
+		this = &nodes[this->prev_id];
 	}
 	// If the source has no route to the destination
 	if (this->id == dst_id) {
@@ -52,10 +43,21 @@ int get_next_hop(DijkstraNode** node_ptrs, int src_id, int dst_id) {
 	}
 }
 
-void dijkstra(Graph* g, int src_id) {
+int* get_next_hops(DijkstraNode* nodes, int src_id) {
+	int* next_hop_ids = (int*)malloc(MAX_NODE_NUM * sizeof(int));
+	for (int i = 0; i < MAX_NODE_NUM; i++) {
+		if (nodes[i].id != -1) {
+			next_hop_ids[i] = get_next_hop(nodes, src_id, i);
+		} else {
+			next_hop_ids[i] = -1;
+		}
+	}
+	return next_hop_ids;
+}
+
+DijkstraNode* dijkstra(Graph* g, int src_id) {
 	DijkstraNode* nodes = dijkstra_init(g, src_id);
 	MinHeap* h = heap_init(nodes);
-
 	while (h->size > 0) {
 		DijkstraNode* curr_node = minheap_pop(h);
 		for (int i = 0; i < curr_node->n_neighbours; i++) {
@@ -67,6 +69,13 @@ void dijkstra(Graph* g, int src_id) {
 			}
 		}
 	}
+	minheap_dealloc(h);
+	return nodes;
 }
 
-
+int* pathfind(Graph* g, int src_id) {
+	DijkstraNode* nodes = dijkstra(g, src_id);
+	int* next_hops = get_next_hops(nodes, src_id);
+	free(nodes);
+	return next_hops;
+}
