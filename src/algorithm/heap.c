@@ -3,8 +3,8 @@
 
 #include <stdio.h>
 
-void swap(kv* a, kv* b) {
-	kv c = *a;
+void swap(DijkstraNode** a, DijkstraNode** b) {
+	DijkstraNode* c = *a;
 	*a = *b;
 	*b = c;
 }
@@ -25,20 +25,22 @@ MinHeap minheap_alloc(int max) {
 	MinHeap h;
 	h.size = 0;
 	h.max_size = max;
-	h.nodes = (kv*)malloc(max * sizeof(kv));
+	h.node_ptrs = (DijkstraNode**)malloc(max * sizeof(DijkstraNode*));
 	return h;
 }
 
 void minheap_dealloc(MinHeap* h) {
-	free(h->nodes);
+	free(h->node_ptrs);
 }
 
-void minheap_insert(MinHeap* h, int id, int dist) {
+void minheap_insert(MinHeap* h, DijkstraNode* n) {
 	int i = h->size;
-	h->nodes[i] = (kv){.node_id=id, .dist=dist};
+	h->node_ptrs[i] = n;
 	h->size++;
-	while (i != 0 && h->nodes[parent(i)].dist > h->nodes[i].dist) {
-		swap(&h->nodes[i], &h->nodes[parent(i)]);
+	while (i != 0 &&
+			(*h->node_ptrs[parent(i)]).tent_dist >
+			(*h->node_ptrs[i]).tent_dist) {
+		swap(&h->node_ptrs[i], &h->node_ptrs[parent(i)]);
 		i = parent(i);
 	}
 }
@@ -48,15 +50,17 @@ void minheap_decrease_dist(MinHeap* h, int id, int new_dist) {
 	int i = 0;
 	char found = 0;
 	for (i = 0; i < h->max_size; i++) {
-		if (h->nodes[i].node_id == id) {
+		if ((*h->node_ptrs[i]).id == id) {
 			found = 1;
 			break;
 		}
 	}
 	if (!found) return;
-	h->nodes[i].dist = new_dist;
-	while (i != 0 && h->nodes[parent(i)].dist > h->nodes[i].dist) {
-		swap(&h->nodes[i], &h->nodes[parent(i)]);
+	(*h->node_ptrs[i]).tent_dist = new_dist;
+	while (i != 0 &&
+			(*h->node_ptrs[parent(i)]).tent_dist >
+			(*h->node_ptrs[i]).tent_dist) {
+		swap(&h->node_ptrs[i], &h->node_ptrs[parent(i)]);
 		i = parent(i);
 	}
 }
@@ -71,27 +75,29 @@ void minheap_heapify(MinHeap* h, int i) {
     int l = left(i);
     int r = right(i);
     int smallest = i;
-    if (l < h->size && h->nodes[l].dist < h->nodes[i].dist)
+    if (l < h->size &&
+					(*h->node_ptrs[l]).tent_dist <
+					(*h->node_ptrs[i]).tent_dist)
         smallest = l;
-    if (r < h->size && h->nodes[r].dist < h->nodes[smallest].dist)
+    if (r < h->size &&
+					(*h->node_ptrs[r]).tent_dist <
+					(*h->node_ptrs[smallest]).tent_dist)
         smallest = r;
     if (smallest != i) {
-        swap(&h->nodes[i], &h->nodes[smallest]);
+        swap(&h->node_ptrs[i], &h->node_ptrs[smallest]);
         minheap_heapify(h, smallest);
     }
 }
 
-kv minheap_pop(MinHeap* h) {
+DijkstraNode* minheap_pop(MinHeap* h) {
 	if (h->size == 1) {
 		h->size--;
-		return h->nodes[0];
+		return h->node_ptrs[0];
 	}
-	kv root = h->nodes[0];
-	h->nodes[0] = h->nodes[h->size - 1];
+	DijkstraNode* root = h->node_ptrs[0];
+	h->node_ptrs[0] = h->node_ptrs[h->size - 1];
 	h->size--;
 	minheap_heapify(h, 0);
 	return root;
 }
-
-
 
