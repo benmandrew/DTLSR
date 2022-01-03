@@ -23,7 +23,8 @@ TCase* case_node(void) {
 
 TCase* case_pathfind(void) {
 	TCase* tc = tcase_create("Pathfind");
-	tcase_add_test(tc, test_pathfind);
+	tcase_add_test(tc, test_pathfind_pentagon);
+	tcase_add_test(tc, test_pathfind_partition);
 	return tc;
 }
 
