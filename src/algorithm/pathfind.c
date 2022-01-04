@@ -22,6 +22,8 @@ DijkstraNode* dijkstra_init(Graph* g, int src_id) {
 		} else {
 			nodes[i].id = -1;
 		}
+
+		nodes[i].state = g->nodes[i].state;
 	}
 	return nodes;
 }
@@ -69,11 +71,13 @@ DijkstraNode* dijkstra(Graph* g, int src_id) {
 	MinHeap h = heap_init(nodes);
 	while (h.size > 0) {
 		DijkstraNode* curr_node = minheap_pop(&h);
+		if (curr_node->state == NODE_OPAQUE) {
+			continue;
+		}
 		for (int i = 0; i < curr_node->n_neighbours; i++) {
 			int alt = curr_node->tent_dist + 1;
 			DijkstraNode* neighbour = &nodes[curr_node->neighbour_ids[i] - 1];
 			if (alt < neighbour->tent_dist) {
-				// minheap_decrease_dist(&h, neighbour->id, alt);
 				neighbour->prev_id = curr_node->id;
 				neighbour->tent_dist = alt;
 				minheap_build_heap(&h);
@@ -94,9 +98,8 @@ int* pathfind(Graph* g, int src_id) {
 void pathfind_f(Graph* g, int src_id) {
 	int* next_hops = pathfind(g, src_id);
 	for (int i = 0; i < MAX_NODE_NUM; i++) {
-		if (g->nodes[i].id != -1) {
+		if (g->nodes[i].state != NODE_UNSEEN) {
 			log_f("%d through %d", i+1, next_hops[i]);
 		}
 	}
-	log_f("");
 }

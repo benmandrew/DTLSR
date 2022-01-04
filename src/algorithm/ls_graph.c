@@ -28,6 +28,7 @@ void update_global_this(Graph* g, Node* this) {
 		if (n->state == NODE_UNSEEN) {
 			n->id = id;
 			n->state = NODE_OPAQUE;
+			n->timestamp = this->timestamp;
 		}
 	}
 }
