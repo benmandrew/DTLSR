@@ -4,8 +4,11 @@
 
 #include <stdlib.h>
 
+#include "algorithm/graph.h"
+
 typedef struct dijkstra_node {
 	int id;
+	enum NodeState state;
 	int tent_dist;
 	int* neighbour_ids;
 	int n_neighbours;

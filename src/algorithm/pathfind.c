@@ -4,7 +4,7 @@
 DijkstraNode* dijkstra_init(Graph* g, int src_id) {
 	DijkstraNode* nodes = (DijkstraNode*)malloc(MAX_NODE_NUM * sizeof(DijkstraNode));
 	for (int i = 0; i < MAX_NODE_NUM; i++) {
-		if (g->nodes[i].id != -1) {
+		if (g->nodes[i].state == NODE_SEEN) {
 			nodes[i].id = g->nodes[i].id;
 			if (i + 1 == src_id) {
 				nodes[i].tent_dist = 0;
@@ -14,6 +14,10 @@ DijkstraNode* dijkstra_init(Graph* g, int src_id) {
 			}
 			nodes[i].neighbour_ids = g->nodes[i].neighbour_ids;
 			nodes[i].n_neighbours = g->nodes[i].n_neighbours;
+			nodes[i].prev_id = -1;
+		} else if (g->nodes[i].state == NODE_OPAQUE) {
+			nodes[i].id = g->nodes[i].id;
+			nodes[i].tent_dist = INT32_MAX - 100;
 			nodes[i].prev_id = -1;
 		} else {
 			nodes[i].id = -1;
@@ -85,4 +89,14 @@ int* pathfind(Graph* g, int src_id) {
 	int* next_hops = get_next_hops(nodes, src_id);
 	free(nodes);
 	return next_hops;
+}
+
+void pathfind_f(Graph* g, int src_id) {
+	int* next_hops = pathfind(g, src_id);
+	for (int i = 0; i < MAX_NODE_NUM; i++) {
+		if (g->nodes[i].id != -1) {
+			log_f("%d through %d", i+1, next_hops[i]);
+		}
+	}
+	log_f("");
 }

@@ -18,7 +18,6 @@
 #include "network/packetsend.h"
 #include "algorithm/node.h"
 
-LocalNode this;
 struct rtentry* routes;
 
 // Link-State Graph representation
@@ -42,22 +41,22 @@ typedef struct LSSockets {
   int n_event_fds;
 } LSSockets;
 
-void graph_init(void);
+void graph_init(Graph* g);
 
-void graph_dealloc(void);
+void graph_dealloc(Graph* g);
 
-void receive_heartbeat(LSSockets* socks);
+void receive_heartbeat(Graph* g, LocalNode* this, LSSockets* socks);
 
-void update_global_this(Node* this);
+void update_global_this(Graph* g, Node* this);
 
-void timeout_heartbeat(int active_fd, LSSockets* socks);
+void timeout_heartbeat(Graph* g, LocalNode* this, int active_fd, LSSockets* socks);
 
-void aggregate_fds(LSSockets* socks, int n_sockfds);
+void aggregate_fds(LocalNode* this, LSSockets* socks, int n_sockfds);
 
-void receive_lsa(LSSockets* socks);
+void receive_lsa(Graph* g, LocalNode* this, LSSockets* socks);
 
-void send_lsa_except(LSSockets* socks, long source_addr);
+void send_lsa_except(Graph* g, LocalNode* this, LSSockets* socks, long source_addr);
 
-void send_lsa(LSSockets* socks);
+void send_lsa(Graph* g, LocalNode* this, LSSockets* socks);
 
 #endif

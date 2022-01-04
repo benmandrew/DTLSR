@@ -8,4 +8,6 @@
 
 int* pathfind(Graph* g, int src_id);
 
+void pathfind_f(Graph* g, int src_id);
+
 #endif

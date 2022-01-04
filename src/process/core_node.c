@@ -3,22 +3,22 @@
 
 #define CONFIG_PATH "/home/ben/projects/routing/configs"
 
-char* _read_node_id_str(char* protocol) {
+char* read_node_id_str(char* protocol) {
 	char filename[FILENAME_MAX];
 	sprintf(filename, "%s.id", protocol);
 	return read_file(filename);
 }
 
-char* _read_node_conf_file(char* protocol) {
-	char* node_id = _read_node_id_str(protocol);
+char* read_node_conf_file(char* protocol, char* config) {
+	char* node_id = read_node_id_str(protocol);
 	// Use node ID to find the corresponding config file
 	char filename[FILENAME_MAX];
-	sprintf(filename, "%s/%s/n%s", CONFIG_PATH, protocol, node_id);
+	sprintf(filename, "%s/%s/n%s", CONFIG_PATH, config, node_id);
 	free(node_id);
 	return read_file(filename);
 }
 
-int _parse_link(char* pch, LocalNode* this, int i) {
+int parse_link(char* pch, LocalNode* this, int i) {
 	// Format:
 	// iface - src_addr - dst_addr - dst_id
 	char* saved;
@@ -34,11 +34,11 @@ int _parse_link(char* pch, LocalNode* this, int i) {
 }
 
 int get_node_id(char* protocol) {
-	return atoi(_read_node_id_str(protocol));
+	return atoi(read_node_id_str(protocol));
 }
 
 // Derive the number of neighbours from the neighbour file contents
-int _parse_n_neighbours(char* contents) {
+int parse_n_neighbours(char* contents) {
 	int n = 0, i = 0;
 	while (contents[i] != '\0') {
 		if (contents[i] == '\n') n++;
@@ -47,10 +47,10 @@ int _parse_n_neighbours(char* contents) {
 	return n;
 }
 
-void init_this_node(LocalNode* this, char* protocol, int hb_timeout) {
-	char* contents = _read_node_conf_file(protocol);
+void init_this_node(LocalNode* this, char* protocol, char* config, int hb_timeout) {
+	char* contents = read_node_conf_file(protocol, config);
 	// Get number of neighbours
-	int n = _parse_n_neighbours(contents);
+	int n = parse_n_neighbours(contents);
 	*this = node_local_alloc(n, hb_timeout);
 	this->node.id = get_node_id(protocol);
 	// Save start so contents can be freed
@@ -59,7 +59,7 @@ void init_this_node(LocalNode* this, char* protocol, int hb_timeout) {
 	char* pch = strtok_r(contents, "\n", &saved);
 	int i = 0;
 	while(pch != NULL) {
-		_parse_link(pch, this, i);
+		parse_link(pch, this, i);
 		pch = strtok_r(NULL, "\n", &saved);
 		// Links start DOWN
 		this->node.neighbour_links_alive[i] = 0;

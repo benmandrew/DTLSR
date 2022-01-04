@@ -15,13 +15,15 @@
 #include "network/packetsend.h"
 #include "algorithm/def.h"
 
-LocalNode this;
+#define PROTOCOL "graph"
+#define CONFIG "partition"
 
 int driver(int argc, char** argv) {
+	LocalNode this;
 	// Creating socket file descriptor
 	int sockfd = get_socket();
 	// Read neighbours
-	init_this_node(&this, "graph", HEARTBEAT_TIMEOUT);
+	init_this_node(&this, PROTOCOL, CONFIG, HEARTBEAT_TIMEOUT);
 	struct rtentry* routes = get_routes(&this);
 	// Create heartbeat timer
 	Timer timer = event_timer_append(HEARTBEAT_T, 0);

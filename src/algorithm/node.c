@@ -5,6 +5,7 @@
 
 Node node_alloc(int n) {
 	Node node;
+	node.state = NODE_SEEN;
 	node.n_neighbours = n;
 	node.neighbour_ids = (int*)malloc(n * sizeof(int));
 	node.neighbour_ips = (uint32_t*)malloc(n * sizeof(uint32_t));
