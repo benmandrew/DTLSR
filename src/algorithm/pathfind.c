@@ -103,4 +103,5 @@ void pathfind_f(Node* graph, int src_id) {
 			log_f("%d through %d", i+1, next_hops[i]);
 		}
 	}
+	log_f("");
 }

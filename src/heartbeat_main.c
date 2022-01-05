@@ -1,22 +1,11 @@
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
-
+#include "filenames.h"
 #include "process/logging.h"
 #include "process/daemonise.h"
 #include "process/fd_event.h"
 #include "process/core_node.h"
 #include "network/packetsend.h"
 #include "algorithm/def.h"
-
-#define PROTOCOL "graph"
-#define CONFIG "partition"
 
 int driver(int argc, char** argv) {
 	LocalNode this;

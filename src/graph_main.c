@@ -1,9 +1,8 @@
 
+#include "filenames.h"
 #include "algorithm/def.h"
 #include "algorithm/graph.h"
 
-#define PROTOCOL "graph"
-#define CONFIG "partition"
 
 LSSockets init_sockets(LocalNode* this) {
 	LSSockets socks;
