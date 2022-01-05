@@ -36,13 +36,10 @@ int driver(int argc, char** argv) {
 			continue;
 		}
 		if (active_fd == socks.hb_sock) {
-			log_f("HB");
 			receive_heartbeat(graph, &this, &socks);
 		} else if (active_fd == socks.lsa_rec_sock) {
-			log_f("LSA");
 			receive_lsa(graph, &this, &socks);
 		} else {
-			log_f("TMO");
 			timeout_heartbeat(graph, &this, active_fd, &socks);
 		}
 	}

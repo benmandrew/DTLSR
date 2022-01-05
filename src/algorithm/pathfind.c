@@ -1,29 +1,26 @@
 
 #include "algorithm/pathfind.h"
 
+// Disgusting, but the Linux kernel uses this exact thing so oh well
+#define FIELD_SIZEOF(t, f) (sizeof(((t*)0)->f))
+
 DijkstraNode* dijkstra_init(Node* graph, int src_id) {
 	DijkstraNode* nodes = (DijkstraNode*)malloc(MAX_NODE_NUM * sizeof(DijkstraNode));
 	for (int i = 0; i < MAX_NODE_NUM; i++) {
+		nodes[i].id = graph[i].id;
+		nodes[i].state = graph[i].state;
+		// INT32_MAX - 100 so that incrementing doesn't cause overflow
+		nodes[i].tent_dist = INT32_MAX - 100;
+		nodes[i].prev_id = -1;
 		if (graph[i].state == NODE_SEEN) {
-			nodes[i].id = graph[i].id;
 			if (i + 1 == src_id) {
 				nodes[i].tent_dist = 0;
-			} else {
-				// INT32_MAX - 100 so that incrementing doesn't cause overflow
-				nodes[i].tent_dist = INT32_MAX - 100;
 			}
-			nodes[i].neighbour_ids = graph[i].neighbour_ids;
 			nodes[i].n_neighbours = graph[i].n_neighbours;
+			memcpy(nodes[i].neighbour_ids, graph[i].neighbour_ids, FIELD_SIZEOF(Node, neighbour_ids));
+			memcpy(nodes[i].link_statuses, graph[i].link_statuses, FIELD_SIZEOF(Node, link_statuses));
 			nodes[i].prev_id = -1;
-		} else if (graph[i].state == NODE_OPAQUE) {
-			nodes[i].id = graph[i].id;
-			nodes[i].tent_dist = INT32_MAX - 100;
-			nodes[i].prev_id = -1;
-		} else {
-			nodes[i].id = -1;
 		}
-
-		nodes[i].state = graph[i].state;
 	}
 	return nodes;
 }
@@ -31,7 +28,7 @@ DijkstraNode* dijkstra_init(Node* graph, int src_id) {
 MinHeap heap_init(DijkstraNode* nodes) {
 	MinHeap h = minheap_alloc(MAX_NODE_NUM);
 	for (int i = 0; i < MAX_NODE_NUM; i++) {
-		if (nodes[i].id != -1) {
+		if (nodes[i].state != NODE_UNSEEN) {
 			minheap_insert(&h, &nodes[i]);
 		}
 	}
@@ -75,8 +72,12 @@ DijkstraNode* dijkstra(Node* graph, int src_id) {
 			continue;
 		}
 		for (int i = 0; i < curr_node->n_neighbours; i++) {
-			int alt = curr_node->tent_dist + 1;
+			// Discard neighbours connected to by DOWN links
+			if (curr_node->link_statuses[i] == LINK_DOWN) {
+				continue;
+			}
 			DijkstraNode* neighbour = &nodes[curr_node->neighbour_ids[i] - 1];
+			int alt = curr_node->tent_dist + 1;
 			if (alt < neighbour->tent_dist) {
 				neighbour->prev_id = curr_node->id;
 				neighbour->tent_dist = alt;

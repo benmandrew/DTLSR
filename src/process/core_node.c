@@ -63,7 +63,7 @@ void init_this_node(LocalNode* this, char* protocol, char* config, int hb_timeou
 		parse_link(pch, this, i);
 		pch = strtok_r(NULL, "\n", &saved);
 		// Links start DOWN
-		this->node.neighbour_links_alive[i] = 0;
+		this->node.link_statuses[i] = LINK_DOWN;
 		event_timer_disarm(&this->timers[i]);
 		i++;
 	}

@@ -10,9 +10,9 @@ char register_heartbeat(LocalNode* this, long source_addr) {
 			// Reset timer
 			event_timer_arm(&this->timers[i], HEARTBEAT_TIMEOUT, 0);
 			// If link was DOWN then it is now UP
-			if (!this->node.neighbour_links_alive[i]) {
+			if (this->node.link_statuses[i] == LINK_DOWN) {
 				log_f("%s UP", ip_to_str(source_addr));
-				this->node.neighbour_links_alive[i] = 1;
+				this->node.link_statuses[i] = LINK_UP;
 				updated = 1;
 				break;
 			}
@@ -41,8 +41,8 @@ void timeout_heartbeat(Node* graph, LocalNode* this, int active_fd, LSSockets* s
 	char updated = 0;
 	for (int i = 0; i < this->node.n_neighbours; i++) {
 		if (this->timers[i].fd == active_fd) {
-			if (this->node.neighbour_links_alive[i]) {
-				this->node.neighbour_links_alive[i] = 0;
+			if (this->node.link_statuses[i] == LINK_UP) {
+				this->node.link_statuses[i] = LINK_DOWN;
 				log_f("%s DOWN", ip_to_str(this->node.neighbour_ips[i]));
 				event_timer_disarm(&this->timers[i]);
 				updated = 1;

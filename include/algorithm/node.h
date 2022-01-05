@@ -17,7 +17,13 @@ enum NodeState {
   NODE_SEEN
 };
 
-/* Graph representation of an IP node
+enum LinkState {
+  LINK_DOWN,
+  LINK_UP
+};
+
+/*
+ * Logical representation of a network node in the graph
  */
 typedef struct node {
   int id;
@@ -28,7 +34,7 @@ typedef struct node {
   uint32_t neighbour_ips[MAX_NODE_FAN];
   int neighbour_ids[MAX_NODE_FAN];
   // Whether the link is alive or we have detected a breakage
-  char neighbour_links_alive[MAX_NODE_FAN];
+  enum LinkState link_statuses[MAX_NODE_FAN];
   // Node last update time
   unsigned long long timestamp;
 } Node;
