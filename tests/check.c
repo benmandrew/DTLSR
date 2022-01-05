@@ -16,7 +16,7 @@ TCase* case_heap(void) {
 
 TCase* case_node(void) {
 	TCase* tc = tcase_create("Node");
-	tcase_add_test(tc, test_node_alloc);
+	tcase_add_test(tc, test_node_init);
 	tcase_add_test(tc, test_node_local_alloc);
 	tcase_add_test(tc, test_node_update_time);
 	return tc;
@@ -26,6 +26,7 @@ TCase* case_pathfind(void) {
 	TCase* tc = tcase_create("Pathfind");
 	tcase_add_test(tc, test_pathfind_pentagon);
 	tcase_add_test(tc, test_pathfind_partition);
+	tcase_add_test(tc, test_pathfind_opaque);
 	return tc;
 }
 
@@ -41,7 +42,7 @@ Suite* suite_graph(void) {
 	suite_add_tcase(s, case_heap());
 	suite_add_tcase(s, case_node());
 	suite_add_tcase(s, case_pathfind());
-	suite_add_tcase(s, case_ls_graph());
+	// suite_add_tcase(s, case_ls_graph());
 	return s;
 }
 

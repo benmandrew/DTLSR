@@ -34,6 +34,7 @@ void minheap_dealloc(MinHeap* h) {
 }
 
 void minheap_insert(MinHeap* h, DijkstraNode* n) {
+	assert(h->size < h->max_size);
 	int i = h->size;
 	h->node_ptrs[i] = n;
 	h->size++;

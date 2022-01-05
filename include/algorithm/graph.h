@@ -20,12 +20,6 @@
 
 struct rtentry* routes;
 
-// Link-State Graph representation
-typedef struct Graph {
-  Node* nodes;
-  size_t n_nodes;
-} Graph;
-
 #define N_EVENT_SOCKS 2
 
 // Sockets required for Graph + event file descriptors
@@ -41,24 +35,22 @@ typedef struct LSSockets {
   int n_event_fds;
 } LSSockets;
 
-void graph_init(Graph* g);
+void graph_init(Node* graph);
 
-void graph_dealloc(Graph* g);
+void receive_heartbeat(Node* graph, LocalNode* this, LSSockets* socks);
 
-void receive_heartbeat(Graph* g, LocalNode* this, LSSockets* socks);
-
-void update_global_this(Graph* g, Node* this);
+void update_global_this(Node* graph, Node* this);
 
 char merge_in(Node* these, Node* others);
 
-void timeout_heartbeat(Graph* g, LocalNode* this, int active_fd, LSSockets* socks);
+void timeout_heartbeat(Node* graph, LocalNode* this, int active_fd, LSSockets* socks);
 
 void aggregate_fds(LocalNode* this, LSSockets* socks, int n_sockfds);
 
-void receive_lsa(Graph* g, LocalNode* this, LSSockets* socks);
+void receive_lsa(Node* graph, LocalNode* this, LSSockets* socks);
 
-void send_lsa_except(Graph* g, LocalNode* this, LSSockets* socks, long source_addr);
+void send_lsa_except(Node* graph, LocalNode* this, LSSockets* socks, long source_addr);
 
-void send_lsa(Graph* g, LocalNode* this, LSSockets* socks);
+void send_lsa(Node* graph, LocalNode* this, LSSockets* socks);
 
 #endif

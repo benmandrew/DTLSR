@@ -6,8 +6,8 @@
 #include "algorithm/graph.h"
 #include "algorithm/heap.h"
 
-int* pathfind(Graph* g, int src_id);
+int* pathfind(Node* graph, int src_id);
 
-void pathfind_f(Graph* g, int src_id);
+void pathfind_f(Node* graph, int src_id);
 
 #endif

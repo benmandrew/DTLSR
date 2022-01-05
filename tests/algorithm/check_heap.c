@@ -102,8 +102,8 @@ START_TEST(test_heap_decrease_dist) {
 	nodes[1].tent_dist = 10;
 	nodes[2].id = 3;
 	nodes[2].tent_dist = 20;
-	nodes[2].id = 4;
-	nodes[2].tent_dist = 15;
+	nodes[3].id = 4;
+	nodes[3].tent_dist = 15;
 	minheap_insert(&h, &nodes[0]);
 	minheap_insert(&h, &nodes[1]);
 	minheap_insert(&h, &nodes[2]);

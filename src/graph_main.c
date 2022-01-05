@@ -23,11 +23,11 @@ void close_sockets(LSSockets* socks) {
 }
 
 int driver(int argc, char** argv) {
-	Graph g;
+	Node graph[MAX_NODE_NUM];
 	LocalNode this;
-	graph_init(&g);
+	graph_init(graph);
 	init_this_node(&this, PROTOCOL, CONFIG, HEARTBEAT_TIMEOUT);
-	update_global_this(&g, &this.node);
+	update_global_this(graph, &this.node);
 	routes = get_routes(&this);
 	LSSockets socks = init_sockets(&this);
 	while (1) {
@@ -37,17 +37,16 @@ int driver(int argc, char** argv) {
 		}
 		if (active_fd == socks.hb_sock) {
 			log_f("HB");
-			receive_heartbeat(&g, &this, &socks);
+			receive_heartbeat(graph, &this, &socks);
 		} else if (active_fd == socks.lsa_rec_sock) {
 			log_f("LSA");
-			receive_lsa(&g, &this, &socks);
+			receive_lsa(graph, &this, &socks);
 		} else {
 			log_f("TMO");
-			timeout_heartbeat(&g, &this, active_fd, &socks);
+			timeout_heartbeat(graph, &this, active_fd, &socks);
 		}
 	}
 	close_sockets(&socks);
-	graph_dealloc(&g);
 	return 0;
 }
 

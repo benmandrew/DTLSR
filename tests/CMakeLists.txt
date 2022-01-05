@@ -13,8 +13,8 @@ set(TEST_SOURCES
 
 set(LINK_LIBS algorithm ${CHECK_LIBRARIES})
 
-# SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage")
-SET(GCC_COVERAGE_LINK_FLAGS "-pthread")
+SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage -fsanitize=address -fsanitize=undefined")
+SET(GCC_COVERAGE_LINK_FLAGS "-pthread -fsanitize=address -fsanitize=undefined")
 SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
 
 add_executable(check ${TEST_SOURCES})

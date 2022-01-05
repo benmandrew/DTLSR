@@ -1,29 +1,29 @@
 
 #include "algorithm/pathfind.h"
 
-DijkstraNode* dijkstra_init(Graph* g, int src_id) {
+DijkstraNode* dijkstra_init(Node* graph, int src_id) {
 	DijkstraNode* nodes = (DijkstraNode*)malloc(MAX_NODE_NUM * sizeof(DijkstraNode));
 	for (int i = 0; i < MAX_NODE_NUM; i++) {
-		if (g->nodes[i].state == NODE_SEEN) {
-			nodes[i].id = g->nodes[i].id;
+		if (graph[i].state == NODE_SEEN) {
+			nodes[i].id = graph[i].id;
 			if (i + 1 == src_id) {
 				nodes[i].tent_dist = 0;
 			} else {
 				// INT32_MAX - 100 so that incrementing doesn't cause overflow
 				nodes[i].tent_dist = INT32_MAX - 100;
 			}
-			nodes[i].neighbour_ids = g->nodes[i].neighbour_ids;
-			nodes[i].n_neighbours = g->nodes[i].n_neighbours;
+			nodes[i].neighbour_ids = graph[i].neighbour_ids;
+			nodes[i].n_neighbours = graph[i].n_neighbours;
 			nodes[i].prev_id = -1;
-		} else if (g->nodes[i].state == NODE_OPAQUE) {
-			nodes[i].id = g->nodes[i].id;
+		} else if (graph[i].state == NODE_OPAQUE) {
+			nodes[i].id = graph[i].id;
 			nodes[i].tent_dist = INT32_MAX - 100;
 			nodes[i].prev_id = -1;
 		} else {
 			nodes[i].id = -1;
 		}
 
-		nodes[i].state = g->nodes[i].state;
+		nodes[i].state = graph[i].state;
 	}
 	return nodes;
 }
@@ -66,8 +66,8 @@ int* get_next_hops(DijkstraNode* nodes, int src_id) {
 	return next_hop_ids;
 }
 
-DijkstraNode* dijkstra(Graph* g, int src_id) {
-	DijkstraNode* nodes = dijkstra_init(g, src_id);
+DijkstraNode* dijkstra(Node* graph, int src_id) {
+	DijkstraNode* nodes = dijkstra_init(graph, src_id);
 	MinHeap h = heap_init(nodes);
 	while (h.size > 0) {
 		DijkstraNode* curr_node = minheap_pop(&h);
@@ -88,17 +88,17 @@ DijkstraNode* dijkstra(Graph* g, int src_id) {
 	return nodes;
 }
 
-int* pathfind(Graph* g, int src_id) {
-	DijkstraNode* nodes = dijkstra(g, src_id);
+int* pathfind(Node* graph, int src_id) {
+	DijkstraNode* nodes = dijkstra(graph, src_id);
 	int* next_hops = get_next_hops(nodes, src_id);
 	free(nodes);
 	return next_hops;
 }
 
-void pathfind_f(Graph* g, int src_id) {
-	int* next_hops = pathfind(g, src_id);
+void pathfind_f(Node* graph, int src_id) {
+	int* next_hops = pathfind(graph, src_id);
 	for (int i = 0; i < MAX_NODE_NUM; i++) {
-		if (g->nodes[i].state != NODE_UNSEEN) {
+		if (graph[i].state != NODE_UNSEEN) {
 			log_f("%d through %d", i+1, next_hops[i]);
 		}
 	}

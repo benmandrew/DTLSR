@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
+#include "algorithm/def.h"
 #include "process/fd_event.h"
 
 enum NodeState {
@@ -23,11 +24,11 @@ typedef struct node {
   // Do we know about this node from its LSA, or just opaquely as a neighbour?
   enum NodeState state;
   int n_neighbours;
-  uint32_t* source_ips;
-  uint32_t* neighbour_ips;
-  int* neighbour_ids;
+  uint32_t source_ips[MAX_NODE_FAN];
+  uint32_t neighbour_ips[MAX_NODE_FAN];
+  int neighbour_ids[MAX_NODE_FAN];
   // Whether the link is alive or we have detected a breakage
-  char* neighbour_links_alive;
+  char neighbour_links_alive[MAX_NODE_FAN];
   // Node last update time
   unsigned long long timestamp;
 } Node;
@@ -43,11 +44,9 @@ typedef struct local_node {
   char* if_arena_ptr;
 } LocalNode;
 
-Node node_alloc(int n);
+void node_init(Node* node, int n);
 
-LocalNode node_local_alloc(int n, int hb_timeout);
-
-void node_dealloc(Node* n);
+LocalNode node_local_alloc(int id, int n, int hb_timeout);
 
 void node_local_dealloc(LocalNode* n);
 
