@@ -52,6 +52,8 @@ typedef struct local_node {
 
 void node_init(Node* node, int n);
 
+char nodes_eq(Node* n1, Node* n2);
+
 LocalNode node_local_alloc(int id, int n, int hb_timeout);
 
 void node_local_dealloc(LocalNode* n);

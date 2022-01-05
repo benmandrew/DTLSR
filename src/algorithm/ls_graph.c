@@ -17,7 +17,7 @@ void graph_init(Node* graph) {
 
 void update_global_this(Node* graph, Node* this) {
 	memcpy(&graph[this->id - 1], this, sizeof(Node));
-
+	// Update neighbours
 	for (int i = 0; i < this->n_neighbours; i++) {
 		int id = this->neighbour_ids[i];
 		Node* n = &graph[id - 1];
@@ -50,9 +50,11 @@ char merge_in(Node* these, Node* others) {
 			updated = 1;
 		}
 		// other is a seen node we have also seen, but a more recent version
-		if (other->state == NODE_SEEN || (other->timestamp > this->timestamp)) {
-			memcpy(this, other, sizeof(Node));
-			updated = 1;
+		if (other->state == NODE_SEEN && (other->timestamp > this->timestamp)) {
+			if (!nodes_eq(this, other)) {
+				memcpy(this, other, sizeof(Node));
+				updated = 1;
+			}
 		}
 	}
 	return updated;

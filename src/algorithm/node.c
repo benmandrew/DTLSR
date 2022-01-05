@@ -10,6 +10,20 @@ void node_init(Node* node, int n) {
 	node->timestamp = 0;
 };
 
+char nodes_eq(Node* n1, Node* n2) {
+	char eq = (
+		n1->id == n2->id &&
+		n1->state == n2->state);
+	if (!eq || n1->n_neighbours != n2->n_neighbours) return 0;
+	for (int i = 0; i < n1->n_neighbours; i++) {
+		eq &= (
+			n1->neighbour_ids[i] == n2->neighbour_ids[i] &&
+			n1->link_statuses[i] == n2->link_statuses[i]);
+		if (!eq) return 0;
+	}
+	return eq;
+}
+
 // 'eth' + max 2 digit ID + null terminator
 #define IFACE_STR_MAX_LEN 6
 
