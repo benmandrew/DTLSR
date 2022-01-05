@@ -49,7 +49,7 @@ void minheap_insert(MinHeap* h, DijkstraNode* n) {
 void minheap_decrease_dist(MinHeap* h, int id, int new_dist) {
 	int i = 0;
 	char found = 0;
-	for (i = 0; i < h->max_size; i++) {
+	for (i = 0; i < h->size; i++) {
 		if ((*h->node_ptrs[i]).id == id) {
 			found = 1;
 			break;

@@ -49,6 +49,8 @@ void receive_heartbeat(Graph* g, LocalNode* this, LSSockets* socks);
 
 void update_global_this(Graph* g, Node* this);
 
+char merge_in(Node* these, Node* others);
+
 void timeout_heartbeat(Graph* g, LocalNode* this, int active_fd, LSSockets* socks);
 
 void aggregate_fds(LocalNode* this, LSSockets* socks, int n_sockfds);

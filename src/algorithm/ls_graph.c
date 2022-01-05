@@ -11,6 +11,7 @@ void graph_init(Graph* g) {
 	g->n_nodes = MAX_NODE_NUM;
 	g->nodes = (Node*)malloc(MAX_NODE_NUM * sizeof(Node));
 	for (int i = 0; i < MAX_NODE_NUM; i++) {
+		g->nodes[i].id = i + 1;
 		g->nodes[i].state = NODE_UNSEEN;
 	}
 }
@@ -33,17 +34,28 @@ void update_global_this(Graph* g, Node* this) {
 	}
 }
 
-char merge_in(Graph* g, Node* nodes) {
+char merge_in(Node* these, Node* others) {
 	char updated = 0;
 	for (int i = 0; i < MAX_NODE_NUM; i++) {
-		Node* this = &g->nodes[i];
-		Node* other = &nodes[i];
-		// Node exists in neither graph, or only exists in our graph
+		Node* this = &these[i];
+		Node* other = &others[i];
+		// Node exists in neither graph, or only exists in our graph,
 		if (other->state == NODE_UNSEEN) {
 			continue;
 		}
-		// Other graph has a new node we haven't seen, or it has an earlier timestamp
-		if (this->state == NODE_UNSEEN || (other->timestamp < this->timestamp)) {
+		// other knows of a node that we have never encountered
+		// other state is either opaque or seen
+		if (this->state == NODE_UNSEEN) {
+			memcpy(this, other, sizeof(Node));
+			updated = 1;
+		}
+		// other is a seen node that we only know of opaquely
+		if (this->state == NODE_OPAQUE && other->state == NODE_SEEN) {
+			memcpy(this, other, sizeof(Node));
+			updated = 1;
+		}
+		// other is a seen node we have also seen, but a more recent version
+		if (other->state == NODE_SEEN || (other->timestamp > this->timestamp)) {
 			memcpy(this, other, sizeof(Node));
 			updated = 1;
 		}
@@ -56,10 +68,12 @@ char buffer[LSA_SIZE];
 void receive_lsa(Graph* g, LocalNode* this, LSSockets* socks) {
 	struct sockaddr_in from;
 	receive(socks->lsa_rec_sock, (void*)buffer, LSA_SIZE, (struct sockaddr*)&from);
-	char updated = merge_in(g, (Node*)buffer);
+	char updated = merge_in(g->nodes, (Node*)buffer);
 	if (updated) {
 		send_lsa_except(g, this, socks, (long)from.sin_addr.s_addr);
+		log_f("Bruh");
 		pathfind_f(g, this->node.id);
+		log_f("DONE!!!");
 	}
 }
 

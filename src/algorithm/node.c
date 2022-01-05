@@ -11,6 +11,7 @@ Node node_alloc(int n) {
 	node.neighbour_ips = (uint32_t*)malloc(n * sizeof(uint32_t));
 	node.source_ips = (uint32_t*)malloc(n * sizeof(uint32_t));
 	node.neighbour_links_alive = (char*)malloc(n * sizeof(char));
+	node.timestamp = 0;
 	return node;
 };
 

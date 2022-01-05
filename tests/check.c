@@ -2,6 +2,7 @@
 #include "algorithm/check_heap.c"
 #include "algorithm/check_node.c"
 #include "algorithm/check_pathfind.c"
+#include "algorithm/check_ls_graph.c"
 
 TCase* case_heap(void) {
 	TCase* tc = tcase_create("Heap");
@@ -28,11 +29,19 @@ TCase* case_pathfind(void) {
 	return tc;
 }
 
+TCase* case_ls_graph(void) {
+	TCase* tc = tcase_create("LS_Graph");
+	tcase_add_test(tc, test_ls_graph_merge_in_lsa_first);
+	tcase_add_test(tc, test_ls_graph_merge_in_lsa_after_hb);
+	return tc;
+}
+
 Suite* suite_graph(void) {
 	Suite* s = suite_create("Graph");
 	suite_add_tcase(s, case_heap());
 	suite_add_tcase(s, case_node());
 	suite_add_tcase(s, case_pathfind());
+	suite_add_tcase(s, case_ls_graph());
 	return s;
 }
 
