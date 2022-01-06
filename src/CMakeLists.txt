@@ -9,11 +9,14 @@ add_subdirectory(algorithm)
 add_subdirectory(network)
 add_subdirectory(process)
 
-set(graph_source_files graph_main.c)
+set(dtlsr_source_files dtlsr_main.c)
 set(heartbeat_source_files heartbeat_main.c)
+set(routes_source_files routes_main.c)
 
-add_executable(graph ${graph_source_files})
+add_executable(dtlsr ${dtlsr_source_files})
 add_executable(heartbeat ${heartbeat_source_files})
+add_executable(routes ${routes_source_files})
 
-target_link_libraries(graph algorithm network process)
+target_link_libraries(dtlsr algorithm network process)
 target_link_libraries(heartbeat algorithm network process)
+target_link_libraries(routes algorithm network process)

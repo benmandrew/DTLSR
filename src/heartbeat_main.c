@@ -7,6 +7,8 @@
 #include "network/packetsend.h"
 #include "algorithm/def.h"
 
+#define PROTOCOL "heartbeat"
+
 int driver(int argc, char** argv) {
 	LocalNode this;
 	// Creating socket file descriptor

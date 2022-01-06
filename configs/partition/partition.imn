@@ -13,7 +13,7 @@ node n1 {
     iconcoords {232.0 176.0}
     labelcoords {232.0 208.0}
     interface-peer {eth0 n2}
-    services {Graph OSPFv2 OSPFv3 zebra IPForward}
+    services {DTLSR OSPFv2 OSPFv3 zebra IPForward}
 }
 
 node n2 {
@@ -36,7 +36,7 @@ node n2 {
     labelcoords {188.0 347.0}
     interface-peer {eth0 n1}
     interface-peer {eth1 n3}
-    services {Graph OSPFv2 OSPFv3 zebra IPForward}
+    services {DTLSR OSPFv2 OSPFv3 zebra IPForward}
 }
 
 node n3 {
@@ -54,7 +54,7 @@ node n3 {
     iconcoords {293.0 411.0}
     labelcoords {293.0 443.0}
     interface-peer {eth0 n2}
-    services {Graph OSPFv2 OSPFv3 zebra IPForward}
+    services {DTLSR OSPFv2 OSPFv3 zebra IPForward}
 }
 
 node n4 {
@@ -72,7 +72,7 @@ node n4 {
     iconcoords {379.0 186.0}
     labelcoords {379.0 218.0}
     interface-peer {eth0 n5}
-    services {Graph OSPFv2 OSPFv3 zebra IPForward}
+    services {DTLSR OSPFv2 OSPFv3 zebra IPForward}
 }
 
 node n5 {
@@ -90,7 +90,7 @@ node n5 {
     iconcoords {419.0 334.0}
     labelcoords {419.0 366.0}
     interface-peer {eth0 n4}
-    services {Graph OSPFv2 OSPFv3 zebra IPForward}
+    services {DTLSR OSPFv2 OSPFv3 zebra IPForward}
 }
 
 link l1 {

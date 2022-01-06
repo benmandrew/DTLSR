@@ -228,6 +228,3 @@ START_TEST(test_pathfind_opaque) {
 	}
 }
 END_TEST
-
-
-

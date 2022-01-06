@@ -3,6 +3,7 @@
 #include "algorithm/def.h"
 #include "algorithm/graph.h"
 
+#define PROTOCOL "dtlsr"
 
 LSSockets init_sockets(LocalNode* this) {
 	LSSockets socks;
@@ -47,15 +48,15 @@ int driver(int argc, char** argv) {
 }
 
 int main(int argc, char* argv[]) {
-	set_logfile_name("graph");
-	log_f("graph started");
+	set_logfile_name("dtlsr");
+	log_f("dtlsr started");
 	int daemonise = 0;
 	int opt;
 	while ((opt = getopt(argc, argv, "d")) != -1) {
 		switch (opt) {
 			case 'd': daemonise = 1; break;
 			default:
-				log_f("graph usage: %s [-d]", argv[0]);
+				log_f("dtlsr usage: %s [-d]", argv[0]);
 				exit(EXIT_FAILURE);
 		}
 	}
