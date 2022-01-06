@@ -10,20 +10,15 @@
 #define CONFIG "routes"
 
 void set_addrs(struct rtentry* route, uint32_t gateway_ip, uint32_t dest_ip) {
-		struct in_addr a;
-		a.s_addr = dest_ip;
-		log_f("to %s", inet_ntoa(a));
-		a.s_addr = gateway_ip;
-		log_f("through %s", inet_ntoa(a));
-		struct sockaddr_in *addr = (struct sockaddr_in*) &route->rt_gateway;
-		addr->sin_family = AF_INET;
-		addr->sin_addr.s_addr = gateway_ip;
-		addr = (struct sockaddr_in*) &route->rt_dst;
-		addr->sin_family = AF_INET;
-		addr->sin_addr.s_addr = dest_ip;
-		addr = (struct sockaddr_in*) &route->rt_genmask;
-		addr->sin_family = AF_INET;
-		addr->sin_addr.s_addr = inet_addr("255.255.255.0"); // x.x.x.x/24
+	struct sockaddr_in *addr = (struct sockaddr_in*) &route->rt_gateway;
+	addr->sin_family = AF_INET;
+	addr->sin_addr.s_addr = gateway_ip;
+	addr = (struct sockaddr_in*) &route->rt_dst;
+	addr->sin_family = AF_INET;
+	addr->sin_addr.s_addr = dest_ip;
+	addr = (struct sockaddr_in*) &route->rt_genmask;
+	addr->sin_family = AF_INET;
+	addr->sin_addr.s_addr = inet_addr("255.255.255.0"); // x.x.x.x/24
 }
 
 void add_routes(LocalNode* this, struct hop_dest* next_hops) {
@@ -39,12 +34,13 @@ void add_routes(LocalNode* this, struct hop_dest* next_hops) {
 		for (int nb_i = 0; nb_i < this->node.n_neighbours; nb_i++) {
 			if (this->node.neighbour_ids[nb_i] == next_hops[hop_i].next_hop) {
 				set_addrs(&route, this->node.neighbour_ips[nb_i], next_hops[hop_i].dest_ip);
-				// route.rt_dev = this->interfaces[i];
 				route.rt_flags = RTF_UP | RTF_GATEWAY;
-				// route.rt_flags = RTF_UP | RTF_HOST;
-				// route.rt_metric = 0;
-				if (ioctl(fd, SIOCADDRT, &route) < 0) {
-					log_f("ioctl failed: errno %s", strerror(errno));
+				int err;
+				if (err = ioctl(fd, SIOCADDRT, &route) < 0) {
+					log_f("1. ioctl failed: errno %d %s", err, strerror(errno));
+				}
+				if (err = ioctl(fd, SIOCADDRT, &route) < 0) {
+					log_f("2. ioctl failed: errno %d %s", err, strerror(errno));
 				}
 				break;
 			}
