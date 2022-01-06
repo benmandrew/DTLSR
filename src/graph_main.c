@@ -55,7 +55,7 @@ int main(int argc, char* argv[]) {
 		switch (opt) {
 			case 'd': daemonise = 1; break;
 			default:
-				log_f("Server usage: %s [-d]", argv[0]);
+				log_f("graph usage: %s [-d]", argv[0]);
 				exit(EXIT_FAILURE);
 		}
 	}

@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 		switch (opt) {
 			case 'd': daemonise = 1; break;
 			default:
-				fprintf(stderr, "Usage: %s [-d]", argv[0]);
+				log_f("heartbeat usage: %s [-d]", argv[0]);
 				exit(EXIT_FAILURE);
 		}
 	}

@@ -5,7 +5,9 @@
 #define FIELD_SIZEOF(t, f) (sizeof(((t*)0)->f))
 
 DijkstraNode* dijkstra_init(Node* graph, int src_id) {
-	DijkstraNode* nodes = (DijkstraNode*)malloc(MAX_NODE_NUM * sizeof(DijkstraNode));
+	DijkstraNode* nodes = (DijkstraNode*)malloc(
+													MAX_NODE_NUM * sizeof(DijkstraNode));
+	memset(nodes, 0, MAX_NODE_NUM * sizeof(DijkstraNode));
 	for (int i = 0; i < MAX_NODE_NUM; i++) {
 		nodes[i].id = graph[i].id;
 		nodes[i].state = graph[i].state;
@@ -17,9 +19,10 @@ DijkstraNode* dijkstra_init(Node* graph, int src_id) {
 				nodes[i].tent_dist = 0;
 			}
 			nodes[i].n_neighbours = graph[i].n_neighbours;
-			memcpy(nodes[i].neighbour_ids, graph[i].neighbour_ids, FIELD_SIZEOF(Node, neighbour_ids));
-			memcpy(nodes[i].link_statuses, graph[i].link_statuses, FIELD_SIZEOF(Node, link_statuses));
-			nodes[i].prev_id = -1;
+			memcpy(nodes[i].neighbour_ids, graph[i].neighbour_ids,
+						 FIELD_SIZEOF(Node, neighbour_ids));
+			memcpy(nodes[i].link_statuses, graph[i].link_statuses,
+						 FIELD_SIZEOF(Node, link_statuses));
 		}
 	}
 	return nodes;
@@ -51,16 +54,37 @@ int get_next_hop(DijkstraNode* nodes, int src_id, int dst_id) {
 	}
 }
 
-int* get_next_hops(DijkstraNode* nodes, int src_id) {
-	int* next_hop_ids = (int*)malloc(MAX_NODE_NUM * sizeof(int));
-	for (int i = 0; i < MAX_NODE_NUM; i++) {
-		if (nodes[i].id != -1) {
-			next_hop_ids[i] = get_next_hop(nodes, src_id, i + 1);
-		} else {
-			next_hop_ids[i] = -1;
+uint32_t get_dst_ip(Node* graph, DijkstraNode* nodes, int dst_id) {
+	DijkstraNode dest = nodes[dst_id - 1];
+	DijkstraNode prev = nodes[dest.prev_id - 1];
+
+	// prev is guaranteed not to be opaque so it will have
+	// neighbour info stored. Previously I used dest instead
+	// but it can be opaque and thus not have IP info
+	for (int i = 0; i < prev.n_neighbours; i++) {
+		if (dest.id == prev.neighbour_ids[i]) {
+			return graph[prev.id - 1].neighbour_ips[i];
 		}
 	}
-	return next_hop_ids;
+	// for (int i = 0; i < dest.n_neighbours; i++) {
+	// 	if (prev.id == dest.neighbour_ids[i]) {
+	// 		return graph[dst_id - 1].source_ips[i];
+	// 	}
+	// }
+	abort();
+}
+
+void get_next_hops(Node* graph, DijkstraNode* nodes, int src_id,
+									 struct hop_dest* next_hops) {
+	for (int i = 0; i < MAX_NODE_NUM; i++) {
+		if (nodes[i].state != NODE_UNSEEN && nodes[i].prev_id != -1) {
+			next_hops[i] = (struct hop_dest){
+				.next_hop = get_next_hop(nodes, src_id, i+1),
+				.dest_ip = get_dst_ip(graph, nodes, i+1)};
+		} else {
+			next_hops[i] = (struct hop_dest){.next_hop=-1, .dest_ip=0};
+		}
+	}
 }
 
 DijkstraNode* dijkstra(Node* graph, int src_id) {
@@ -89,15 +113,15 @@ DijkstraNode* dijkstra(Node* graph, int src_id) {
 	return nodes;
 }
 
-int* pathfind(Node* graph, int src_id) {
+void pathfind(Node* graph, int src_id, struct hop_dest* next_hops) {
 	DijkstraNode* nodes = dijkstra(graph, src_id);
-	int* next_hops = get_next_hops(nodes, src_id);
+	get_next_hops(graph, nodes, src_id, next_hops);
 	free(nodes);
-	return next_hops;
 }
 
 void pathfind_f(Node* graph, int src_id) {
-	int* next_hops = pathfind(graph, src_id);
+	struct hop_dest next_hops[MAX_NODE_NUM];
+	pathfind(graph, src_id, next_hops);
 	for (int i = 0; i < MAX_NODE_NUM; i++) {
 		if (graph[i].state != NODE_UNSEEN) {
 			log_f("%d through %d", i+1, next_hops[i]);
