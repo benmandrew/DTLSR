@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #endif
 
-#include "algorithm/heap.h"
+#include "algorithm/heap_pi.h"
 
 START_TEST(test_heap_alloc) {
   MinHeap h = minheap_alloc(64);

@@ -2,16 +2,7 @@
 #include <errno.h>
 
 #include "process/route_control.h"
-
-struct simple_rt {
-  uint32_t dst;
-  uint32_t gateway;
-  char seen;
-  char exists;
-};
-
-int ioctl_fd;
-struct simple_rt curr_routes[MAX_NODE_NUM];
+#include "process/route_control_pi.h"
 
 struct simple_rt get_simple_rt(struct rtentry *rt) {
   struct simple_rt simple;
@@ -71,7 +62,7 @@ void set_addrs(struct rtentry *route, uint32_t gateway_ip, uint32_t dest_ip) {
   addr->sin_addr.s_addr = inet_addr("255.255.255.0"); // x.x.x.x/24
 }
 
-void remove_marked_routes() {
+void remove_marked_routes(void) {
   struct rtentry rt;
   for (int i = 0; i < MAX_NODE_NUM; i++) {
     if (curr_routes[i].exists && !curr_routes[i].seen) {

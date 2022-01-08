@@ -1,7 +1,8 @@
 
-#include "algorithm/heap.h"
-
 #include <stdio.h>
+
+#include "algorithm/heap.h"
+#include "algorithm/heap_pi.h"
 
 void swap(DijkstraNode **a, DijkstraNode **b) {
   DijkstraNode *c = *a;

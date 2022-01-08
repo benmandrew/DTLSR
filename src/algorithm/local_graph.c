@@ -1,6 +1,7 @@
 
 #include "algorithm/def.h"
 #include "algorithm/graph.h"
+#include "algorithm/graph_pi.h"
 #include "algorithm/pathfind.h"
 
 char register_heartbeat(LocalNode *this, long source_addr) {

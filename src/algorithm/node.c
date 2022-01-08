@@ -2,6 +2,7 @@
 #include <string.h>
 
 #include "algorithm/node.h"
+#include "algorithm/node_pi.h"
 
 void node_init(Node *node, int n) {
   if (n > MAX_NODE_FAN)

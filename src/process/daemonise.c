@@ -1,5 +1,6 @@
 
 #include "process/daemonise.h"
+#include "process/daemonise_pi.h"
 
 void make_daemon(void) {
   pid_t process_id = 0;

@@ -42,7 +42,7 @@ Suite *suite_graph(void) {
   suite_add_tcase(s, case_heap());
   suite_add_tcase(s, case_node());
   suite_add_tcase(s, case_pathfind());
-  // suite_add_tcase(s, case_ls_graph());
+  suite_add_tcase(s, case_ls_graph());
   return s;
 }
 

@@ -40,8 +40,6 @@ char receive_heartbeat(Node *graph, LocalNode *this, LSSockets *socks);
 
 void update_global_this(Node *graph, Node *this);
 
-char merge_in(Node *these, Node *others);
-
 char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd,
                        LSSockets *socks);
 

@@ -16,6 +16,4 @@ DijkstraNode *dijkstra(Node *graph, int src_id);
 
 void pathfind(Node *graph, int src_id, struct hop_dest *next_hops);
 
-void pathfind_f(Node *graph, int src_id);
-
 #endif

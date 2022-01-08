@@ -5,8 +5,7 @@
 #include <stdlib.h>
 #endif
 
-#include "algorithm/graph.h"
-#include "algorithm/pathfind.h"
+#include "algorithm/graph_pi.h"
 
 /*
  * Test case where an LSA is received from a neighbour before a heartbeat,

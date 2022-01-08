@@ -1,5 +1,6 @@
 
 #include "algorithm/pathfind.h"
+#include "algorithm/pathfind_pi.h"
 
 // Disgusting, but the Linux kernel uses this exact thing so oh well
 #define FIELD_SIZEOF(t, f) (sizeof(((t *)0)->f))
@@ -111,15 +112,4 @@ void pathfind(Node *graph, int src_id, struct hop_dest *next_hops) {
   DijkstraNode *nodes = dijkstra(graph, src_id);
   get_next_hops(graph, nodes, src_id, next_hops);
   free(nodes);
-}
-
-void pathfind_f(Node *graph, int src_id) {
-  struct hop_dest next_hops[MAX_NODE_NUM];
-  pathfind(graph, src_id, next_hops);
-  for (int i = 0; i < MAX_NODE_NUM; i++) {
-    if (graph[i].state != NODE_UNSEEN) {
-      log_f("%d through %d", i + 1, next_hops[i]);
-    }
-  }
-  log_f("");
 }

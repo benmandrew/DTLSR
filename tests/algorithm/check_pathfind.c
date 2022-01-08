@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #endif
 
-#include "algorithm/pathfind.h"
+#include "algorithm/pathfind_pi.h"
 
 /*
  * Generate pentagonal graph

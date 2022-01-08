@@ -3,6 +3,7 @@
 
 #include "algorithm/def.h"
 #include "algorithm/graph.h"
+#include "algorithm/graph_pi.h"
 #include "algorithm/pathfind.h"
 
 #define LSA_SIZE MAX_NODE_NUM * sizeof(Node)

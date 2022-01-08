@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #endif
 
-#include "algorithm/node.h"
+#include "algorithm/node_pi.h"
 
 START_TEST(test_node_init) {
   Node n;

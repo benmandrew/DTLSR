@@ -1,5 +1,6 @@
 
 #include "process/logging.h"
+#include "process/logging_pi.h"
 
 #define LOG_BUF_LEN 80
 
@@ -26,7 +27,8 @@ static char *_get_time_str(void) {
 
 int log_f(const char *format, ...) {
   if (logfile_name == NULL) {
-    exit(EXIT_FAILURE);
+    return 0;
+    // exit(EXIT_FAILURE);
   }
   char *time_buf = _get_time_str();
   FILE *file = fopen(logfile_name, "a");
