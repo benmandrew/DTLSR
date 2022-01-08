@@ -1,7 +1,6 @@
 
 #include <errno.h>
 
-// #include "filenames.h"
 #include "algorithm/pathfind.h"
 #include "process/core_node.h"
 #include "process/route_control.h"
@@ -33,6 +32,17 @@ int driver(int argc, char **argv) {
   next_hops[5].dest_ip = inet_addr("10.0.2.1");
   for (int i = 6; i < MAX_NODE_NUM; i++)
     next_hops[i].next_hop = -1;
+
+  update_routes(&this, next_hops);
+
+  next_hops[2].next_hop = -1;
+  next_hops[2].dest_ip = inet_addr("10.0.1.11");
+  next_hops[3].next_hop = -1;
+  next_hops[3].dest_ip = inet_addr("10.0.1.10");
+  next_hops[4].next_hop = -1;
+  next_hops[4].dest_ip = inet_addr("0.0.0.0");
+  next_hops[5].next_hop = -1;
+  next_hops[5].dest_ip = inet_addr("0.0.0.0");
 
   update_routes(&this, next_hops);
 

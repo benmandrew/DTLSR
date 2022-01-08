@@ -57,7 +57,6 @@ int get_next_hop(DijkstraNode *nodes, int src_id, int dst_id) {
 uint32_t get_dst_ip(Node *graph, DijkstraNode *nodes, int dst_id) {
   DijkstraNode dest = nodes[dst_id - 1];
   DijkstraNode prev = nodes[dest.prev_id - 1];
-
   // prev is guaranteed not to be opaque so it will have
   // neighbour info stored. Previously I used dest instead
   // but it can be opaque and thus not have IP info
@@ -66,11 +65,6 @@ uint32_t get_dst_ip(Node *graph, DijkstraNode *nodes, int dst_id) {
       return graph[prev.id - 1].neighbour_ips[i];
     }
   }
-  // for (int i = 0; i < dest.n_neighbours; i++) {
-  // 	if (prev.id == dest.neighbour_ids[i]) {
-  // 		return graph[dst_id - 1].source_ips[i];
-  // 	}
-  // }
   abort();
 }
 

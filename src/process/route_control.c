@@ -10,15 +10,17 @@ struct simple_rt {
   char exists;
 };
 
+int ioctl_fd;
 struct simple_rt curr_routes[MAX_NODE_NUM];
 
 struct simple_rt get_simple_rt(struct rtentry *rt) {
   struct simple_rt simple;
   struct sockaddr_in *addr = (struct sockaddr_in *)&rt->rt_dst;
-  simple.dst = addr->sin_addr.s_addr;
+  simple.dst = (uint32_t)addr->sin_addr.s_addr;
   addr = (struct sockaddr_in *)&rt->rt_gateway;
-  simple.gateway = addr->sin_addr.s_addr;
+  simple.gateway = (uint32_t)addr->sin_addr.s_addr;
   simple.exists = 1;
+  simple.seen = 1;
   return simple;
 }
 
@@ -35,7 +37,12 @@ void mark_routes_unseen(void) {
 void add_to_curr_routes(struct simple_rt *rt) {
   for (int i = 0; i < MAX_NODE_NUM; i++) {
     if (!curr_routes[i].exists) {
-      memcpy(&curr_routes[i], rt, sizeof rt);
+      struct in_addr addr;
+      addr.s_addr = rt->gateway;
+      log_f("s s_rt.gateway %s", inet_ntoa(addr));
+      addr.s_addr = rt->dst;
+      log_f("s s_rt.dst %s", inet_ntoa(addr));
+      memcpy(&curr_routes[i], rt, sizeof *rt);
       return;
     }
   }
@@ -52,7 +59,7 @@ void mark_route_seen(struct rtentry *rt) {
       break;
     }
   }
-  if (seen) {
+  if (!seen) {
     add_to_curr_routes(&simple);
   }
 }
@@ -69,13 +76,18 @@ void set_addrs(struct rtentry *route, uint32_t gateway_ip, uint32_t dest_ip) {
   addr->sin_addr.s_addr = inet_addr("255.255.255.0"); // x.x.x.x/24
 }
 
-void remove_marked_routes(int fd) {
-  mark_routes_unseen();
+void remove_marked_routes() {
+  struct rtentry rt;
   for (int i = 0; i < MAX_NODE_NUM; i++) {
     if (curr_routes[i].exists && !curr_routes[i].seen) {
-      struct rtentry rt;
+      memset(&rt, 0, sizeof rt);
+      struct in_addr addr;
+      addr.s_addr = curr_routes[i].gateway;
+      log_f("del s_rt.gateway %s", inet_ntoa(addr));
+      addr.s_addr = curr_routes[i].dst;
+      log_f("del s_rt.dst %s", inet_ntoa(addr));
       set_addrs(&rt, curr_routes[i].gateway, curr_routes[i].dst);
-      if (ioctl(fd, SIOCDELRT, &rt) < 0) {
+      if (ioctl(ioctl_fd, SIOCDELRT, &rt) < 0) {
         log_f("ioctl failed: errno %s", strerror(errno));
       }
       memset(&curr_routes[i], 0, sizeof(struct simple_rt));
@@ -83,9 +95,9 @@ void remove_marked_routes(int fd) {
   }
 }
 
-void derive_rtentries(LocalNode *this, struct hop_dest next_hops[MAX_NODE_NUM],
-                      struct rtentry routes[MAX_NODE_NUM]) {
-  memset(routes, 0, sizeof routes);
+void derive_rtentries(LocalNode *this, struct hop_dest *next_hops,
+                      struct rtentry *routes) {
+  memset(routes, 0, MAX_NODE_NUM * sizeof(struct rtentry));
   for (int hop_i = 0; hop_i < MAX_NODE_NUM; hop_i++) {
     if (next_hops[hop_i].next_hop == -1) {
       continue;
@@ -103,15 +115,9 @@ void derive_rtentries(LocalNode *this, struct hop_dest next_hops[MAX_NODE_NUM],
 
 void add_routes(LocalNode *this, struct hop_dest *next_hops,
                 struct rtentry *routes) {
-  int fd = socket(AF_INET, SOCK_DGRAM, 0);
   for (int i = 0; i < MAX_NODE_NUM; i++) {
     if (next_hops[i].next_hop != -1) {
-      struct sockaddr_in *addr;
-      addr = (struct sockaddr_in *)&routes[i].rt_gateway;
-      log_f("gateway %s", inet_ntoa(addr->sin_addr));
-      addr = (struct sockaddr_in *)&routes[i].rt_dst;
-      log_f("dst %s", inet_ntoa(addr->sin_addr));
-      if (ioctl(fd, SIOCADDRT, &routes[i]) < 0) {
+      if (ioctl(ioctl_fd, SIOCADDRT, &routes[i]) < 0) {
         log_f("ioctl failed: errno %s", strerror(errno));
       }
     }
@@ -154,17 +160,31 @@ void reduce_routes_to_subnets(struct hop_dest *next_hops) {
 
 void update_routes(LocalNode *this, struct hop_dest *next_hops) {
   struct rtentry routes[MAX_NODE_NUM];
+  ioctl_fd = socket(AF_INET, SOCK_DGRAM, 0);
   remove_neighbours(this, next_hops);
   reduce_routes_to_subnets(next_hops);
   derive_rtentries(this, next_hops, routes);
   add_routes(this, next_hops, routes);
 
-  // mark_routes_unseen();
-  // for (int i = 0; i < MAX_NODE_NUM; i++) {
-  // 	if (next_hops[i].next_hop != -1) {
-  // 		mark_route_seen(&routes[i]);
-  // 	}
-  // }
+  mark_routes_unseen();
+  for (int i = 0; i < MAX_NODE_NUM; i++) {
+    if (next_hops[i].next_hop != -1) {
+      mark_route_seen(&routes[i]);
+    }
+  }
+  remove_marked_routes();
+
+  for (int i = 0; i < MAX_NODE_NUM; i++) {
+    if (curr_routes[i].exists) {
+      struct in_addr addr;
+      addr.s_addr = curr_routes[i].gateway;
+      log_f("s_rt.gateway %s", inet_ntoa(addr));
+      addr.s_addr = curr_routes[i].dst;
+      log_f("s_rt.dst %s", inet_ntoa(addr));
+    }
+  }
+  log_f("DONE");
+  close(ioctl_fd);
 }
 
 void log_routes(void) {
