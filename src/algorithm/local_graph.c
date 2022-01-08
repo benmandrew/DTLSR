@@ -23,7 +23,7 @@ char register_heartbeat(LocalNode *this, long source_addr) {
 
 char buffer[HB_SIZE];
 
-void receive_heartbeat(Node *graph, LocalNode *this, LSSockets *socks) {
+char receive_heartbeat(Node *graph, LocalNode *this, LSSockets *socks) {
   struct sockaddr_in from;
   receive(socks->hb_sock, (void *)buffer, HB_SIZE, (struct sockaddr *)&from);
   // Update node timestamp to now
@@ -33,11 +33,11 @@ void receive_heartbeat(Node *graph, LocalNode *this, LSSockets *socks) {
     // Update global graph
     update_global_this(graph, &this->node);
     send_lsa(graph, this, socks);
-    pathfind_f(graph, this->node.id);
   }
+  return updated;
 }
 
-void timeout_heartbeat(Node *graph, LocalNode *this, int active_fd,
+char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd,
                        LSSockets *socks) {
   char updated = 0;
   for (int i = 0; i < this->node.n_neighbours; i++) {
@@ -55,8 +55,8 @@ void timeout_heartbeat(Node *graph, LocalNode *this, int active_fd,
     // Update global graph
     update_global_this(graph, &this->node);
     send_lsa(graph, this, socks);
-    pathfind_f(graph, this->node.id);
   }
+  return updated;
 }
 
 // Aggregate timer and socket file descriptors into a single array

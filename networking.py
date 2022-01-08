@@ -68,9 +68,9 @@ class Heartbeat(CoreService):
   name: str = "Heartbeat"
   group: str = "Networking"
 
-  configs: Tuple[str, ...] = ("hb.id", "hbboot.sh", )
+  configs: Tuple[str, ...] = ("hbt.id", "hbtboot.sh", )
 
-  startup: Tuple[str, ...] = ("bash hbboot.sh", )
+  startup: Tuple[str, ...] = ("bash hbtboot.sh", )
 
   @classmethod
   def generate_config(cls, node: CoreNode, filename: str) -> None:

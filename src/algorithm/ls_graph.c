@@ -62,15 +62,15 @@ char merge_in(Node *these, Node *others) {
 
 char buffer[LSA_SIZE];
 
-void receive_lsa(Node *graph, LocalNode *this, LSSockets *socks) {
+char receive_lsa(Node *graph, LocalNode *this, LSSockets *socks) {
   struct sockaddr_in from;
   receive(socks->lsa_rec_sock, (void *)buffer, LSA_SIZE,
           (struct sockaddr *)&from);
   char updated = merge_in(graph, (Node *)buffer);
   if (updated) {
     send_lsa_except(graph, this, socks, (long)from.sin_addr.s_addr);
-    pathfind_f(graph, this->node.id);
   }
+  return updated;
 }
 
 // Send LSA to all neighbours except one

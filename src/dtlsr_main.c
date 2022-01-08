@@ -1,7 +1,9 @@
 
 #include "algorithm/def.h"
 #include "algorithm/graph.h"
+#include "algorithm/pathfind.h"
 #include "filenames.h"
+#include "process/route_control.h"
 
 #define PROTOCOL "dtlsr"
 
@@ -24,6 +26,7 @@ void close_sockets(LSSockets *socks) {
 
 int driver(int argc, char **argv) {
   Node graph[MAX_NODE_NUM];
+  struct hop_dest next_hops[MAX_NODE_NUM];
   LocalNode this;
   graph_init(graph);
   init_this_node(&this, PROTOCOL, CONFIG, HEARTBEAT_TIMEOUT);
@@ -32,15 +35,20 @@ int driver(int argc, char **argv) {
   LSSockets socks = init_sockets(&this);
   while (1) {
     int active_fd;
+    char graph_updated = 0;
     if ((active_fd = event_wait(socks.event_fds, socks.n_event_fds)) < 0) {
       continue;
     }
     if (active_fd == socks.hb_sock) {
-      receive_heartbeat(graph, &this, &socks);
+      graph_updated = receive_heartbeat(graph, &this, &socks);
     } else if (active_fd == socks.lsa_rec_sock) {
-      receive_lsa(graph, &this, &socks);
+      graph_updated = receive_lsa(graph, &this, &socks);
     } else {
-      timeout_heartbeat(graph, &this, active_fd, &socks);
+      graph_updated = timeout_heartbeat(graph, &this, active_fd, &socks);
+    }
+    if (graph_updated) {
+      pathfind(graph, this.node.id, next_hops);
+      update_routing_table(&this, next_hops);
     }
   }
   close_sockets(&socks);

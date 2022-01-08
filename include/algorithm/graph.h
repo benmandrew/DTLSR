@@ -36,18 +36,18 @@ typedef struct LSSockets {
 
 void graph_init(Node *graph);
 
-void receive_heartbeat(Node *graph, LocalNode *this, LSSockets *socks);
+char receive_heartbeat(Node *graph, LocalNode *this, LSSockets *socks);
 
 void update_global_this(Node *graph, Node *this);
 
 char merge_in(Node *these, Node *others);
 
-void timeout_heartbeat(Node *graph, LocalNode *this, int active_fd,
+char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd,
                        LSSockets *socks);
 
 void aggregate_fds(LocalNode *this, LSSockets *socks, int n_sockfds);
 
-void receive_lsa(Node *graph, LocalNode *this, LSSockets *socks);
+char receive_lsa(Node *graph, LocalNode *this, LSSockets *socks);
 
 void send_lsa_except(Node *graph, LocalNode *this, LSSockets *socks,
                      long source_addr);

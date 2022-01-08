@@ -33,7 +33,7 @@ int driver(int argc, char **argv) {
   for (int i = 6; i < MAX_NODE_NUM; i++)
     next_hops[i].next_hop = -1;
 
-  update_routes(&this, next_hops);
+  update_routing_table(&this, next_hops);
 
   next_hops[2].next_hop = -1;
   next_hops[2].dest_ip = inet_addr("10.0.1.11");
@@ -44,7 +44,7 @@ int driver(int argc, char **argv) {
   next_hops[5].next_hop = -1;
   next_hops[5].dest_ip = inet_addr("0.0.0.0");
 
-  update_routes(&this, next_hops);
+  update_routing_table(&this, next_hops);
 
   return 0;
 }

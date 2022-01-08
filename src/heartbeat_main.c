@@ -7,7 +7,7 @@
 #include "process/fd_event.h"
 #include "process/logging.h"
 
-#define PROTOCOL "heartbeat"
+#define PROTOCOL "hbt"
 
 int driver(int argc, char **argv) {
   LocalNode this;

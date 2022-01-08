@@ -4,6 +4,10 @@ node n1 {
     network-config {
 	hostname n1
 	!
+	interface eth2
+	 ip address 10.0.5.1/24
+	 ipv6 address 2001:5::1/64
+	!
 	interface eth1
 	 ip address 10.0.3.1/24
 	 ipv6 address 2001:3::1/64
@@ -17,8 +21,9 @@ node n1 {
     iconcoords {336.0 207.0}
     labelcoords {336.0 239.0}
     interface-peer {eth0 n2}
-    services {DTLSR OSPFv2 OSPFv3 zebra IPForward}
+    services {DTLSR Heartbeat OSPFv2 OSPFv3 zebra IPForward}
     interface-peer {eth1 n5}
+    interface-peer {eth2 n6}
 }
 
 node n2 {
@@ -26,6 +31,10 @@ node n2 {
     model router
     network-config {
 	hostname n2
+	!
+	interface eth3
+	 ip address 10.0.7.1/24
+	 ipv6 address 2001:7::1/64
 	!
 	interface eth2
 	 ip address 10.0.2.2/24
@@ -44,9 +53,10 @@ node n2 {
     iconcoords {551.0 404.0}
     labelcoords {551.0 436.0}
     interface-peer {eth0 n1}
-    services {DTLSR OSPFv2 OSPFv3 zebra IPForward}
+    services {DTLSR Heartbeat OSPFv2 OSPFv3 zebra IPForward}
     interface-peer {eth1 n4}
     interface-peer {eth2 n3}
+    interface-peer {eth3 n7}
 }
 
 node n3 {
@@ -54,6 +64,10 @@ node n3 {
     model router
     network-config {
 	hostname n3
+	!
+	interface eth1
+	 ip address 10.0.6.1/24
+	 ipv6 address 2001:6::1/64
 	!
 	interface eth0
 	 ip address 10.0.2.1/24
@@ -64,7 +78,8 @@ node n3 {
     iconcoords {572.0 221.0}
     labelcoords {572.0 253.0}
     interface-peer {eth0 n2}
-    services {DTLSR OSPFv2 OSPFv3 zebra IPForward}
+    services {DTLSR Heartbeat OSPFv2 OSPFv3 zebra IPForward}
+    interface-peer {eth1 n8}
 }
 
 node n4 {
@@ -86,7 +101,7 @@ node n4 {
     iconcoords {355.0 464.0}
     labelcoords {355.0 496.0}
     interface-peer {eth0 n2}
-    services {DTLSR OSPFv2 OSPFv3 zebra IPForward}
+    services {DTLSR Heartbeat OSPFv2 OSPFv3 zebra IPForward}
     interface-peer {eth1 n5}
 }
 
@@ -110,7 +125,61 @@ node n5 {
     labelcoords {229.0 380.0}
     interface-peer {eth0 n1}
     interface-peer {eth1 n4}
-    services {DTLSR OSPFv2 OSPFv3 zebra IPForward}
+    services {DTLSR Heartbeat OSPFv2 OSPFv3 zebra IPForward}
+}
+
+node n6 {
+    type router
+    model host
+    network-config {
+	hostname n6
+	!
+	interface eth0
+	 ip address 10.0.5.10/24
+	 ipv6 address 2001:5::10/64
+	!
+    }
+    canvas c1
+    iconcoords {334.0 89.0}
+    labelcoords {334.0 121.0}
+    interface-peer {eth0 n1}
+    services {Heartbeat DefaultRoute SSH}
+}
+
+node n7 {
+    type router
+    model host
+    network-config {
+	hostname n7
+	!
+	interface eth0
+	 ip address 10.0.7.10/24
+	 ipv6 address 2001:7::10/64
+	!
+    }
+    canvas c1
+    iconcoords {626.0 505.0}
+    labelcoords {626.0 537.0}
+    interface-peer {eth0 n2}
+    services {Heartbeat DefaultRoute SSH}
+}
+
+node n8 {
+    type router
+    model host
+    network-config {
+	hostname n8
+	!
+	interface eth0
+	 ip address 10.0.6.10/24
+	 ipv6 address 2001:6::10/64
+	!
+    }
+    canvas c1
+    iconcoords {686.0 155.0}
+    labelcoords {686.0 187.0}
+    interface-peer {eth0 n3}
+    services {Heartbeat DefaultRoute SSH}
 }
 
 link l1 {
@@ -135,6 +204,21 @@ link l4 {
 
 link l5 {
     nodes {n5 n4}
+    bandwidth 0
+}
+
+link l6 {
+    nodes {n6 n1}
+    bandwidth 0
+}
+
+link l7 {
+    nodes {n3 n8}
+    bandwidth 0
+}
+
+link l8 {
+    nodes {n2 n7}
     bandwidth 0
 }
 
