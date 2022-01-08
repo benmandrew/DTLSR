@@ -8,7 +8,8 @@
 #include "algorithm/def.h"
 #include "process/fd_event.h"
 
-enum NodeState {
+enum NodeState
+{
   // Node has not been encountered at all
   NODE_UNSEEN,
   // Node has only been seen as a neighbour; its state is opaque
@@ -17,7 +18,8 @@ enum NodeState {
   NODE_SEEN
 };
 
-enum LinkState {
+enum LinkState
+{
   LINK_DOWN,
   LINK_UP
 };
@@ -25,7 +27,8 @@ enum LinkState {
 /*
  * Logical representation of a network node in the graph
  */
-typedef struct node {
+typedef struct node
+{
   int id;
   // Do we know about this node from its LSA, or just opaquely as a neighbour?
   enum NodeState state;
@@ -39,25 +42,26 @@ typedef struct node {
   unsigned long long timestamp;
 } Node;
 
-typedef struct local_node {
+typedef struct local_node
+{
   // Global node
   Node node;
   // Heartbeat timer array
-  Timer* timers;
+  Timer *timers;
   // Outgoing interfaces
-  char** interfaces;
+  char **interfaces;
   // Book-keeping pointer for interface string arena
-  char* if_arena_ptr;
+  char *if_arena_ptr;
 } LocalNode;
 
-void node_init(Node* node, int n);
+void node_init(Node *node, int n);
 
-char nodes_eq(Node* n1, Node* n2);
+char nodes_eq(Node *n1, Node *n2);
 
 LocalNode node_local_alloc(int id, int n, int hb_timeout);
 
-void node_local_dealloc(LocalNode* n);
+void node_local_dealloc(LocalNode *n);
 
-void node_update_time(Node* n);
+void node_update_time(Node *n);
 
 #endif

@@ -2,18 +2,19 @@
 #ifndef CORE_NODE_H
 #define CORE_NODE_H
 
+#include <arpa/inet.h>
+#include <net/route.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <arpa/inet.h>
 #include <string.h>
-#include <net/route.h>
 
 #include "algorithm/node.h"
 #include "process/fileio.h"
 
-int get_node_id(char* protocol);
+int get_node_id(char *protocol);
 
 // Initialise 'this' node, allocating and populating neighbour information
-void init_this_node(LocalNode* this, char* protocol, char* config, int hb_timeout);
+void init_this_node(LocalNode *this, char *protocol, char *config,
+                    int hb_timeout);
 
 #endif
