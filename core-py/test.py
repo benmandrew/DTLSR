@@ -1,9 +1,12 @@
+
+from threading import Event
 from core.emulator.coreemu import CoreEmu
 from core.emulator.data import IpPrefixes, NodeOptions
 from core.emulator.enumerations import EventTypes
 from core.emulator.session import Session
 from core.emulator.data import LinkOptions
 from core.nodes.base import CoreNode
+from core.services.coreservices import ServiceManager
 
 import dtlsr
 
@@ -23,16 +26,12 @@ session.set_state(EventTypes.CONFIGURATION_STATE)
 # create nodes
 options = NodeOptions(x=100, y=100)
 n1: CoreNode = session.add_node(CoreNode, options=options)
-session.services.add_services(node=n1, node_type=n1.type, services=["Heartbeat"])
-# options = NodeOptions(x=300, y=100, services=["Heartbeat"])
-# n2: CoreNode = session.add_node(CoreNode, options=options)
-
-
-
-for k, v in session.service_manager.services.items():
-	print(k, v)
-
-print(session.services.get_service(n1.id, "FRRBGP"))
+session.services.set_service(n1.id, "DTLSR")
+session.services.set_service(n1.id, "Heartbeat")
+options = NodeOptions(x=300, y=100)
+n2: CoreNode = session.add_node(CoreNode, options=options)
+session.services.set_service(n2.id, "DTLSR")
+session.services.set_service(n2.id, "Heartbeat")
 
 # configuring when creating a link
 options = LinkOptions(
@@ -44,15 +43,17 @@ options = LinkOptions(
 )
 
 # link nodes together
-# iface1 = ip_prefixes.create_iface(n1)
-# iface2 = ip_prefixes.create_iface(n2)
-# session.add_link(n1.id, n2.id, iface1, iface2, options)
+iface1 = ip_prefixes.create_iface(n1)
+iface2 = ip_prefixes.create_iface(n2)
+session.add_link(n1.id, n2.id, iface1, iface2, options)
+
+print(session.services.custom_services)
 
 # start session
 session.instantiate()
 
 # do whatever you like here
-input("press enter to shutdown")
+# input("press enter to shutdown")
 
 # stop session
 session.shutdown()
