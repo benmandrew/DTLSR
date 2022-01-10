@@ -26,7 +26,6 @@ class DTLSR(CoreService):
   group: str = "DTLSR"
 
   configs: Tuple[str, ...] = ("dtlsr.id", "dtlsrboot.sh", )
-
   startup: Tuple[str, ...] = ("bash dtlsrboot.sh", )
 
   @classmethod
@@ -62,8 +61,8 @@ class Heartbeat(CoreService):
   group: str = "DTLSR"
 
   configs: Tuple[str, ...] = ("hbt.id", "hbtboot.sh", )
-
   startup: Tuple[str, ...] = ("bash hbtboot.sh", )
+  validate: Tuple[str, ...] = ("pidof -z heartbeat", )
 
   @classmethod
   def generate_config(cls, node: CoreNode, filename: str) -> None:

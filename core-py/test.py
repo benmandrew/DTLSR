@@ -20,26 +20,25 @@ session: Session = coreemu.create_session()
 session.service_manager.add(dtlsr.Heartbeat)
 session.service_manager.add(dtlsr.DTLSR)
 
-# must be in configuration state for nodes to start, when using "node_add" below
 session.set_state(EventTypes.CONFIGURATION_STATE)
 
 # create nodes
-options = NodeOptions(x=100, y=100)
+options = NodeOptions(name="n1", x=100, y=100)
 n1: CoreNode = session.add_node(CoreNode, options=options)
 session.services.set_service(n1.id, "DTLSR")
 session.services.set_service(n1.id, "Heartbeat")
-options = NodeOptions(x=300, y=100)
+options = NodeOptions(name="n2", x=300, y=100)
 n2: CoreNode = session.add_node(CoreNode, options=options)
 session.services.set_service(n2.id, "DTLSR")
 session.services.set_service(n2.id, "Heartbeat")
 
 # configuring when creating a link
 options = LinkOptions(
-    bandwidth=54_000_000,
-    delay=5000,
-    dup=5,
-    loss=5.5,
-    jitter=0,
+  bandwidth=54_000_000,
+  delay=5000,
+  dup=5,
+  loss=5.5,
+  jitter=0,
 )
 
 # link nodes together
@@ -47,13 +46,18 @@ iface1 = ip_prefixes.create_iface(n1)
 iface2 = ip_prefixes.create_iface(n2)
 session.add_link(n1.id, n2.id, iface1, iface2, options)
 
-print(session.services.custom_services)
 
-# start session
+
 session.instantiate()
 
-# do whatever you like here
-# input("press enter to shutdown")
+session.services.create_service_files(n1, dtlsr.Heartbeat)
+session.services.create_service_files(n2, dtlsr.DTLSR)
+session.services.startup_service(n1, dtlsr.Heartbeat)
+session.services.startup_service(n2, dtlsr.DTLSR)
 
-# stop session
+print("Heartbeat valid:", session.services.validate_service(n1, dtlsr.Heartbeat))
+print("Heartbeat valid:", session.services.validate_service(n2, dtlsr.DTLSR))
+
+input("press enter to shutdown")
+
 session.shutdown()
