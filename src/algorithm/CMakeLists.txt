@@ -7,6 +7,7 @@ set(algorithm_source_files
 	ls_graph.c
 	node.c
 	pathfind.c
+	link_hist.c
 )
 
 add_library(algorithm ${algorithm_source_files})

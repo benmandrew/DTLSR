@@ -3,6 +3,7 @@
 #include "algorithm/check_ls_graph.c"
 #include "algorithm/check_node.c"
 #include "algorithm/check_pathfind.c"
+#include "algorithm/check_link_hist.c"
 
 TCase *case_heap(void) {
   TCase *tc = tcase_create("Heap");
@@ -37,12 +38,21 @@ TCase *case_ls_graph(void) {
   return tc;
 }
 
+TCase *case_link_hist(void) {
+  TCase *tc = tcase_create("Link_Hist");
+  tcase_add_test(tc, test_link_hist_init);
+  tcase_add_test(tc, test_link_hist_toggle_state);
+  tcase_add_test(tc, test_link_hist_weighted_average_uptime);
+  return tc;
+}
+
 Suite *suite_graph(void) {
   Suite *s = suite_create("Graph");
   suite_add_tcase(s, case_heap());
   suite_add_tcase(s, case_node());
   suite_add_tcase(s, case_pathfind());
   suite_add_tcase(s, case_ls_graph());
+  suite_add_tcase(s, case_link_hist());
   return s;
 }
 
