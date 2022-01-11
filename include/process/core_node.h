@@ -13,8 +13,10 @@
 
 int get_node_id(char *protocol);
 
+unsigned long long get_now(void);
+
 // Initialise 'this' node, allocating and populating neighbour information
-void init_this_node(LocalNode *this, char *protocol, char *config,
+void local_node_init(LocalNode *this, char *protocol, char *config,
                     int hb_timeout);
 
 #endif

@@ -53,8 +53,8 @@ TCase *case_link_hist(void) {
   return tc;
 }
 
-Suite *suite_graph(void) {
-  Suite *s = suite_create("Graph");
+Suite *suite_dtlsr(void) {
+  Suite *s = suite_create("DTLSR");
   suite_add_tcase(s, case_heap());
   suite_add_tcase(s, case_node());
   suite_add_tcase(s, case_pathfind());
@@ -65,11 +65,11 @@ Suite *suite_graph(void) {
 
 int main(void) {
   int number_failed;
-  Suite *s_graph;
+  Suite *s_dtlsr;
   SRunner *sr;
 
-  s_graph = suite_graph();
-  sr = srunner_create(s_graph);
+  s_dtlsr = suite_dtlsr();
+  sr = srunner_create(s_dtlsr);
   srunner_set_fork_status(sr, CK_NOFORK);
 
   // srunner_run_all(sr, CK_NORMAL);

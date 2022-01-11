@@ -29,8 +29,8 @@ int driver(int argc, char **argv) {
   struct hop_dest next_hops[MAX_NODE_NUM];
   LocalNode this;
   graph_init(graph);
-  init_this_node(&this, PROTOCOL, CONFIG, HEARTBEAT_TIMEOUT);
-  update_global_this(graph, &this.node);
+  local_node_init(&this, PROTOCOL, CONFIG, HEARTBEAT_TIMEOUT);
+  update_global_this(graph, &this);
   routes = get_routes(&this);
   LSSockets socks = init_sockets(&this);
   while (1) {

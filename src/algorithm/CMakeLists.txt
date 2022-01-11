@@ -14,3 +14,4 @@ add_library(algorithm ${algorithm_source_files})
 
 target_link_libraries(algorithm network)
 target_link_libraries(algorithm process)
+target_link_libraries(algorithm m)

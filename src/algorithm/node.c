@@ -18,7 +18,8 @@ char nodes_eq(Node *n1, Node *n2) {
     return 0;
   for (int i = 0; i < n1->n_neighbours; i++) {
     eq &= (n1->neighbour_ids[i] == n2->neighbour_ids[i] &&
-           n1->link_statuses[i] == n2->link_statuses[i]);
+           n1->link_statuses[i] == n2->link_statuses[i] &&
+           n1->link_metrics[i] == n2->link_metrics[i]);
     if (!eq)
       return 0;
   }
@@ -32,8 +33,6 @@ LocalNode node_local_alloc(int id, int n, int hb_timeout) {
   LocalNode node;
   node_init(&node.node, n);
   node.node.id = id;
-  node.timers = (Timer *)malloc(n * sizeof(Timer));
-  node.interfaces = (char **)malloc(n * sizeof(char *));
   node.if_arena_ptr = (char *)malloc(IFACE_STR_MAX_LEN * n * sizeof(char));
   for (int i = 0; i < n; i++) {
     node.timers[i] = event_timer_append(hb_timeout, 0);
@@ -43,11 +42,7 @@ LocalNode node_local_alloc(int id, int n, int hb_timeout) {
   return node;
 };
 
-void node_local_dealloc(LocalNode *n) {
-  free(n->timers);
-  free(n->interfaces);
-  free(n->if_arena_ptr);
-}
+void node_local_dealloc(LocalNode *n) { free(n->if_arena_ptr); }
 
 void node_update_time(Node *n) {
   struct timeval tv;

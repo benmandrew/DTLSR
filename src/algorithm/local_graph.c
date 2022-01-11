@@ -12,9 +12,10 @@ char register_heartbeat(LocalNode *this, long source_addr) {
       event_timer_arm(&this->timers[i], HEARTBEAT_TIMEOUT, 0);
       // If link was DOWN then it is now UP
       if (this->node.link_statuses[i] == LINK_DOWN) {
-        log_f("%s UP", ip_to_str(source_addr));
         this->node.link_statuses[i] = LINK_UP;
+        ts_toggle_state(&this->ls_time_series[i], get_now());
         updated = 1;
+        log_f("%s UP", ip_to_str(source_addr));
         break;
       }
     }
@@ -32,7 +33,7 @@ char receive_heartbeat(Node *graph, LocalNode *this, LSSockets *socks) {
   char updated = register_heartbeat(this, (long)from.sin_addr.s_addr);
   if (updated) {
     // Update global graph
-    update_global_this(graph, &this->node);
+    update_global_this(graph, this);
     send_lsa(graph, this, socks);
   }
   return updated;
@@ -45,19 +46,26 @@ char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd,
     if (this->timers[i].fd == active_fd) {
       if (this->node.link_statuses[i] == LINK_UP) {
         this->node.link_statuses[i] = LINK_DOWN;
-        log_f("%s DOWN", ip_to_str(this->node.neighbour_ips[i]));
+        ts_toggle_state(&this->ls_time_series[i], get_now());
         event_timer_disarm(&this->timers[i]);
         updated = 1;
+        log_f("%s DOWN", ip_to_str(this->node.neighbour_ips[i]));
       }
       break;
     }
   }
   if (updated) {
     // Update global graph
-    update_global_this(graph, &this->node);
+    update_global_this(graph, this);
     send_lsa(graph, this, socks);
   }
   return updated;
+}
+
+void local_node_update_metrics(LocalNode *this, unsigned long long now) {
+  for (int i = 0; i < this->node.n_neighbours; i++) {
+    this->node.link_metrics[i] = ts_compute_metric(&this->ls_time_series[i], now);
+  }
 }
 
 // Aggregate timer and socket file descriptors into a single array

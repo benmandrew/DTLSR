@@ -4,7 +4,15 @@
 
 #include <stdlib.h>
 
+// #include "algorithm/node.h"
+
 #define TS_SIZE 64
+
+enum LinkState { LINK_DOWN, LINK_UP };
+
+enum LinkState link_state_toggle(enum LinkState ls);
+
+char link_state_to_bool(enum LinkState ls);
 
 // Circular array of link state history
 // Pushing to a full time series overwrites the oldest data
@@ -15,15 +23,16 @@ typedef struct link_state_time_series {
   size_t front;
   size_t n_states;
   char full;
-  char curr_link_state;
+  enum LinkState curr_link_state;
 } LSTimeSeries;
 
-double ts_weighted_average_uptime(LSTimeSeries *ts, unsigned long long now);
+double ts_compute_metric(LSTimeSeries *ts, unsigned long long now);
 
 // Push a state change onto the history with its timestamp
 void ts_toggle_state(LSTimeSeries *ts, unsigned long long ms);
 
 // Initialise with the current link state and timestamp
-void ts_init(LSTimeSeries *ts, char curr_link_state, unsigned long long ms);
+void ts_init(LSTimeSeries *ts, enum LinkState curr_link_state,
+             unsigned long long ms);
 
 #endif

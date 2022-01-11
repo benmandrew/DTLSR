@@ -38,7 +38,9 @@ void graph_init(Node *graph);
 
 char receive_heartbeat(Node *graph, LocalNode *this, LSSockets *socks);
 
-void update_global_this(Node *graph, Node *this);
+void local_node_update_metrics(LocalNode *this, unsigned long long now);
+
+void update_global_this(Node *graph, LocalNode *this);
 
 char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd,
                        LSSockets *socks);

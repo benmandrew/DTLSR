@@ -14,7 +14,7 @@ int driver(int argc, char **argv) {
   // Creating socket file descriptor
   int sockfd = get_socket();
   // Read neighbours
-  init_this_node(&this, PROTOCOL, CONFIG, HEARTBEAT_TIMEOUT);
+  local_node_init(&this, PROTOCOL, CONFIG, HEARTBEAT_TIMEOUT);
   struct rtentry *routes = get_routes(&this);
   // Create heartbeat timer
   Timer timer = event_timer_append(HEARTBEAT_T, 0);

@@ -5,7 +5,29 @@
 #include <math.h>
 #include <stdio.h>
 
-#define FALLOFF 32.0
+#include "process/logging.h"
+
+enum LinkState link_state_toggle(enum LinkState ls) {
+  switch (ls) {
+  case LINK_UP:
+    return LINK_DOWN;
+  case LINK_DOWN:
+    return LINK_UP;
+  }
+  abort();
+}
+
+char link_state_to_bool(enum LinkState ls) {
+  switch (ls) {
+  case LINK_UP:
+    return 1;
+  case LINK_DOWN:
+    return 0;
+  }
+  abort();
+}
+
+#define FALLOFF 3200.0
 
 // e^{t_r_rel/FALLOFF} - e^{t_l_rel/FALLOFF}
 // Supposed to multiply result by FALLOFF, but as we divide, it cancels out
@@ -16,9 +38,16 @@ double integral_between(unsigned long long t_l, unsigned long long t_r,
   return exp(t_r_rel / FALLOFF) - exp(t_l_rel / FALLOFF);
 }
 
+double ts_compute_metric(LSTimeSeries *ts, unsigned long long now) {
+  if (ts->curr_link_state == LINK_UP)
+    return 0.0;
+  return 1.0 / (ts_weighted_average_uptime(ts, now) + 0.0001);
+}
+
+// Compute the average uptime weighted by an exponential falloff 
 double ts_weighted_average_uptime(LSTimeSeries *ts, unsigned long long now) {
-  if (ts->n_states == 0)
-    return (double)ts->curr_link_state;
+  if (ts->n_states == 1)
+    return (double)link_state_to_bool(ts->curr_link_state);
   double summation, total;
   // Index to first element
   size_t first = (ts->front - 1) % TS_SIZE;
@@ -35,14 +64,17 @@ double ts_weighted_average_uptime(LSTimeSeries *ts, unsigned long long now) {
     summation += integral_between(ts->timestamps[idx_left],
                                   ts->timestamps[idx_right], now);
   }
-  if (!ts->curr_link_state) {
+  if (ts->curr_link_state == LINK_DOWN) {
     summation = total - summation;
   }
+
+  log_f("st: %f %f : %llu -> %llu", summation, integral_between(ts->timestamps[0], now, now), ts->timestamps[0], now);
   return summation / total;
 }
 
 void ts_toggle_state(LSTimeSeries *ts, unsigned long long ms) {
-  ts->curr_link_state = !ts->curr_link_state;
+  ts->curr_link_state = link_state_toggle(ts->curr_link_state);
+  log_f("link %d t=%llu", ts->curr_link_state, ms);
   ts->timestamps[ts->front] = ms;
   ts->front++;
   if (!ts->full) {
@@ -54,9 +86,10 @@ void ts_toggle_state(LSTimeSeries *ts, unsigned long long ms) {
   }
 }
 
-void ts_init(LSTimeSeries *ts, char curr_link_state, unsigned long long ms) {
+void ts_init(LSTimeSeries *ts, enum LinkState curr_link_state,
+             unsigned long long ms) {
   // This trickery is necessary for kickstarting the history
-  ts->curr_link_state = !curr_link_state;
+  ts->curr_link_state = link_state_toggle(curr_link_state);
   ts->front = 0;
   ts->n_states = 0;
   ts->full = 0;

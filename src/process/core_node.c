@@ -47,14 +47,21 @@ int parse_n_neighbours(char *contents) {
   return n;
 }
 
-void init_this_node(LocalNode *this, char *protocol, char *config,
-                    int hb_timeout) {
+unsigned long long get_now(void) {
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  return (unsigned long long)(tv.tv_sec) * 1000 +
+         (unsigned long long)(tv.tv_usec) / 1000;
+}
+
+void local_node_init(LocalNode *this, char *protocol, char *config,
+                     int hb_timeout) {
+  unsigned long long now = get_now();
   char *contents = read_node_conf_file(protocol, config);
   // Get number of neighbours
   int n = parse_n_neighbours(contents);
   int id = get_node_id(protocol);
   *this = node_local_alloc(id, n, hb_timeout);
-  this->node.state = NODE_SEEN;
   // Save start so contents can be freed
   char *start = contents;
   char *saved;
@@ -65,6 +72,7 @@ void init_this_node(LocalNode *this, char *protocol, char *config,
     pch = strtok_r(NULL, "\n", &saved);
     // Links start DOWN
     this->node.link_statuses[i] = LINK_DOWN;
+    ts_init(&this->ls_time_series[i], LINK_DOWN, now);
     event_timer_disarm(&this->timers[i]);
     i++;
   }

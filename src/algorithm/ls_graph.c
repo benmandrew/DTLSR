@@ -16,16 +16,17 @@ void graph_init(Node *graph) {
   }
 }
 
-void update_global_this(Node *graph, Node *this) {
-  memcpy(&graph[this->id - 1], this, sizeof(Node));
+void update_global_this(Node *graph, LocalNode *this) {
+  local_node_update_metrics(this, get_now());
+  memcpy(&graph[this->node.id - 1], this, sizeof(Node));
   // Update neighbours
-  for (int i = 0; i < this->n_neighbours; i++) {
-    int id = this->neighbour_ids[i];
+  for (int i = 0; i < this->node.n_neighbours; i++) {
+    int id = this->node.neighbour_ids[i];
     Node *n = &graph[id - 1];
+    n->timestamp = this->node.timestamp;
     if (n->state == NODE_UNSEEN) {
       n->id = id;
       n->state = NODE_OPAQUE;
-      n->timestamp = this->timestamp;
     }
   }
 }

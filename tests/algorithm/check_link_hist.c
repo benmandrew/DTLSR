@@ -43,7 +43,7 @@ END_TEST
 START_TEST(test_link_hist_weighted_average_uptime) {
   double rt;
   LSTimeSeries ts;
-  ts_init(&ts, 0, 0);
+  ts_init(&ts, 0, 0ULL);
   for (int i = 1; i < TS_SIZE; i++) {
     ts_toggle_state(&ts, i);
   }
@@ -51,10 +51,10 @@ START_TEST(test_link_hist_weighted_average_uptime) {
   rt = ts_weighted_average_uptime(&ts, TS_SIZE + 3);
   ck_assert_int_eq(double_eq(rt, 0.491137), 1);
 
-  ts_init(&ts, 0, 0);
-  ts_toggle_state(&ts, 1);
-  ts_toggle_state(&ts, 4);
-  ts_toggle_state(&ts, 5);
+  ts_init(&ts, 0, 0ULL);
+  ts_toggle_state(&ts, 1ULL);
+  ts_toggle_state(&ts, 4ULL);
+  ts_toggle_state(&ts, 5ULL);
   rt = ts_weighted_average_uptime(&ts, 8);
   ck_assert_int_eq(double_eq(rt, 0.76159386), 1);
 
@@ -69,6 +69,17 @@ START_TEST(test_link_hist_weighted_average_uptime) {
   ts_toggle_state(&ts, 8);
   rt = ts_weighted_average_uptime(&ts, 20);
   ck_assert_int_eq(double_eq(rt, 0.672874), 1);
+
+
+
+
+
+  // ts_init(&ts, 0, 1641922462768ULL);
+  // ts_toggle_state(&ts, 1641922477804ULL);
+  // ts_toggle_state(&ts, 1641922487777ULL);
+  // rt = ts_weighted_average_uptime(&ts, 1641922487777ULL);
+  
+  // printf("%f\n", rt);
 }
 END_TEST
 

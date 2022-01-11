@@ -69,7 +69,7 @@ void remove_marked_routes(void) {
       memset(&rt, 0, sizeof rt);
       set_addrs(&rt, curr_routes[i].gateway, curr_routes[i].dst);
       if (ioctl(ioctl_fd, SIOCDELRT, &rt) < 0) {
-        log_f("ioctl failed: errno %s", strerror(errno));
+        log_f("ioctl remove failed: errno %s", strerror(errno));
       }
       memset(&curr_routes[i], 0, sizeof(struct simple_rt));
     }
@@ -99,7 +99,7 @@ void add_routes(LocalNode *this, struct hop_dest *next_hops,
   for (int i = 0; i < MAX_NODE_NUM; i++) {
     if (next_hops[i].next_hop != -1) {
       if (ioctl(ioctl_fd, SIOCADDRT, &routes[i]) < 0) {
-        log_f("ioctl failed: errno %s", strerror(errno));
+        // log_f("ioctl add failed: errno %s", strerror(errno));
       }
     }
   }
