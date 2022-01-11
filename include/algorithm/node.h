@@ -38,6 +38,7 @@ typedef struct node
   int neighbour_ids[MAX_NODE_FAN];
   // Whether the link is alive or we have detected a breakage
   enum LinkState link_statuses[MAX_NODE_FAN];
+  float link_metrics[MAX_NODE_FAN];
   // Node last update time
   unsigned long long timestamp;
 } Node;

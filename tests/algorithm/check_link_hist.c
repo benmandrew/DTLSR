@@ -3,6 +3,8 @@
 #define TEST_INCLUDES
 #include <check.h>
 #include <stdlib.h>
+
+char double_eq(double a, double b);
 #endif
 
 #include <stdio.h>
@@ -39,7 +41,7 @@ START_TEST(test_link_hist_toggle_state) {
 END_TEST
 
 START_TEST(test_link_hist_weighted_average_uptime) {
-  struct ratio rt;
+  double rt;
   LSTimeSeries ts;
   ts_init(&ts, 0, 0);
   for (int i = 1; i < TS_SIZE; i++) {
@@ -47,33 +49,42 @@ START_TEST(test_link_hist_weighted_average_uptime) {
   }
   ts_toggle_state(&ts, TS_SIZE + 1);
   rt = ts_weighted_average_uptime(&ts, TS_SIZE + 3);
-  ck_assert_int_eq(rt.num, 33);
-  ck_assert_int_eq(rt.den, 66);
+  ck_assert_int_eq(double_eq(rt, 0.491137), 1);
 
   ts_init(&ts, 0, 0);
   ts_toggle_state(&ts, 1);
   ts_toggle_state(&ts, 4);
   ts_toggle_state(&ts, 5);
-  ts_toggle_state(&ts, 8);
-  ts_toggle_state(&ts, 9);
-  rt = ts_weighted_average_uptime(&ts, 12);
-  ck_assert_int_eq(rt.num, 9);
-  ck_assert_int_eq(rt.den, 12);
+  rt = ts_weighted_average_uptime(&ts, 8);
+  ck_assert_int_eq(double_eq(rt, 0.76159386), 1);
 
   ts_init(&ts, 1, 0);
   ts_toggle_state(&ts, 1);
   ts_toggle_state(&ts, 4);
   ts_toggle_state(&ts, 5);
-  ts_toggle_state(&ts, 8);
-  ts_toggle_state(&ts, 9);
-  rt = ts_weighted_average_uptime(&ts, 12);
-  ck_assert_int_eq(rt.num, 3);
-  ck_assert_int_eq(rt.den, 12);
+  rt = ts_weighted_average_uptime(&ts, 8);
+  ck_assert_int_eq(double_eq(rt, 0.23840613), 1);
 
   ts_init(&ts, 0, 0);
   ts_toggle_state(&ts, 8);
   rt = ts_weighted_average_uptime(&ts, 20);
-  ck_assert_int_eq(rt.num, 12);
-  ck_assert_int_eq(rt.den, 20);
+  ck_assert_int_eq(double_eq(rt, 0.672874), 1);
+}
+END_TEST
+
+START_TEST(test_link_hist_integral_between) {
+  unsigned long long t_l, t_r, now;
+  double res;
+  t_l = 0;
+  t_r = 8;
+  now = 8;
+  res = integral_between(t_l, t_r, now);
+  ck_assert_int_eq(double_eq(res, 0.22119921), 1);
+
+  t_l = 25;
+  t_r = 50;
+  now = 100;
+  res = integral_between(t_l, t_r, now);
+  ck_assert_int_eq(double_eq(res, 0.11364430), 1);
 }
 END_TEST

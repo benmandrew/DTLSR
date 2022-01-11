@@ -1,9 +1,15 @@
 
 #include "algorithm/check_heap.c"
+#include "algorithm/check_link_hist.c"
 #include "algorithm/check_ls_graph.c"
 #include "algorithm/check_node.c"
 #include "algorithm/check_pathfind.c"
-#include "algorithm/check_link_hist.c"
+
+#include <math.h>
+
+#define EPSILON 0.001
+
+char double_eq(double a, double b) { return fabs(a - b) < EPSILON; }
 
 TCase *case_heap(void) {
   TCase *tc = tcase_create("Heap");
@@ -43,6 +49,7 @@ TCase *case_link_hist(void) {
   tcase_add_test(tc, test_link_hist_init);
   tcase_add_test(tc, test_link_hist_toggle_state);
   tcase_add_test(tc, test_link_hist_weighted_average_uptime);
+  tcase_add_test(tc, test_link_hist_integral_between);
   return tc;
 }
 

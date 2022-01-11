@@ -2,31 +2,43 @@
 #include "algorithm/link_hist.h"
 #include "algorithm/link_hist_pi.h"
 
+#include <math.h>
 #include <stdio.h>
 
-struct ratio ts_weighted_average_uptime(LSTimeSeries *ts,
-                                        unsigned long long now) {
+#define FALLOFF 32.0
+
+// e^{t_r_rel/FALLOFF} - e^{t_l_rel/FALLOFF}
+// Supposed to multiply result by FALLOFF, but as we divide, it cancels out
+double integral_between(unsigned long long t_l, unsigned long long t_r,
+                        unsigned long long now) {
+  double t_l_rel = (double)t_l - (double)now;
+  double t_r_rel = (double)t_r - (double)now;
+  return exp(t_r_rel / FALLOFF) - exp(t_l_rel / FALLOFF);
+}
+
+double ts_weighted_average_uptime(LSTimeSeries *ts, unsigned long long now) {
   if (ts->n_states == 0)
-    return (struct ratio){.num = ts->curr_link_state, .den = 1};
-  unsigned long long total_time_ms, sum_uptime_ms;
+    return (double)ts->curr_link_state;
+  double summation, total;
   // Index to first element
   size_t first = (ts->front - 1) % TS_SIZE;
   // If full, we need to compute index to last element
   if (ts->full) {
-    total_time_ms = now - ts->timestamps[(first + 1) % TS_SIZE];
+    total = integral_between(ts->timestamps[(first + 1) % TS_SIZE], now, now);
   } else {
-    total_time_ms = now - ts->timestamps[0];
+    total = integral_between(ts->timestamps[0], now, now);
   }
-  sum_uptime_ms = now - ts->timestamps[first];
+  summation = integral_between(ts->timestamps[first], now, now);
   for (int i = 0; i > 2 - (int)ts->n_states; i -= 2) {
     int idx_left = (i + first - 2) % TS_SIZE;
     int idx_right = (i + first - 1) % TS_SIZE;
-    sum_uptime_ms += ts->timestamps[idx_right] - ts->timestamps[idx_left];
+    summation += integral_between(ts->timestamps[idx_left],
+                                  ts->timestamps[idx_right], now);
   }
   if (!ts->curr_link_state) {
-    sum_uptime_ms = total_time_ms - sum_uptime_ms;
+    summation = total - summation;
   }
-  return (struct ratio){.num = sum_uptime_ms, .den = total_time_ms};
+  return summation / total;
 }
 
 void ts_toggle_state(LSTimeSeries *ts, unsigned long long ms) {

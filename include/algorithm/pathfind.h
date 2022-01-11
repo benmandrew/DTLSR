@@ -10,6 +10,7 @@ struct hop_dest
 {
   int next_hop;
   uint32_t dest_ip;
+  short metric;
 };
 
 DijkstraNode *dijkstra(Node *graph, int src_id);

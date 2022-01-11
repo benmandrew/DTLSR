@@ -3,6 +3,8 @@
 #define TEST_INCLUDES
 #include <check.h>
 #include <stdlib.h>
+
+char double_eq(double a, double b);
 #endif
 
 #include "algorithm/heap_pi.h"

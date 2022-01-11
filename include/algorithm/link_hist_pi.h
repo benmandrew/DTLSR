@@ -4,10 +4,7 @@
 
 #include "algorithm/link_hist.h"
 
-struct ratio {
-  unsigned long long num, den;
-};
-
-struct ratio ts_weighted_average_uptime(LSTimeSeries *ts, unsigned long long now);
+double integral_between(unsigned long long t0, unsigned long long t1,
+                        unsigned long long now);
 
 #endif

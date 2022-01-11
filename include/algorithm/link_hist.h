@@ -18,12 +18,12 @@ typedef struct link_state_time_series {
   char curr_link_state;
 } LSTimeSeries;
 
+double ts_weighted_average_uptime(LSTimeSeries *ts, unsigned long long now);
+
 // Push a state change onto the history with its timestamp
 void ts_toggle_state(LSTimeSeries *ts, unsigned long long ms);
 
 // Initialise with the current link state and timestamp
 void ts_init(LSTimeSeries *ts, char curr_link_state, unsigned long long ms);
-
-
 
 #endif
