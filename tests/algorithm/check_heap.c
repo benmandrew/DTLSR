@@ -1,12 +1,5 @@
 
-#ifndef TEST_INCLUDES
-#define TEST_INCLUDES
-#include <check.h>
-#include <stdlib.h>
-
-char double_eq(double a, double b);
-#endif
-
+#include "test_inc.h"
 #include "algorithm/heap_pi.h"
 
 START_TEST(test_heap_alloc) {

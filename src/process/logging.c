@@ -27,8 +27,8 @@ char *get_time_str(void) {
 
 int log_f(const char *format, ...) {
   if (logfile_name == NULL) {
-    // return 0;
-    exit(EXIT_FAILURE);
+    return 0;
+    // exit(EXIT_FAILURE);
   }
   char *time_buf = get_time_str();
   FILE *file = fopen(logfile_name, "a");

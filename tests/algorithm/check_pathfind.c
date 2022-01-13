@@ -1,12 +1,5 @@
 
-#ifndef TEST_INCLUDES
-#define TEST_INCLUDES
-#include <check.h>
-#include <stdlib.h>
-
-char double_eq(double a, double b);
-#endif
-
+#include "test_inc.h"
 #include "algorithm/pathfind_pi.h"
 
 /*
@@ -228,5 +221,64 @@ START_TEST(test_pathfind_opaque) {
     ck_assert_int_eq(next_hops[i].next_hop, -1);
     ck_assert_uint_eq(next_hops[i].dest_ip, inet_addr("0.0.0.0"));
   }
+}
+END_TEST
+
+/*
+ * Generate linear graph with opaque endpoint
+ * (seen S, opaque O)
+ * 
+ *    30    58    10    = 98
+ * S1 -- S2 -- S3 -- O4
+ *             |
+ *             |  INT16_MAX
+ *             O5
+ */
+START_TEST(test_pathfind_metric) {
+  Node graph[MAX_NODE_NUM];
+  graph_init(graph);
+  node_init(&graph[0], 1);
+  graph[0].neighbour_ids[0] = 2;
+  graph[0].neighbour_ips[0] = inet_addr("10.0.0.2");
+  graph[0].source_ips[0] = inet_addr("10.0.0.1");
+  graph[0].link_statuses[0] = LINK_UP;
+  graph[0].link_metrics[0] = 30;
+  node_init(&graph[1], 2);
+  graph[1].neighbour_ids[0] = 1;
+  graph[1].neighbour_ids[1] = 3;
+  graph[1].neighbour_ips[0] = inet_addr("10.0.0.1");
+  graph[1].neighbour_ips[1] = inet_addr("10.0.1.2");
+  graph[1].source_ips[0] = inet_addr("10.0.0.2");
+  graph[1].source_ips[1] = inet_addr("10.0.1.1");
+  graph[1].link_statuses[0] = LINK_UP;
+  graph[1].link_statuses[1] = LINK_UP;
+  graph[1].link_metrics[0] = 5;
+  graph[1].link_metrics[1] = 58;
+  node_init(&graph[2], 3);
+  graph[2].neighbour_ids[0] = 2;
+  graph[2].neighbour_ids[1] = 4;
+  graph[2].neighbour_ids[2] = 5;
+  graph[2].neighbour_ips[0] = inet_addr("10.0.1.1");
+  graph[2].neighbour_ips[1] = inet_addr("10.0.2.2");
+  graph[2].neighbour_ips[2] = inet_addr("10.0.3.2");
+  graph[2].source_ips[0] = inet_addr("10.0.1.2");
+  graph[2].source_ips[1] = inet_addr("10.0.2.1");
+  graph[2].source_ips[2] = inet_addr("10.0.3.1");
+  graph[2].link_statuses[0] = LINK_UP;
+  graph[2].link_statuses[1] = LINK_UP;
+  graph[2].link_statuses[2] = LINK_UP;
+  graph[2].link_metrics[0] = 800;
+  graph[2].link_metrics[1] = 10;
+  graph[2].link_metrics[2] = INT16_MAX;
+  graph[3].state = NODE_OPAQUE;
+  graph[4].state = NODE_OPAQUE;
+  struct hop_dest next_hops[MAX_NODE_NUM];
+  memset(next_hops, 0, sizeof next_hops);
+  pathfind(graph, 1, next_hops);
+
+  ck_assert_int_eq(next_hops[1].metric, 30);
+  ck_assert_int_eq(next_hops[2].metric, 88);
+  ck_assert_int_eq(next_hops[3].metric, 98);
+  ck_assert_int_eq(next_hops[4].metric, INT16_MAX);
 }
 END_TEST

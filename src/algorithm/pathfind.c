@@ -5,6 +5,7 @@
 // Disgusting, but the Linux kernel uses this exact thing so oh well
 #define FIELD_SIZEOF(t, f) (sizeof(((t *)0)->f))
 
+// Copy graph nodes to the DijkstraNode struct format
 DijkstraNode *dijkstra_init(Node *graph, int src_id) {
   DijkstraNode *nodes =
       (DijkstraNode *)malloc(MAX_NODE_NUM * sizeof(DijkstraNode));
@@ -39,13 +40,32 @@ MinHeap heap_init(DijkstraNode *nodes) {
   return h;
 }
 
-int get_next_hop(DijkstraNode *nodes, int src_id, int dst_id) {
+// Add short and double without risk of overflowing short
+short s_d_safe_add(short s, double d) {
+  if (d >= (double)INT16_MAX || s >= INT16_MAX)
+    return INT16_MAX;
+  short ds = (short)d;
+  short res = ds + s;
+  if (res < s)
+    return INT16_MAX;
+  return res;
+}
+
+int get_next_hop(Node *graph, DijkstraNode *nodes, int src_id, int dst_id,
+                 short *metric) {
   DijkstraNode *next;
   DijkstraNode *this = &nodes[dst_id - 1];
+  *metric = 0;
   // Backtrace the route, keeping track of the 'next' hop
   while (this->prev_id != -1) {
     next = this;
     this = &nodes[this->prev_id - 1];
+    for (int i = 0; i < this->n_neighbours; i++) {
+      if (next->id == this->neighbour_ids[i]) {
+        *metric = s_d_safe_add(*metric, graph[this->id - 1].link_metrics[i]);
+        break;
+      }
+    }
   }
   // If the source has no route to the destination
   if (this->id == dst_id) {
@@ -73,11 +93,15 @@ void get_next_hops(Node *graph, DijkstraNode *nodes, int src_id,
                    struct hop_dest *next_hops) {
   for (int i = 0; i < MAX_NODE_NUM; i++) {
     if (nodes[i].state != NODE_UNSEEN && nodes[i].prev_id != -1) {
+      short metric;
+      int next_hop = get_next_hop(graph, nodes, src_id, i + 1, &metric);
       next_hops[i] =
-          (struct hop_dest){.next_hop = get_next_hop(nodes, src_id, i + 1),
-                            .dest_ip = get_dst_ip(graph, nodes, i + 1)};
+          (struct hop_dest){.next_hop = next_hop,
+                            .dest_ip = get_dst_ip(graph, nodes, i + 1),
+                            .metric = metric};
     } else {
-      next_hops[i] = (struct hop_dest){.next_hop = -1, .dest_ip = 0};
+      next_hops[i] =
+          (struct hop_dest){.next_hop = -1, .dest_ip = 0, .metric = 0};
     }
   }
 }

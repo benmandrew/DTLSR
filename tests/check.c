@@ -34,6 +34,7 @@ TCase *case_pathfind(void) {
   tcase_add_test(tc, test_pathfind_pentagon);
   tcase_add_test(tc, test_pathfind_partition);
   tcase_add_test(tc, test_pathfind_opaque);
+  tcase_add_test(tc, test_pathfind_metric);
   return tc;
 }
 
@@ -48,8 +49,10 @@ TCase *case_link_hist(void) {
   TCase *tc = tcase_create("Link_Hist");
   tcase_add_test(tc, test_link_hist_init);
   tcase_add_test(tc, test_link_hist_toggle_state);
-  tcase_add_test(tc, test_link_hist_weighted_average_uptime);
-  tcase_add_test(tc, test_link_hist_integral_between);
+  tcase_add_test(tc, test_link_hist_weighted_average_uptime_f32);
+  tcase_add_test(tc, test_link_hist_weighted_average_uptime_f6400);
+  tcase_add_test(tc, test_link_hist_integral_between_f32);
+  tcase_add_test(tc, test_link_hist_integral_between_f6400);
   return tc;
 }
 

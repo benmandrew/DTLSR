@@ -9,8 +9,8 @@
 
 void set_logfile_name(char *name);
 
-int log_f(const char *format, ...);
-
 char *get_time_str(void);
+
+int log_f(const char *format, ...);
 
 #endif

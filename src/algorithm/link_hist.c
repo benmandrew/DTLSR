@@ -27,15 +27,19 @@ char link_state_to_bool(enum LinkState ls) {
   abort();
 }
 
-#define FALLOFF 3200.0
+double falloff = 3200.0;
 
-// e^{t_r_rel/FALLOFF} - e^{t_l_rel/FALLOFF}
-// Supposed to multiply result by FALLOFF, but as we divide, it cancels out
+void ts_set_falloff_parameter(double f) {
+  falloff = f;
+}
+
+// e^{t_r_rel/falloff} - e^{t_l_rel/falloff}
+// Supposed to multiply result by falloff, but as we divide, it cancels out
 double integral_between(unsigned long long t_l, unsigned long long t_r,
                         unsigned long long now) {
   double t_l_rel = (double)t_l - (double)now;
   double t_r_rel = (double)t_r - (double)now;
-  return exp(t_r_rel / FALLOFF) - exp(t_l_rel / FALLOFF);
+  return exp(t_r_rel / falloff) - exp(t_l_rel / falloff);
 }
 
 double ts_compute_metric(LSTimeSeries *ts, unsigned long long now) {
@@ -67,7 +71,6 @@ double ts_weighted_average_uptime(LSTimeSeries *ts, unsigned long long now) {
   if (ts->curr_link_state == LINK_DOWN) {
     summation = total - summation;
   }
-
   log_f("st: %f %f : %llu -> %llu", summation, integral_between(ts->timestamps[0], now, now), ts->timestamps[0], now);
   return summation / total;
 }

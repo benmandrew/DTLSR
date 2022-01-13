@@ -88,6 +88,7 @@ void derive_rtentries(LocalNode *this, struct hop_dest *next_hops,
         set_addrs(&routes[hop_i], this->node.neighbour_ips[nb_i],
                   next_hops[hop_i].dest_ip);
         routes[hop_i].rt_flags = RTF_UP | RTF_GATEWAY;
+        routes[hop_i].rt_metric = next_hops[hop_i].metric;
         break;
       }
     }

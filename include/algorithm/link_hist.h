@@ -26,6 +26,8 @@ typedef struct link_state_time_series {
   enum LinkState curr_link_state;
 } LSTimeSeries;
 
+void ts_set_falloff_parameter(double f);
+
 double ts_compute_metric(LSTimeSeries *ts, unsigned long long now);
 
 // Push a state change onto the history with its timestamp
