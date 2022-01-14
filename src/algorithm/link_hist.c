@@ -91,8 +91,6 @@ double ts_weighted_average_uptime(LSTimeSeries *ts, unsigned long long now) {
   if (ts->curr_link_state == LINK_DOWN) {
     summation = total - summation;
   }
-  log_f("st: %f : %llu : tr=%f", pow(summation / total, 3.0),
-        now - ts->timestamps[last_idx(ts)], ts_average_uptime(ts, now));
   return pow(summation / total, 3.0);
 }
 
@@ -107,8 +105,6 @@ void ts_toggle_state(LSTimeSeries *ts, unsigned long long ms) {
     ts->full = 1;
     ts->front = 0;
   }
-  log_f("link %d t=%llu", ts->curr_link_state,
-        ms - ts->timestamps[last_idx(ts)]);
 }
 
 void ts_init(LSTimeSeries *ts, enum LinkState curr_link_state,

@@ -43,14 +43,18 @@ void close_sockets(LSFD *fds) {
 void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds, int active_fd,
                      char *send_status, char *graph_updated) {
   if (active_fd == fds->hb_sock) {
+    log_f("HEARTBEAT");
     *graph_updated = receive_heartbeat(graph, this, fds, IS_DTLSR);
   } else if (active_fd == fds->lsa_rec_sock) {
+    log_f("LSA_REC");
     *graph_updated = receive_lsa(graph, this, fds);
   } else if (active_fd == fds->lsa_snd_timer.fd) {
+    log_f("LSA_SND");
     event_timer_reset(&fds->lsa_snd_timer);
     *graph_updated = 1;
     *send_status = 1;
   } else {
+    log_f("TIMEOUT");
     *graph_updated = timeout_heartbeat(graph, this, active_fd, fds, IS_DTLSR);
   }
 }
@@ -74,11 +78,13 @@ int driver(int argc, char **argv) {
     handle_event_fd(graph, &this, &fds, active_fd, &do_send_lsa,
                     &graph_updated);
     if (graph_updated) {
+      log_f("RECOMPUTE");
       local_node_update_metrics(&this, get_now(), IS_DTLSR);
       pathfind(graph, this.node.id, next_hops);
       update_routing_table(&this, next_hops);
     }
     if (do_send_lsa) {
+      log_f("SEND");
       send_lsa(graph, &this, &fds);
     }
   }
