@@ -24,9 +24,9 @@ void event_timer_reset(Timer *t);
 
 void event_timer_disarm(Timer *t);
 
-void event_timer_arm(Timer *t, int sec, int nsec);
+void event_timer_arm(Timer *t, long sec, long nsec);
 
-Timer event_timer_append(int sec, int nsec);
+Timer event_timer_append(long sec, long nsec);
 
 int event_wait(int *fds, int n_fds);
 

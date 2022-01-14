@@ -8,9 +8,12 @@
 #define HB_SIZE sizeof(int)
 #define LSA_PORT 45001
 
+// Heartbeat period
 #define HEARTBEAT_T 2
-// A bit of fudge factor
-#define HEARTBEAT_TIMEOUT HEARTBEAT_T + 3
+// Add a bit of fudge factor
+#define HEARTBEAT_TIMEOUT 2 * HEARTBEAT_T + 1
+// How often we recompute the link metric
+#define METRIC_RECOMPUTATION_T HEARTBEAT_T + 1
 
 #define LOGGING_ACTIVE
 

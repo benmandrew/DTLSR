@@ -37,7 +37,7 @@ options = LinkOptions(
   bandwidth=54_000_000,
   delay=5000,
   dup=5,
-  loss=5.5,
+  loss=75.0,
   jitter=0,
 )
 
@@ -56,7 +56,7 @@ session.services.startup_service(n1, dtlsr.Heartbeat)
 session.services.startup_service(n2, dtlsr.DTLSR)
 
 print("Heartbeat valid:", session.services.validate_service(n1, dtlsr.Heartbeat))
-print("Heartbeat valid:", session.services.validate_service(n2, dtlsr.DTLSR))
+print("DTLSR valid:", session.services.validate_service(n2, dtlsr.DTLSR))
 
 input("press enter to shutdown")
 

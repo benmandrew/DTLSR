@@ -19,39 +19,37 @@
 
 struct rtentry *routes;
 
-#define N_EVENT_SOCKS 2
-
-// Sockets required for Graph + event file descriptors
-typedef struct LSSockets {
+// File descriptors for operation of Link-State graph + sockets
+typedef struct LSFD {
   // Heartbeat
   int hb_sock;
   // LSA receiving
   int lsa_rec_sock;
   // LSA sending
   int lsa_snd_sock;
+  // LS metric recomputation
+  Timer lsa_snd_timer;
   // Event system file descriptors
   int *event_fds;
   int n_event_fds;
-} LSSockets;
+} LSFD;
 
 void graph_init(Node *graph);
 
-char receive_heartbeat(Node *graph, LocalNode *this, LSSockets *socks);
+char receive_heartbeat(Node *graph, LocalNode *this, LSFD *fds, char is_dtlsr);
 
-void local_node_update_metrics(LocalNode *this, unsigned long long now);
+void local_node_update_metrics(LocalNode *this, unsigned long long now, char is_dtlsr);
 
-void update_global_this(Node *graph, LocalNode *this);
+void update_global_this(Node *graph, LocalNode *this, char is_dtlsr);
 
 char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd,
-                       LSSockets *socks);
+                       LSFD *fds, char is_dtlsr);
 
-void aggregate_fds(LocalNode *this, LSSockets *socks, int n_sockfds);
+char receive_lsa(Node *graph, LocalNode *this, LSFD *fds);
 
-char receive_lsa(Node *graph, LocalNode *this, LSSockets *socks);
-
-void send_lsa_except(Node *graph, LocalNode *this, LSSockets *socks,
+void send_lsa_except(Node *graph, LocalNode *this, LSFD *fds,
                      long source_addr);
 
-void send_lsa(Node *graph, LocalNode *this, LSSockets *socks);
+void send_lsa(Node *graph, LocalNode *this, LSFD *fds);
 
 #endif

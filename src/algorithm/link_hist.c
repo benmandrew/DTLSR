@@ -29,9 +29,7 @@ char link_state_to_bool(enum LinkState ls) {
 
 double falloff = 3200.0;
 
-void ts_set_falloff_parameter(double f) {
-  falloff = f;
-}
+void ts_set_falloff_parameter(double f) { falloff = f; }
 
 // e^{t_r_rel/falloff} - e^{t_l_rel/falloff}
 // Supposed to multiply result by falloff, but as we divide, it cancels out
@@ -42,13 +40,39 @@ double integral_between(unsigned long long t_l, unsigned long long t_r,
   return exp(t_r_rel / falloff) - exp(t_l_rel / falloff);
 }
 
+size_t last_idx(LSTimeSeries *ts) {
+  if (ts->full)
+    return ts->front % TS_SIZE;
+  return 0;
+}
+
 double ts_compute_metric(LSTimeSeries *ts, unsigned long long now) {
-  if (ts->curr_link_state == LINK_UP)
-    return 0.0;
+  // if (ts->curr_link_state == LINK_UP)
+  //   return 0.0;
   return 1.0 / (ts_weighted_average_uptime(ts, now) + 0.0001);
 }
 
-// Compute the average uptime weighted by an exponential falloff 
+double ts_average_uptime(LSTimeSeries *ts, unsigned long long now) {
+  if (ts->n_states == 1)
+    return (double)link_state_to_bool(ts->curr_link_state);
+  double summation, total;
+  // Index to first element
+  size_t first = (ts->front - 1) % TS_SIZE;
+  // If full, we need to compute index to last element
+  total = now - ts->timestamps[last_idx(ts)];
+  summation = now - ts->timestamps[first];
+  for (int i = 0; i > 2 - (int)ts->n_states; i -= 2) {
+    int idx_left = (i + first - 2) % TS_SIZE;
+    int idx_right = (i + first - 1) % TS_SIZE;
+    summation += ts->timestamps[idx_right] - ts->timestamps[idx_left];
+  }
+  if (ts->curr_link_state == LINK_DOWN) {
+    summation = total - summation;
+  }
+  return summation / total;
+}
+
+// Compute the average uptime weighted by an exponential falloff
 double ts_weighted_average_uptime(LSTimeSeries *ts, unsigned long long now) {
   if (ts->n_states == 1)
     return (double)link_state_to_bool(ts->curr_link_state);
@@ -56,11 +80,7 @@ double ts_weighted_average_uptime(LSTimeSeries *ts, unsigned long long now) {
   // Index to first element
   size_t first = (ts->front - 1) % TS_SIZE;
   // If full, we need to compute index to last element
-  if (ts->full) {
-    total = integral_between(ts->timestamps[(first + 1) % TS_SIZE], now, now);
-  } else {
-    total = integral_between(ts->timestamps[0], now, now);
-  }
+  total = integral_between(ts->timestamps[last_idx(ts)], now, now);
   summation = integral_between(ts->timestamps[first], now, now);
   for (int i = 0; i > 2 - (int)ts->n_states; i -= 2) {
     int idx_left = (i + first - 2) % TS_SIZE;
@@ -71,13 +91,13 @@ double ts_weighted_average_uptime(LSTimeSeries *ts, unsigned long long now) {
   if (ts->curr_link_state == LINK_DOWN) {
     summation = total - summation;
   }
-  log_f("st: %f %f : %llu -> %llu", summation, integral_between(ts->timestamps[0], now, now), ts->timestamps[0], now);
-  return summation / total;
+  log_f("st: %f : %llu : tr=%f", pow(summation / total, 3.0),
+        now - ts->timestamps[last_idx(ts)], ts_average_uptime(ts, now));
+  return pow(summation / total, 3.0);
 }
 
 void ts_toggle_state(LSTimeSeries *ts, unsigned long long ms) {
   ts->curr_link_state = link_state_toggle(ts->curr_link_state);
-  log_f("link %d t=%llu", ts->curr_link_state, ms);
   ts->timestamps[ts->front] = ms;
   ts->front++;
   if (!ts->full) {
@@ -87,6 +107,8 @@ void ts_toggle_state(LSTimeSeries *ts, unsigned long long ms) {
     ts->full = 1;
     ts->front = 0;
   }
+  log_f("link %d t=%llu", ts->curr_link_state,
+        ms - ts->timestamps[last_idx(ts)]);
 }
 
 void ts_init(LSTimeSeries *ts, enum LinkState curr_link_state,

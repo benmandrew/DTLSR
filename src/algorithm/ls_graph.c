@@ -16,8 +16,8 @@ void graph_init(Node *graph) {
   }
 }
 
-void update_global_this(Node *graph, LocalNode *this) {
-  local_node_update_metrics(this, get_now());
+void update_global_this(Node *graph, LocalNode *this, char is_dtlsr) {
+  local_node_update_metrics(this, get_now(), is_dtlsr);
   memcpy(&graph[this->node.id - 1], this, sizeof(Node));
   // Update neighbours
   for (int i = 0; i < this->node.n_neighbours; i++) {
@@ -64,19 +64,19 @@ char merge_in(Node *these, Node *others) {
 
 char buffer[LSA_SIZE];
 
-char receive_lsa(Node *graph, LocalNode *this, LSSockets *socks) {
+char receive_lsa(Node *graph, LocalNode *this, LSFD *fds) {
   struct sockaddr_in from;
-  receive(socks->lsa_rec_sock, (void *)buffer, LSA_SIZE,
+  receive(fds->lsa_rec_sock, (void *)buffer, LSA_SIZE,
           (struct sockaddr *)&from);
   char updated = merge_in(graph, (Node *)buffer);
   if (updated) {
-    send_lsa_except(graph, this, socks, (long)from.sin_addr.s_addr);
+    send_lsa_except(graph, this, fds, (long)from.sin_addr.s_addr);
   }
   return updated;
 }
 
 // Send LSA to all neighbours except one
-void send_lsa_except(Node *graph, LocalNode *this, LSSockets *socks,
+void send_lsa_except(Node *graph, LocalNode *this, LSFD *fds,
                      long source_addr) {
   for (int i = 0; i < this->node.n_neighbours; i++) {
     // Skip neighbour from which LSA was originally received
@@ -88,12 +88,12 @@ void send_lsa_except(Node *graph, LocalNode *this, LSSockets *socks,
     neighbour_addr->sin_port = htons(LSA_PORT);
     int addr_len = sizeof(*neighbour_addr);
     // Send LSA to neighbour
-    sendto(socks->lsa_snd_sock, (const void *)graph, LSA_SIZE, MSG_CONFIRM,
+    sendto(fds->lsa_snd_sock, (const void *)graph, LSA_SIZE, MSG_CONFIRM,
            (const struct sockaddr *)neighbour_addr, addr_len);
   }
 }
 
 // Send LSA to all neighbours
-void send_lsa(Node *graph, LocalNode *this, LSSockets *socks) {
-  send_lsa_except(graph, this, socks, 0);
+void send_lsa(Node *graph, LocalNode *this, LSFD *fds) {
+  send_lsa_except(graph, this, fds, 0);
 }

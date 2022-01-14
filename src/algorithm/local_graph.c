@@ -25,7 +25,8 @@ char register_heartbeat(LocalNode *this, long source_addr) {
 
 char buffer[HB_SIZE];
 
-char receive_heartbeat(Node *graph, LocalNode *this, LSSockets *socks) {
+char receive_heartbeat(Node *graph, LocalNode *this, LSFD *socks,
+                       char is_dtlsr) {
   struct sockaddr_in from;
   receive(socks->hb_sock, (void *)buffer, HB_SIZE, (struct sockaddr *)&from);
   // Update node timestamp to now
@@ -33,14 +34,14 @@ char receive_heartbeat(Node *graph, LocalNode *this, LSSockets *socks) {
   char updated = register_heartbeat(this, (long)from.sin_addr.s_addr);
   if (updated) {
     // Update global graph
-    update_global_this(graph, this);
+    update_global_this(graph, this, is_dtlsr);
     send_lsa(graph, this, socks);
   }
   return updated;
 }
 
 char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd,
-                       LSSockets *socks) {
+                       LSFD *fds, char is_dtlsr) {
   char updated = 0;
   for (int i = 0; i < this->node.n_neighbours; i++) {
     if (this->timers[i].fd == active_fd) {
@@ -56,26 +57,24 @@ char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd,
   }
   if (updated) {
     // Update global graph
-    update_global_this(graph, this);
-    send_lsa(graph, this, socks);
+    update_global_this(graph, this, is_dtlsr);
+    send_lsa(graph, this, fds);
   }
   return updated;
 }
 
-void local_node_update_metrics(LocalNode *this, unsigned long long now) {
-  for (int i = 0; i < this->node.n_neighbours; i++) {
-    this->node.link_metrics[i] = ts_compute_metric(&this->ls_time_series[i], now);
+void local_node_update_metrics(LocalNode *this, unsigned long long now,
+                               char is_dtlsr) {
+  if (!is_dtlsr) {
+    // For LSR, path cost is simply the hop count
+    for (int i = 0; i < this->node.n_neighbours; i++) {
+      this->node.link_metrics[i] = 1.0;
+    }
+  } else {
+    // For DTLSR, we use our more complicated metric
+    for (int i = 0; i < this->node.n_neighbours; i++) {
+      this->node.link_metrics[i] =
+          ts_compute_metric(&this->ls_time_series[i], now);
+    }
   }
-}
-
-// Aggregate timer and socket file descriptors into a single array
-void aggregate_fds(LocalNode *this, LSSockets *socks, int n_sockfds) {
-  socks->n_event_fds = this->node.n_neighbours + n_sockfds;
-  socks->event_fds = (int *)malloc(socks->n_event_fds * sizeof(int));
-  int i;
-  for (i = 0; i < this->node.n_neighbours; i++) {
-    socks->event_fds[i] = this->timers[i].fd;
-  }
-  socks->event_fds[this->node.n_neighbours] = socks->hb_sock;
-  socks->event_fds[this->node.n_neighbours + 1] = socks->lsa_rec_sock;
 }

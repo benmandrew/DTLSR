@@ -20,7 +20,7 @@ void event_timer_disarm(Timer *t) {
   event_timer_reset(t);
 }
 
-void event_timer_arm(Timer *t, int sec, int nsec) {
+void event_timer_arm(Timer *t, long sec, long nsec) {
   t->v = (struct itimerspec){
       .it_interval = {0, 0},
       .it_value = {sec, nsec},
@@ -28,7 +28,7 @@ void event_timer_arm(Timer *t, int sec, int nsec) {
   event_timer_reset(t);
 }
 
-Timer event_timer_append(int sec, int nsec) {
+Timer event_timer_append(long sec, long nsec) {
   Timer t;
   t.fd = timerfd_create(CLOCK_REALTIME, 0);
   event_timer_arm(&t, sec, nsec);
