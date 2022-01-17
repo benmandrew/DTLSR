@@ -62,7 +62,8 @@ int driver(int argc, char **argv) {
   local_node_init(&this, PROTOCOL, CONFIG, HEARTBEAT_TIMEOUT);
   update_global_this(graph, &this);
   #ifdef DTLSR
-  ts_set_falloff_parameter(64000.0);
+  ts_set_falloff_param(64000.0);
+  ts_set_power_param(3.0);
   #endif
   routes = get_routes(&this);
   LSFD fds = init_sockets(&this);

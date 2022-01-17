@@ -49,8 +49,9 @@ TCase *case_link_hist(void) {
   TCase *tc = tcase_create("Link_Hist");
   tcase_add_test(tc, test_link_hist_init);
   tcase_add_test(tc, test_link_hist_toggle_state);
-  tcase_add_test(tc, test_link_hist_weighted_average_uptime_f32);
-  tcase_add_test(tc, test_link_hist_weighted_average_uptime_f6400);
+  tcase_add_test(tc, test_link_hist_weighted_average_uptime_f32_p1);
+  tcase_add_test(tc, test_link_hist_weighted_average_uptime_f6400_p1);
+  tcase_add_test(tc, test_link_hist_weighted_average_uptime_f32_p3);
   tcase_add_test(tc, test_link_hist_integral_between_f32);
   tcase_add_test(tc, test_link_hist_integral_between_f6400);
   return tc;

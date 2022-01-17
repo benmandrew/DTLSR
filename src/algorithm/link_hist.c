@@ -30,8 +30,11 @@ char link_state_to_bool(enum LinkState ls) {
 #ifdef DTLSR
 
 double falloff = 3200.0;
+double power = 1.0;
 
-void ts_set_falloff_parameter(double f) { falloff = f; }
+void ts_set_falloff_param(double f) { falloff = f; }
+
+void ts_set_power_param(double p) { power = p; }
 
 // e^{t_r_rel/falloff} - e^{t_l_rel/falloff}
 // Supposed to multiply result by falloff, but as we divide, it cancels out
@@ -91,7 +94,7 @@ double ts_weighted_average_uptime(LSTimeSeries *ts, unsigned long long now) {
   if (ts->curr_link_state == LINK_DOWN) {
     summation = total - summation;
   }
-  return pow(summation / total, 3.0);
+  return pow(summation / total, power);
 }
 
 void ts_toggle_state(LSTimeSeries *ts, unsigned long long ms) {

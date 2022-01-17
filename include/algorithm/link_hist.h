@@ -28,7 +28,9 @@ typedef struct link_state_time_series {
   enum LinkState curr_link_state;
 } LSTimeSeries;
 
-void ts_set_falloff_parameter(double f);
+void ts_set_falloff_param(double f);
+
+void ts_set_power_param(double p);
 
 double ts_compute_metric(LSTimeSeries *ts, unsigned long long now);
 
