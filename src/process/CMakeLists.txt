@@ -7,7 +7,6 @@ set(process_source_files
 	fd_event.c
 	fileio.c
 	logging.c
-	perf_logging.c
 	route_control.c
 )
 

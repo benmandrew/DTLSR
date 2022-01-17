@@ -72,7 +72,9 @@ void local_node_init(LocalNode *this, char *protocol, char *config,
     pch = strtok_r(NULL, "\n", &saved);
     // Links start DOWN
     this->node.link_statuses[i] = LINK_DOWN;
+    #ifdef DTLSR
     ts_init(&this->ls_time_series[i], LINK_DOWN, now);
+    #endif
     event_timer_disarm(&this->timers[i]);
     i++;
   }

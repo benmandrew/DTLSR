@@ -6,7 +6,6 @@
 #include "process/route_control.h"
 
 #define PROTOCOL "dtlsr"
-#define IS_DTLSR 1
 #define N_AUX_FDS 3
 
 // Aggregate timer and socket file descriptors into a single array
@@ -43,7 +42,7 @@ void close_sockets(LSFD *fds) {
 void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds, int active_fd,
                      char *send_status, char *graph_updated) {
   if (active_fd == fds->hb_sock) {
-    *graph_updated = receive_heartbeat(graph, this, fds, IS_DTLSR);
+    *graph_updated = receive_heartbeat(graph, this, fds);
   } else if (active_fd == fds->lsa_rec_sock) {
     *graph_updated = receive_lsa(graph, this, fds);
   } else if (active_fd == fds->lsa_snd_timer.fd) {
@@ -51,7 +50,7 @@ void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds, int active_fd,
     *graph_updated = 1;
     *send_status = 1;
   } else {
-    *graph_updated = timeout_heartbeat(graph, this, active_fd, fds, IS_DTLSR);
+    *graph_updated = timeout_heartbeat(graph, this, active_fd, fds);
   }
 }
 
@@ -61,8 +60,10 @@ int driver(int argc, char **argv) {
   LocalNode this;
   graph_init(graph);
   local_node_init(&this, PROTOCOL, CONFIG, HEARTBEAT_TIMEOUT);
-  update_global_this(graph, &this, IS_DTLSR);
+  update_global_this(graph, &this);
+  #ifdef DTLSR
   ts_set_falloff_parameter(64000.0);
+  #endif
   routes = get_routes(&this);
   LSFD fds = init_sockets(&this);
   while (1) {
@@ -74,7 +75,7 @@ int driver(int argc, char **argv) {
     handle_event_fd(graph, &this, &fds, active_fd, &do_send_lsa,
                     &graph_updated);
     if (graph_updated) {
-      local_node_update_metrics(&this, get_now(), IS_DTLSR);
+      local_node_update_metrics(&this, get_now());
       pathfind(graph, this.node.id, next_hops);
       update_routing_table(&this, next_hops);
     }

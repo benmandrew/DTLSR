@@ -16,8 +16,8 @@ void graph_init(Node *graph) {
   }
 }
 
-void update_global_this(Node *graph, LocalNode *this, char is_dtlsr) {
-  local_node_update_metrics(this, get_now(), is_dtlsr);
+void update_global_this(Node *graph, LocalNode *this) {
+  local_node_update_metrics(this, get_now());
   memcpy(&graph[this->node.id - 1], this, sizeof(Node));
   // Update neighbours
   for (int i = 0; i < this->node.n_neighbours; i++) {

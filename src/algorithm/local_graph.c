@@ -13,7 +13,9 @@ char register_heartbeat(LocalNode *this, long source_addr) {
       // If link was DOWN then it is now UP
       if (this->node.link_statuses[i] == LINK_DOWN) {
         this->node.link_statuses[i] = LINK_UP;
+        #ifdef DTLSR
         ts_toggle_state(&this->ls_time_series[i], get_now());
+        #endif
         updated = 1;
         log_f("%s UP", ip_to_str(source_addr));
         break;
@@ -25,8 +27,7 @@ char register_heartbeat(LocalNode *this, long source_addr) {
 
 char buffer[HB_SIZE];
 
-char receive_heartbeat(Node *graph, LocalNode *this, LSFD *socks,
-                       char is_dtlsr) {
+char receive_heartbeat(Node *graph, LocalNode *this, LSFD *socks) {
   struct sockaddr_in from;
   receive(socks->hb_sock, (void *)buffer, HB_SIZE, (struct sockaddr *)&from);
   // Update node timestamp to now
@@ -34,20 +35,21 @@ char receive_heartbeat(Node *graph, LocalNode *this, LSFD *socks,
   char updated = register_heartbeat(this, (long)from.sin_addr.s_addr);
   if (updated) {
     // Update global graph
-    update_global_this(graph, this, is_dtlsr);
+    update_global_this(graph, this);
     send_lsa(graph, this, socks);
   }
   return updated;
 }
 
-char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd,
-                       LSFD *fds, char is_dtlsr) {
+char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds) {
   char updated = 0;
   for (int i = 0; i < this->node.n_neighbours; i++) {
     if (this->timers[i].fd == active_fd) {
       if (this->node.link_statuses[i] == LINK_UP) {
         this->node.link_statuses[i] = LINK_DOWN;
+        #ifdef DTLSR
         ts_toggle_state(&this->ls_time_series[i], get_now());
+        #endif
         event_timer_disarm(&this->timers[i]);
         updated = 1;
         log_f("%s DOWN", ip_to_str(this->node.neighbour_ips[i]));
@@ -57,24 +59,23 @@ char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd,
   }
   if (updated) {
     // Update global graph
-    update_global_this(graph, this, is_dtlsr);
+    update_global_this(graph, this);
     send_lsa(graph, this, fds);
   }
   return updated;
 }
 
-void local_node_update_metrics(LocalNode *this, unsigned long long now,
-                               char is_dtlsr) {
-  if (!is_dtlsr) {
-    // For LSR, path cost is simply the hop count
-    for (int i = 0; i < this->node.n_neighbours; i++) {
-      this->node.link_metrics[i] = 1.0;
-    }
-  } else {
-    // For DTLSR, we use our more complicated metric
-    for (int i = 0; i < this->node.n_neighbours; i++) {
-      this->node.link_metrics[i] =
-          ts_compute_metric(&this->ls_time_series[i], now);
-    }
+void local_node_update_metrics(LocalNode *this, unsigned long long now) {
+#ifdef DTLSR
+  // For DTLSR, we use our complicated metric
+  for (int i = 0; i < this->node.n_neighbours; i++) {
+    this->node.link_metrics[i] =
+        ts_compute_metric(&this->ls_time_series[i], now);
   }
+#else
+  // For LSR, path cost is simply the hop count
+  for (int i = 0; i < this->node.n_neighbours; i++) {
+    this->node.link_metrics[i] = 1.0;
+  }
+#endif
 }

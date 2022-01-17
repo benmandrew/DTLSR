@@ -94,6 +94,7 @@ class Node:
   service_map = {
     "DTLSR" : dtlsr.DTLSR,
     "Heartbeat" : dtlsr.Heartbeat,
+    "Iperf" : dtlsr.Iperf
   }
 
   def __init__(self, id: str, session: Session) -> None:
@@ -106,16 +107,16 @@ class Node:
     self.services: List[str] = []
 
   def init_router(self, session: Session):
-    print("Router")
     session.services.set_service(self.core_node.id, "DTLSR")
     session.services.set_service(self.core_node.id, "Heartbeat")
     self.services.append("DTLSR")
     self.services.append("Heartbeat")
 
   def init_host(self, session: Session):
-    print("Host")
     session.services.set_service(self.core_node.id, "Heartbeat")
+    # session.services.set_service(self.core_node.id, "Iperf")
     self.services.append("Heartbeat")
+    # self.services.append("Iperf")
 
   def add_neighbour(self, source_ip: str, neighbour_ip: str, neighbour_id: int):
     self.source_ips.append(source_ip)
@@ -123,6 +124,7 @@ class Node:
     self.neighbour_ids.append(neighbour_id)
   
   def start_services(self, session: Session):
+    print("n{}: {}".format(self.id, self.source_ips))
     for s in self.services:
       session.services.create_service_files(self.core_node, self.service_map[s])
       session.services.startup_service(self.core_node, self.service_map[s])

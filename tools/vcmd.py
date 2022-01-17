@@ -29,13 +29,10 @@ if __name__ == "__main__":
   try:
     node_dir = "/tmp/{}/{}".format(pycore_dir, sys.argv[1])
     cmd = ["vcmd", "-c", node_dir, "--"]
-    res = subprocess.run(cmd + sys.argv[2:], capture_output=True)
+    res = subprocess.run(cmd + sys.argv[2:], stderr=subprocess.STDOUT)
     print(res.stdout.decode("utf-8"))
   except Exception as e:
-    print(e)
-    print(
-      "Node '{}' is not able to run '{}'"
-      .format(sys.argv[1], sys.argv[2]))
+    pass
 
 
 

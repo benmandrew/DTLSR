@@ -36,19 +36,17 @@ typedef struct LSFD {
 
 void graph_init(Node *graph);
 
-char receive_heartbeat(Node *graph, LocalNode *this, LSFD *fds, char is_dtlsr);
+char receive_heartbeat(Node *graph, LocalNode *this, LSFD *fds);
 
-void local_node_update_metrics(LocalNode *this, unsigned long long now, char is_dtlsr);
+void local_node_update_metrics(LocalNode *this, unsigned long long now);
 
-void update_global_this(Node *graph, LocalNode *this, char is_dtlsr);
+void update_global_this(Node *graph, LocalNode *this);
 
-char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd,
-                       LSFD *fds, char is_dtlsr);
+char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds);
 
 char receive_lsa(Node *graph, LocalNode *this, LSFD *fds);
 
-void send_lsa_except(Node *graph, LocalNode *this, LSFD *fds,
-                     long source_addr);
+void send_lsa_except(Node *graph, LocalNode *this, LSFD *fds, long source_addr);
 
 void send_lsa(Node *graph, LocalNode *this, LSFD *fds);
 
