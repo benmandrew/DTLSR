@@ -22,13 +22,16 @@ def main():
   link_options = LinkOptions(
     bandwidth=54_000_000,
     delay=1000,
-    dup=5,
-    loss=10.0,
+    dup=0,
+    loss=0.0,
     jitter=0,
   )
   ## Initialise
   conf = Configuration("loop_headless", link_options, session)
+  # conf = Configuration("loop", link_options, session)
   conf.start_services()
+
+  session.instantiate()
 
   input("\npress enter to shutdown")
   session.shutdown()

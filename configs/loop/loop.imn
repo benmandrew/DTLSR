@@ -21,7 +21,7 @@ node n1 {
     iconcoords {336.0 207.0}
     labelcoords {336.0 239.0}
     interface-peer {eth0 n2}
-    services {DTLSR Heartbeat OSPFv2 OSPFv3 zebra IPForward}
+    services {DTLSR Heartbeat IPForward}
     interface-peer {eth1 n5}
     interface-peer {eth2 n6}
 }
@@ -53,7 +53,7 @@ node n2 {
     iconcoords {551.0 404.0}
     labelcoords {551.0 436.0}
     interface-peer {eth0 n1}
-    services {DTLSR Heartbeat OSPFv2 OSPFv3 zebra IPForward}
+    services {DTLSR Heartbeat IPForward}
     interface-peer {eth1 n4}
     interface-peer {eth2 n3}
     interface-peer {eth3 n7}
@@ -78,7 +78,7 @@ node n3 {
     iconcoords {572.0 221.0}
     labelcoords {572.0 253.0}
     interface-peer {eth0 n2}
-    services {DTLSR Heartbeat OSPFv2 OSPFv3 zebra IPForward}
+    services {DTLSR Heartbeat IPForward}
     interface-peer {eth1 n8}
 }
 
@@ -101,7 +101,7 @@ node n4 {
     iconcoords {355.0 464.0}
     labelcoords {355.0 496.0}
     interface-peer {eth0 n2}
-    services {DTLSR Heartbeat OSPFv2 OSPFv3 zebra IPForward}
+    services {DTLSR Heartbeat IPForward}
     interface-peer {eth1 n5}
 }
 
@@ -125,7 +125,7 @@ node n5 {
     labelcoords {229.0 380.0}
     interface-peer {eth0 n1}
     interface-peer {eth1 n4}
-    services {DTLSR Heartbeat OSPFv2 OSPFv3 zebra IPForward}
+    services {DTLSR Heartbeat IPForward}
 }
 
 node n6 {
@@ -143,7 +143,7 @@ node n6 {
     iconcoords {334.0 89.0}
     labelcoords {334.0 121.0}
     interface-peer {eth0 n1}
-    services {Heartbeat DefaultRoute SSH}
+    services {DefaultRoute2 Heartbeat}
 }
 
 node n7 {
@@ -161,7 +161,7 @@ node n7 {
     iconcoords {626.0 505.0}
     labelcoords {626.0 537.0}
     interface-peer {eth0 n2}
-    services {Heartbeat DefaultRoute SSH}
+    services {DefaultRoute2 Heartbeat}
 }
 
 node n8 {
@@ -179,7 +179,7 @@ node n8 {
     iconcoords {686.0 155.0}
     labelcoords {686.0 187.0}
     interface-peer {eth0 n3}
-    services {Heartbeat DefaultRoute SSH}
+    services {DefaultRoute2 Heartbeat}
 }
 
 link l1 {

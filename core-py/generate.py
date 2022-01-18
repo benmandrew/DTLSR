@@ -5,7 +5,7 @@ from core.emulator.enumerations import EventTypes
 from core.emulator.session import Session
 from core.emulator.data import LinkOptions
 from core.nodes.base import CoreNode
-from core.services.utility import DefaultRouteService
+from core.services.utility import DefaultRouteService, IPForwardService
 
 import dtlsr
 
@@ -109,7 +109,8 @@ class Node:
   service_map = {
     "DTLSR" : dtlsr.DTLSR,
     "Heartbeat" : dtlsr.Heartbeat,
-    "DefaultRoute" : DefaultRouteService
+    "DefaultRoute2" : dtlsr.DefaultRoute2,
+    "IPForward" : IPForwardService
   }
 
   def __init__(self, id: str, session: Session) -> None:
@@ -118,20 +119,23 @@ class Node:
     self.neighbour_ips: List[str] = []
     self.neighbour_ids: List[int] = []
     options = NodeOptions(name="n{}".format(self.id))
-    self.core_node: CoreNode = session.add_node(CoreNode, options=options)
+    self.core_node: CoreNode = session.add_node(CoreNode, self.id,
+                                                options=options)
     self.services: List[str] = []
 
   def init_router(self, session: Session):
     session.services.set_service(self.core_node.id, "DTLSR")
     session.services.set_service(self.core_node.id, "Heartbeat")
+    session.services.set_service(self.core_node.id, "IPForward")
     self.services.append("DTLSR")
     self.services.append("Heartbeat")
+    self.services.append("IPForward")
 
   def init_host(self, session: Session):
     session.services.set_service(self.core_node.id, "Heartbeat")
-    session.services.set_service(self.core_node.id, "DefaultRoute")
+    session.services.set_service(self.core_node.id, "DefaultRoute2")
     self.services.append("Heartbeat")
-    self.services.append("DefaultRoute")
+    self.services.append("DefaultRoute2")
 
   def add_neighbour(self, source_ip: str, neighbour_ip: str, neighbour_id: int):
     self.source_ips.append(source_ip)

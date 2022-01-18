@@ -62,6 +62,18 @@ void set_addrs(struct rtentry *route, uint32_t gateway_ip, uint32_t dest_ip) {
   addr->sin_addr.s_addr = inet_addr("255.255.255.0"); // x.x.x.x/24
 }
 
+void set_gateway_route(struct rtentry *route, uint32_t gateway_ip) {
+  struct sockaddr_in *addr = (struct sockaddr_in *)&route->rt_gateway;
+  addr->sin_family = AF_INET;
+  addr->sin_addr.s_addr = gateway_ip;
+  addr = (struct sockaddr_in *)&route->rt_dst;
+  addr->sin_family = AF_INET;
+  addr->sin_addr.s_addr = inet_addr("0.0.0.0");
+  addr = (struct sockaddr_in *)&route->rt_genmask;
+  addr->sin_family = AF_INET;
+  addr->sin_addr.s_addr = inet_addr("0.0.0.0");
+}
+
 void remove_marked_routes(void) {
   struct rtentry rt;
   for (int i = 0; i < MAX_NODE_NUM; i++) {
@@ -85,11 +97,14 @@ void derive_rtentries(LocalNode *this, struct hop_dest *next_hops,
     }
     for (int nb_i = 0; nb_i < this->node.n_neighbours; nb_i++) {
       if (this->node.neighbour_ids[nb_i] == next_hops[hop_i].next_hop) {
+        // struct in_addr a;
+        // a.s_addr = this->node.neighbour_ips[nb_i];
+        // log_f("%s", inet_ntoa(a));
         set_addrs(&routes[hop_i], this->node.neighbour_ips[nb_i],
                   next_hops[hop_i].dest_ip);
         routes[hop_i].rt_flags = RTF_UP | RTF_GATEWAY;
         routes[hop_i].rt_metric = next_hops[hop_i].metric;
-        log_f("metric %hd", routes[hop_i].rt_metric);
+        // log_f("metric %hd", routes[hop_i].rt_metric);
         break;
       }
     }

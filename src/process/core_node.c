@@ -31,6 +31,9 @@ int parse_link(char *pch, LocalNode *this, int i) {
   strcpy(this->interfaces[i], interface);
   inet_pton(AF_INET, src_addr, &(this->node.source_ips[i]));
   inet_pton(AF_INET, dst_addr, &(this->node.neighbour_ips[i]));
+  struct in_addr a;
+  a.s_addr = this->node.neighbour_ips[i];
+  log_f("%s", inet_ntoa(a));
   this->node.neighbour_ids[i] = atoi(dst_id);
 }
 
