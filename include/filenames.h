@@ -2,6 +2,6 @@
 #ifndef FILENAMES_H
 #define FILENAMES_H
 
-#define CONFIG "headless"
+#define CONFIG "loop_headless"
 
 #endif

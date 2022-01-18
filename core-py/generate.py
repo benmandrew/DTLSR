@@ -5,6 +5,7 @@ from core.emulator.enumerations import EventTypes
 from core.emulator.session import Session
 from core.emulator.data import LinkOptions
 from core.nodes.base import CoreNode
+from core.services.utility import DefaultRouteService
 
 import dtlsr
 
@@ -19,7 +20,9 @@ class Configuration:
     self.ns: List[Node] = []
     self.ip_prefixes: List[IpPrefixes] = []
 
+    print("initing nodes")
     self._read_config(config)
+    print("creating links")
     self._create_links(link_options)
 
   def _read_config(self, config: str):
@@ -58,6 +61,11 @@ class Configuration:
         print("Type decoding error")
         continue
       ts[l[0]] = l[1]
+  
+  def _get_node_with_id(self, id: int) -> CoreNode:
+    for n in self.ns:
+      if n.core_node.id == id:
+        return n.core_node
 
   def _create_links(self, options: LinkOptions):
     seen_pairs: Set[Tuple[int, int]] = set()
@@ -67,12 +75,14 @@ class Configuration:
             and (neighbour_id, n.id) not in seen_pairs):
           seen_pairs.add((n.id, neighbour_id))
     for i, (a, b) in enumerate(seen_pairs):
-      cn_a = get_node_with_id(self.ns, a)
-      cn_b = get_node_with_id(self.ns, b)
+      cn_a = self._get_node_with_id(a)
+      cn_b = self._get_node_with_id(b)
       pref = IpPrefixes(
         ip4_prefix="10.0.{}.0/24".format(i))
       if_a = pref.create_iface(cn_a)
       if_b = pref.create_iface(cn_b)
+      print("n{} -- n{} : {} eth{} -- {} eth{}".format(
+        a, b, if_a.ip4, if_a.id, if_b.ip4, if_b.id))
       self.session.add_link(cn_a.id, cn_b.id, if_a, if_b, options)
       self.ip_prefixes.append(pref)
 
@@ -87,14 +97,19 @@ class Configuration:
         print("Unknown type: {}".format(t))
 
   def start_services(self):
+    print("starting services")
     for n in self.ns:
       n.start_services(self.session)
+    
+  def validate_services(self):
+    for n in self.ns:
+      n.validate_services(self.session)
 
 class Node:
   service_map = {
     "DTLSR" : dtlsr.DTLSR,
     "Heartbeat" : dtlsr.Heartbeat,
-    "Iperf" : dtlsr.Iperf
+    "DefaultRoute" : DefaultRouteService
   }
 
   def __init__(self, id: str, session: Session) -> None:
@@ -114,9 +129,9 @@ class Node:
 
   def init_host(self, session: Session):
     session.services.set_service(self.core_node.id, "Heartbeat")
-    # session.services.set_service(self.core_node.id, "Iperf")
+    session.services.set_service(self.core_node.id, "DefaultRoute")
     self.services.append("Heartbeat")
-    # self.services.append("Iperf")
+    self.services.append("DefaultRoute")
 
   def add_neighbour(self, source_ip: str, neighbour_ip: str, neighbour_id: int):
     self.source_ips.append(source_ip)
@@ -124,13 +139,10 @@ class Node:
     self.neighbour_ids.append(neighbour_id)
   
   def start_services(self, session: Session):
-    print("n{}: {}".format(self.id, self.source_ips))
     for s in self.services:
       session.services.create_service_files(self.core_node, self.service_map[s])
       session.services.startup_service(self.core_node, self.service_map[s])
 
-def get_node_with_id(ns: List[Node], id: int) -> CoreNode:
-  for n in ns:
-    if n.core_node.id == id:
-      return n.core_node
-
+  def validate_services(self, session: Session):
+    for s in self.services:
+      session.services.validate_service(self.core_node, self.service_map[s])
