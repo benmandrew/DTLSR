@@ -18,8 +18,8 @@
 #define LOGGING_ACTIVE
 
 // Maximum number of nodes in the network
-#define MAX_NODE_NUM 16
+#define MAX_NODE_NUM 10
 // Maximum number of neighbours
-#define MAX_NODE_FAN 8
+#define MAX_NODE_FAN 5
 
 #endif

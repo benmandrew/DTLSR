@@ -97,9 +97,6 @@ void derive_rtentries(LocalNode *this, struct hop_dest *next_hops,
     }
     for (int nb_i = 0; nb_i < this->node.n_neighbours; nb_i++) {
       if (this->node.neighbour_ids[nb_i] == next_hops[hop_i].next_hop) {
-        // struct in_addr a;
-        // a.s_addr = this->node.neighbour_ips[nb_i];
-        // log_f("%s", inet_ntoa(a));
         set_addrs(&routes[hop_i], this->node.neighbour_ips[nb_i],
                   next_hops[hop_i].dest_ip);
         routes[hop_i].rt_flags = RTF_UP | RTF_GATEWAY;

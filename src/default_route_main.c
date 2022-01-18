@@ -15,15 +15,15 @@ int driver(int argc, char **argv) {
   local_node_init(&this, PROTOCOL, CONFIG, HEARTBEAT_TIMEOUT);
   struct rtentry *routes = get_routes(&this);
   if (this.node.n_neighbours > 1) {
-    abort();
+    log_f("host cannot have more than one neighbour");
+    return 1;
   }
   set_gateway_route(routes, this.node.neighbour_ips[0]);
   log_f("derived route");
   ioctl(ioctl_fd, SIOCADDRT, routes);
   struct in_addr a;
   a.s_addr = this.node.neighbour_ips[0];
-  log_f("ioctl gateway %d", inet_ntoa(a));
-
+  log_f("gateway established %s", inet_ntoa(a));
   close(ioctl_fd);
   return 0;
 }

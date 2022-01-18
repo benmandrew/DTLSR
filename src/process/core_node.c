@@ -33,7 +33,6 @@ int parse_link(char *pch, LocalNode *this, int i) {
   inet_pton(AF_INET, dst_addr, &(this->node.neighbour_ips[i]));
   struct in_addr a;
   a.s_addr = this->node.neighbour_ips[i];
-  log_f("%s", inet_ntoa(a));
   this->node.neighbour_ids[i] = atoi(dst_id);
 }
 
@@ -75,9 +74,9 @@ void local_node_init(LocalNode *this, char *protocol, char *config,
     pch = strtok_r(NULL, "\n", &saved);
     // Links start DOWN
     this->node.link_statuses[i] = LINK_DOWN;
-    #ifdef DTLSR
+#ifdef DTLSR
     ts_init(&this->ls_time_series[i], LINK_DOWN, now);
-    #endif
+#endif
     event_timer_disarm(&this->timers[i]);
     i++;
   }
