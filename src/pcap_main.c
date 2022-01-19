@@ -500,9 +500,12 @@ got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
 		printf("   Payload (%d bytes):\n", size_payload);
 		print_payload(payload, size_payload);
 	}
-	pcap_dump(args, header, packet);
+	// pcap_dump(args, header, packet);
 
-return;
+	size_t size = SIZE_ETHERNET + size_ip + size_tcp + size_payload;
+	printf("%d bytes written\n", pcap_inject((pcap_t *)args, (void *)packet, size));
+
+	return;
 }
 
 int main(int argc, char **argv)
@@ -516,7 +519,7 @@ int main(int argc, char **argv)
 	struct bpf_program fp;			/* compiled filter program (expression) */
 	bpf_u_int32 mask;			/* subnet mask */
 	bpf_u_int32 net;			/* ip */
-	int num_packets = 10;			/* number of packets to capture */
+	int num_packets = 100;			/* number of packets to capture */
 
 	print_app_banner();
 
@@ -553,7 +556,9 @@ int main(int argc, char **argv)
 	printf("Filter expression: %s\n", filter_exp);
 
 	/* open capture device */
-	handle = pcap_open_live(dev, SNAP_LEN, 0, 1000, errbuf);
+	// handle = pcap_open_live(dev, SNAP_LEN, 0, 1000, errbuf);
+	handle = pcap_open_offline("out.pcap", errbuf);
+
 	if (handle == NULL) {
 		fprintf(stderr, "Couldn't open device %s: %s\n", dev, errbuf);
 		exit(EXIT_FAILURE);
@@ -579,15 +584,16 @@ int main(int argc, char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	pcap_dumper_t *dumper = pcap_dump_open(handle, "out.pcap");
+	// pcap_dumper_t *dumper = pcap_dump_open(handle, "out.pcap");
 
 	/* now we can set our callback function */
-	pcap_loop(handle, num_packets, got_packet, (u_char *)dumper);
+	// pcap_loop(handle, num_packets, got_packet, (u_char *)dumper);
+	pcap_loop(handle, num_packets, got_packet, (u_char *)handle);
 
 	/* cleanup */
 	pcap_freecode(&fp);
-	pcap_dump_flush(dumper);
-	pcap_dump_close(dumper);
+	// pcap_dump_flush(dumper);
+	// pcap_dump_close(dumper);
 	pcap_close(handle);
 
 	printf("\nCapture complete.\n");
