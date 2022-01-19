@@ -20,6 +20,6 @@
 // Maximum number of nodes in the network
 #define MAX_NODE_NUM 10
 // Maximum number of neighbours
-#define MAX_NODE_FAN 5
+#define MAX_NODE_FAN 6
 
 #endif
