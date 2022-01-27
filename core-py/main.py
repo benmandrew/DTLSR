@@ -1,4 +1,7 @@
 
+import sys
+sys.path.insert(0, "/home/ben/projects/core/daemon")
+
 from threading import Event
 from core.emulator.coreemu import CoreEmu
 from core.emulator.data import IpPrefixes, NodeOptions

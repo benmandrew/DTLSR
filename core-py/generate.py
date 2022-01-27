@@ -12,7 +12,7 @@ import dtlsr
 import sys, os
 from typing import Dict, List, Set, Tuple
 
-CONFIG_BASE = "/home/ben/projects/routing/configs"
+CONFIG_BASE = "/home/ben/projects/dtlsr/configs"
 
 class Configuration:
   def __init__(self, config: str, link_options: LinkOptions, session: Session) -> None:
