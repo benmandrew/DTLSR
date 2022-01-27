@@ -30,8 +30,8 @@ def main():
     jitter=0,
   )
   ## Initialise
-  conf = Configuration("loop_headless", link_options, session)
-  # conf = Configuration("loop", link_options, session)
+  # conf = Configuration("loop_headless", link_options, session)
+  conf = Configuration("loop", link_options, session)
   conf.start_services()
 
   session.instantiate()

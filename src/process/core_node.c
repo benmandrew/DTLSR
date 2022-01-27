@@ -2,7 +2,7 @@
 #include "process/core_node.h"
 #include "process/core_node_pi.h"
 
-#define CONFIG_PATH "/home/ben/projects/routing/configs"
+#define CONFIG_PATH "/home/ben/projects/dtlsr/configs"
 
 char *read_node_id_str(char *protocol) {
   char filename[FILENAME_MAX];
