@@ -24,8 +24,10 @@ struct capture_info {
   char has_fp;
 };
 
-struct capture_info capture_start(char* dev);
+// void capture_init(char **ifaces, int n, Node *this);
 
-void capture_flush(struct capture_info cap_info);
+// void capture_start(char* iface);
+
+// void capture_flush(struct capture_info cap_info);
 
 #endif

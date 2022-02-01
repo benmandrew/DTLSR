@@ -32,7 +32,7 @@ void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *p
 struct capture_info *cap_infos;
 struct pcap_dumper_t **dumpers;
 int n_ifaces;
-
+char **down_ifaces;
 int n_down_ifaces;
 
 char *generate_filter_exp(Node *this) {
@@ -101,14 +101,13 @@ void init_dev(struct capture_info *info, char *iface, Node *this) {
 void capture_init(char **ifaces, int n, Node *this) {
   n_ifaces = n;
   n_down_ifaces = 0;
+  down_ifaces = (char **)malloc(n * sizeof(char *));
+  memset(down_ifaces, 0, n * sizeof(char *));
   cap_infos = (struct capture_info *)malloc(n * sizeof(struct capture_info));
   memset(cap_infos, 0, n * sizeof(struct capture_info));
   dumpers = (pcap_dumper_t **)malloc(n * sizeof(pcap_dumper_t *));
   for (int i = 0; i < n; i++) {
     init_dev(&cap_infos[i], ifaces[i], this);
-    char filename[16];
-    sprintf(filename, "%s.pcap", ifaces[i]);
-    dumpers[i] = pcap_dump_open(cap_infos[i].handle, filename);
   }
 }
 
@@ -116,24 +115,40 @@ void capture_init(char **ifaces, int n, Node *this) {
 
 
 
-void capture_start(char* iface) {
+void capture_start(char* iface, char **ifaces) {
+  if (n_down_ifaces == 0) {
+    for (int i = 0; i < n_ifaces; i++) {
+      char filename[24];
+      sprintf(filename, "%s.pcap", ifaces[i]);
+      dumpers[i] = pcap_dump_open(cap_infos[i].handle, filename);
+    }
+    for (int i = 0; i < n_ifaces; i++) {
+      pcap_dispatch(cap_infos[i].handle, -1, dump_packet, NULL);
+    }
+  }
 
+  for (int i = 0; i < n_ifaces; i++) {
+    if (down_ifaces[i] == NULL) {
+      down_ifaces[i] = iface;
+      break;
+    }
+  }
 
-
-
-
-
-
-
-
-
-
-  
-  pcap_dispatch(cap_info.handle, -1, dump_packet, (u_char *)cap_info.dumper);
-  return cap_info;
+  n_down_ifaces++;
 }
 
-void capture_flush(struct capture_info cap_info) {
+void capture_end(struct capture_info cap_info) {
+  n_down_ifaces++;
+  if (n_down_ifaces == 0) {
+    for (int i = 0; i < n_ifaces; i++) {
+      pcap_breakloop(cap_infos[i].handle);
+      pcap_dump_close
+    }
+  }
+
+
+
+
   pcap_dump_flush(cap_info.dumper);
   pcap_dump_close(cap_info.dumper);
   pcap_close(cap_info.handle);
