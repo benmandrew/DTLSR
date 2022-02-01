@@ -502,8 +502,8 @@ got_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet)
 	}
 	// pcap_dump(args, header, packet);
 
-	size_t size = SIZE_ETHERNET + size_ip + size_tcp + size_payload;
-	printf("%d bytes written\n", pcap_inject((pcap_t *)args, (void *)packet, size));
+	// size_t size = SIZE_ETHERNET + size_ip + size_tcp + size_payload;
+	// printf("%d bytes written\n", pcap_inject((pcap_t *)args, (void *)packet, size));
 
 	return;
 }
@@ -573,7 +573,7 @@ int main(int argc, char **argv)
 	/* compile the filter expression */
 	if (pcap_compile(handle, &fp, filter_exp, 0, net) == -1) {
 		fprintf(stderr, "Couldn't parse filter %s: %s\n",
-		    filter_exp, pcap_geterr(handle));
+			filter_exp, pcap_geterr(handle));
 		exit(EXIT_FAILURE);
 	}
 

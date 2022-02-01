@@ -3,6 +3,7 @@
 #include "algorithm/graph.h"
 #include "algorithm/graph_pi.h"
 #include "algorithm/pathfind.h"
+#include "network/capture.h"
 
 char register_heartbeat(LocalNode *this, long source_addr) {
   char updated = 0;
@@ -48,7 +49,9 @@ char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds) {
       if (this->node.link_statuses[i] == LINK_UP) {
         this->node.link_statuses[i] = LINK_DOWN;
         #ifdef DTLSR
+        log_f("%s", this->interfaces[i]);
         ts_toggle_state(&this->ls_time_series[i], get_now());
+        this->cap_infos[i] = capture_start(this->interfaces[i]);
         #endif
         event_timer_disarm(&this->timers[i]);
         updated = 1;

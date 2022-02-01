@@ -1,6 +1,6 @@
 
-#ifndef PACKETSEND_H
-#define PACKETSEND_H
+#ifndef PACKETSEND_PI_H
+#define PACKETSEND_PI_H
 
 #include "network/packetsend.h"
 

@@ -20,7 +20,7 @@ void aggregate_fds(LocalNode *this, LSFD *fds, int n_aux_fds) {
   fds->event_fds[this->node.n_neighbours + 2] = fds->lsa_snd_timer.fd;
 }
 
-LSFD init_sockets(LocalNode *this) {
+LSFD init_descriptors(LocalNode *this) {
   LSFD fds;
   fds.hb_sock = get_open_socket(HB_PORT);
   fds.lsa_rec_sock = get_open_socket(LSA_PORT);
@@ -66,20 +66,19 @@ int driver(int argc, char **argv) {
   ts_set_power_param(10.0);
   #endif
   routes = get_routes(&this);
-  LSFD fds = init_sockets(&this);
+  LSFD fds = init_descriptors(&this);
   while (1) {
     int active_fd;
     char graph_updated = 0, do_send_lsa = 0;
-    update_routing_table(&this, next_hops);
     if ((active_fd = event_wait(fds.event_fds, fds.n_event_fds)) < 0) {
       continue;
     }
+    update_routing_table(&this, next_hops);
     handle_event_fd(graph, &this, &fds, active_fd, &do_send_lsa,
                     &graph_updated);
     if (graph_updated) {
       local_node_update_metrics(&this, get_now());
       pathfind(graph, this.node.id, next_hops);
-      // update_routing_table(&this, next_hops);
     }
     if (do_send_lsa) {
       update_global_this(graph, &this);

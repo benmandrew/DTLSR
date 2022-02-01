@@ -7,6 +7,7 @@
 
 #include "algorithm/def.h"
 #include "algorithm/link_hist.h"
+#include "network/capture.h"
 #include "process/fd_event.h"
 
 enum NodeState {
