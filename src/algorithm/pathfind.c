@@ -115,10 +115,12 @@ DijkstraNode *dijkstra(Node *graph, int src_id) {
       continue;
     }
     for (int i = 0; i < curr_node->n_neighbours; i++) {
+      #ifndef DTLSR
       // Discard neighbours connected to by DOWN links
       if (curr_node->link_statuses[i] == LINK_DOWN) {
         continue;
       }
+      #endif
       DijkstraNode *neighbour = &nodes[curr_node->neighbour_ids[i] - 1];
       int alt = curr_node->tent_dist + 1;
       if (alt < neighbour->tent_dist) {

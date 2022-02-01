@@ -63,13 +63,14 @@ int driver(int argc, char **argv) {
   update_global_this(graph, &this);
   #ifdef DTLSR
   ts_set_falloff_param(64000.0);
-  ts_set_power_param(3.0);
+  ts_set_power_param(10.0);
   #endif
   routes = get_routes(&this);
   LSFD fds = init_sockets(&this);
   while (1) {
     int active_fd;
     char graph_updated = 0, do_send_lsa = 0;
+    update_routing_table(&this, next_hops);
     if ((active_fd = event_wait(fds.event_fds, fds.n_event_fds)) < 0) {
       continue;
     }
@@ -78,9 +79,10 @@ int driver(int argc, char **argv) {
     if (graph_updated) {
       local_node_update_metrics(&this, get_now());
       pathfind(graph, this.node.id, next_hops);
-      update_routing_table(&this, next_hops);
+      // update_routing_table(&this, next_hops);
     }
     if (do_send_lsa) {
+      update_global_this(graph, &this);
       send_lsa(graph, &this, &fds);
     }
   }

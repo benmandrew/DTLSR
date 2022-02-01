@@ -12,6 +12,7 @@
 #define HEARTBEAT_T 2
 // Add a bit of fudge factor
 #define HEARTBEAT_TIMEOUT 2 * HEARTBEAT_T + 1
+// #define HEARTBEAT_TIMEOUT 1
 // How often we recompute the link metric
 #define METRIC_RECOMPUTATION_T HEARTBEAT_T + 1
 

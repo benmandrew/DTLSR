@@ -37,6 +37,8 @@ IF(DTLSR)
     ADD_DEFINITIONS(-DDTLSR)
 ENDIF(DTLSR)
 
+add_compile_options(-O3 -D_FORTIFY_SOURCE=2 -fasynchronous-unwind-tables -fpie -Wl,-pie -fpic -shared -fstack-clash-protection -fstack-protector -Werror=implicit-function-declaration)
+
 # SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage -fsanitize=address -fsanitize=undefined")
 # SET(GCC_COVERAGE_LINK_FLAGS "-pthread -lm -fsanitize=address -fsanitize=undefined")
 # SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")

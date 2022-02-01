@@ -12,6 +12,7 @@
 struct simple_rt {
   uint32_t dst;
   uint32_t gateway;
+  short metric;
   char seen;
   char exists;
 };
@@ -22,6 +23,8 @@ struct simple_rt curr_routes[MAX_NODE_NUM];
 struct simple_rt get_simple_rt(struct rtentry *rt);
 
 char simple_rt_eq(struct simple_rt *rt1, struct simple_rt *rt2);
+
+char simple_rt_addr_eq(struct simple_rt *rt1, struct simple_rt *rt2);
 
 void mark_routes_unseen(void);
 

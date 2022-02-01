@@ -10,12 +10,17 @@ struct simple_rt get_simple_rt(struct rtentry *rt) {
   simple.dst = (uint32_t)addr->sin_addr.s_addr;
   addr = (struct sockaddr_in *)&rt->rt_gateway;
   simple.gateway = (uint32_t)addr->sin_addr.s_addr;
+  simple.metric = rt->rt_metric;
   simple.exists = 1;
   simple.seen = 1;
   return simple;
 }
 
 char simple_rt_eq(struct simple_rt *rt1, struct simple_rt *rt2) {
+  return (rt1->dst == rt2->dst && rt1->gateway == rt2->gateway && rt1->metric == rt2->metric);
+}
+
+char simple_rt_addr_eq(struct simple_rt *rt1, struct simple_rt *rt2) {
   return (rt1->dst == rt2->dst && rt1->gateway == rt2->gateway);
 }
 
@@ -35,6 +40,7 @@ void add_to_curr_routes(struct simple_rt *rt) {
 }
 
 // Mark route seen if it is, and if it isn't add it to curr_routes
+// If dst and gateway are seen but metric different, mark for removal
 void mark_route_seen(struct rtentry *rt) {
   struct simple_rt simple = get_simple_rt(rt);
   char seen = 0;
@@ -80,6 +86,7 @@ void remove_marked_routes(void) {
     if (curr_routes[i].exists && !curr_routes[i].seen) {
       memset(&rt, 0, sizeof rt);
       set_addrs(&rt, curr_routes[i].gateway, curr_routes[i].dst);
+      rt.rt_metric = curr_routes[i].metric;
       if (ioctl(ioctl_fd, SIOCDELRT, &rt) < 0) {
         log_f("ioctl remove failed: errno %s", strerror(errno));
       }

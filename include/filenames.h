@@ -3,6 +3,7 @@
 #define FILENAMES_H
 
 // #define CONFIG "loop_headless"
-#define CONFIG "loop"
+// #define CONFIG "loop"
+#define CONFIG "partition"
 
 #endif

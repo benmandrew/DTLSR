@@ -66,16 +66,14 @@ char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds) {
 }
 
 void local_node_update_metrics(LocalNode *this, unsigned long long now) {
-#ifdef DTLSR
-  // For DTLSR, we use our complicated metric
   for (int i = 0; i < this->node.n_neighbours; i++) {
+    #ifdef DTLSR
+    // For DTLSR, we use our complicated metric
     this->node.link_metrics[i] =
         ts_compute_metric(&this->ls_time_series[i], now);
-  }
-#else
-  // For LSR, path cost is simply the hop count
-  for (int i = 0; i < this->node.n_neighbours; i++) {
+    #else
+    // For LSR, path cost is simply the hop count
     this->node.link_metrics[i] = 1.0;
+    #endif
   }
-#endif
 }
