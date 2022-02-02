@@ -4,6 +4,7 @@
 #include "algorithm/pathfind.h"
 #include "filenames.h"
 #include "process/route_control.h"
+#include "network/capture.h"
 
 #define PROTOCOL "dtlsr"
 #define N_AUX_FDS 3
@@ -67,6 +68,7 @@ int driver(int argc, char **argv) {
   #endif
   routes = get_routes(&this);
   LSFD fds = init_descriptors(&this);
+  capture_init(&this);
   while (1) {
     int active_fd;
     char graph_updated = 0, do_send_lsa = 0;

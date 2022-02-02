@@ -13,6 +13,10 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+#include "algorithm/node.h"
+
+typedef struct local_node LocalNode;
+
 typedef unsigned int u_int;
 typedef unsigned short u_short;
 typedef unsigned char u_char;
@@ -24,10 +28,10 @@ struct capture_info {
   char has_fp;
 };
 
-// void capture_init(char **ifaces, int n, Node *this);
+void capture_init(LocalNode *this);
 
-// void capture_start(char* iface);
+void capture_start(char *down_iface);
 
-// void capture_flush(struct capture_info cap_info);
+void capture_end(char *up_iface);
 
 #endif
