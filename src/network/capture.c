@@ -44,26 +44,27 @@ void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *p
   // log_f("From: %s", inet_ntoa(ip->ip_src));
   // log_f("To: %s", inet_ntoa(ip->ip_dst));
 
-  switch(ip->ip_p) {
-		case IPPROTO_TCP:
-			printf("Protocol: TCP\n");
-      dump_tcp(header, packet, size_ip);
-			break;
-		case IPPROTO_UDP:
-			printf("Protocol: UDP\n");
-      dump_udp(header, packet, size_ip);
-			break;
-		case IPPROTO_ICMP:
-			printf("Protocol: ICMP\n");
-			return;
-		case IPPROTO_IP:
-			printf("Protocol: IP\n");
-			return;
-		default:
-			printf("Protocol: unknown\n");
-			return;
-	}
-  pcap_dump_flush(dumpers[0]);
+  // switch(ip->ip_p) {
+	// 	case IPPROTO_TCP:
+	// 		log_f("Protocol: TCP");
+  //     dump_tcp(header, packet, size_ip);
+	// 		break;
+	// 	case IPPROTO_UDP:
+	// 		log_f("Protocol: UDP");
+  //     dump_udp(header, packet, size_ip);
+	// 		break;
+	// 	case IPPROTO_ICMP:
+	// 		log_f("Protocol: ICMP");
+	// 		return;
+	// 	case IPPROTO_IP:
+	// 		log_f("Protocol: IP");
+	// 		return;
+	// 	default:
+	// 		log_f("Protocol: unknown");
+	// 		return;
+	// }
+  pcap_dump((u_char *)dumpers[0], header, packet);
+  // pcap_dump_flush(dumpers[0]);
 }
 
 char *generate_filter_exp(void) {
@@ -127,6 +128,7 @@ void init_dev(struct capture_info *info, char *iface) {
 }
 
 void capture_init(LocalNode *node) {
+  is_capturing = 0;
   this = node;
   n_down_ifaces = 0;
   down_ifaces = (char **)malloc(this->node.n_neighbours * sizeof(char *));
@@ -139,19 +141,20 @@ void capture_init(LocalNode *node) {
   }
 }
 
-void capture_start(char *down_iface) {
+void capture_packets(void) {
+  for (int i = 0; i < this->node.n_neighbours; i++) {
+    pcap_dispatch(cap_infos[i].handle, -1, dump_packet, NULL);
+  }
+}
+
+void capture_start_iface(char *down_iface) {
+  is_capturing = 1;
   // Create the pcap file for the outgoing downed link
   for (int i = 0; i < this->node.n_neighbours; i++) {
     if (strcmp(this->interfaces[i], down_iface)) {
       char filename[24];
       sprintf(filename, "%s.pcap", down_iface);
       dumpers[i] = pcap_dump_open(cap_infos[i].handle, filename);
-    }
-  }
-  // Dispatch all pcap listeners if this is the first downed link
-  if (n_down_ifaces == 0) {
-    for (int i = 0; i < this->node.n_neighbours; i++) {
-      pcap_dispatch(cap_infos[i].handle, -1, dump_packet, NULL);
     }
   }
   // Put downed link into the list
@@ -164,11 +167,11 @@ void capture_start(char *down_iface) {
   n_down_ifaces++;
 }
 
-void capture_end(char* up_iface) {
-  log_f("ENDED CAPTURE");
+void capture_end_iface(char* up_iface) {
   n_down_ifaces--;
   // If all links are now up, stop pcap listeners
   if (n_down_ifaces == 0) {
+    is_capturing = 0;
     for (int i = 0; i < this->node.n_neighbours; i++) {
       pcap_breakloop(cap_infos[i].handle);
     }
@@ -183,6 +186,4 @@ void capture_end(char* up_iface) {
     }
   }
 }
-
-
 

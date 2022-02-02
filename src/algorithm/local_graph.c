@@ -51,7 +51,7 @@ char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds) {
         #ifdef DTLSR
         log_f("%s", this->interfaces[i]);
         ts_toggle_state(&this->ls_time_series[i], get_now());
-        capture_start(this->interfaces[i]);
+        capture_start_iface(this->interfaces[i]);
         #endif
         event_timer_disarm(&this->timers[i]);
         updated = 1;

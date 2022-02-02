@@ -72,6 +72,9 @@ int driver(int argc, char **argv) {
   while (1) {
     int active_fd;
     char graph_updated = 0, do_send_lsa = 0;
+    if (is_capturing) {
+      capture_packets();
+    }
     if ((active_fd = event_wait(fds.event_fds, fds.n_event_fds)) < 0) {
       continue;
     }

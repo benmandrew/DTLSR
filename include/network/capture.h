@@ -28,10 +28,14 @@ struct capture_info {
   char has_fp;
 };
 
+char is_capturing;
+
 void capture_init(LocalNode *this);
 
-void capture_start(char *down_iface);
+void capture_packets(void);
 
-void capture_end(char *up_iface);
+void capture_start_iface(char *down_iface);
+
+void capture_end_iface(char *up_iface);
 
 #endif
