@@ -116,6 +116,7 @@ void capture_start_iface(char *down_iface) {
 }
 
 void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
+  log_f("capture_end_iface %d", n_down_ifaces);
   // Ignore if this is the first time the links have come up
   // Annoying edge case
   if (n_down_ifaces == 0)
@@ -130,10 +131,9 @@ void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
   }
   // Close the pcap file for the newly up outgoing interface
   for (int i = 0; i < this->node.n_neighbours; i++) {
-    if (down_ifaces[i] != NULL && strcmp(down_ifaces[i], up_iface)) {
-      log_f("4 %s", down_ifaces[i]);
+    if (down_ifaces[i] != NULL && strcmp(down_ifaces[i], up_iface) == 0) {
       down_ifaces[i] = NULL;
-      pcap_dump_flush(dumpers[i]);
+      log_f("pcap flush status: %d", pcap_dump_flush(dumpers[i]));
       pcap_dump_close(dumpers[i]);
       break;
     }
@@ -161,7 +161,7 @@ char *generate_replay_command(LocalNode *this, char *up_iface, struct hop_dest *
   strcat(fexp, "dst net ");
   char first = 1;
   for (int i = 0; i < MAX_NODE_NUM; i++) {
-    if (next_hops[i].next_hop == this->node.neighbour_ids[up_idx]) {
+    if (next_hops[i].next_hop + 1 == this->node.neighbour_ids[up_idx]) {
       // Hacky way to insert 'or' between IP addresses
       if (!first) {
         strcat(fexp, " or ");
@@ -177,40 +177,24 @@ char *generate_replay_command(LocalNode *this, char *up_iface, struct hop_dest *
   }
   strcat(fexp, "\0");
   char *cmd = (char *)malloc(80 + 32 * this->node.n_neighbours);
-  sprintf(cmd, "tcpdump -r %s.pcap -w- '%s' | tcpreplay --topspeed -i%s -", up_iface, fexp, up_iface);
+  // Append for error stream: 2>&1
+  sprintf(cmd, "tcpdump -U -r %s.pcap -w- '%s' | tcpreplay --topspeed -i%s -", up_iface, fexp, up_iface);
   free(fexp);
   return cmd;
 }
 
 void capture_replay_iface(char *up_iface, struct hop_dest *next_hops) {
-  char *cmd = generate_replay_command(this, up_iface, next_hops);
-  int err;
-  // if (err = system(cmd)) {
-  //   log_f("replay command returned error code %d: %s", err, cmd);
-  // } else {
-  //   log_f("replay successful: %d", err);
-  // }
-
   FILE *fp;
-  char path[1035];
-
-  log_f("cmd: %s", cmd);
-
+  // char path[1035];
+  char *cmd = generate_replay_command(this, up_iface, next_hops);
   fp = popen(cmd, "r");
   if (fp == NULL) {
     log_f("failed to run replay command: %s", cmd);
     return;
   }
-  while (fgets(path, sizeof(path), fp) != NULL) {
-    // for (int i = 2; i < sizeof(path); i++) {
-    //   if (path[i] == '\n') path[i] = '\0';
-    // }
-    log_f("%s", path);
-  }
+  // while (fgets(path, sizeof(path), fp) != NULL) {
+  //   log_f("%s", path);
+  // }
   pclose(fp);
-
-
-
-
   free(cmd);
 }

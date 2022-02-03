@@ -8,8 +8,8 @@
 
 typedef struct dijkstra_node DijkstraNode;
 
-struct hop_dest
-{
+struct hop_dest {
+  // 0-indexed
   int next_hop;
   uint32_t dest_ip;
   short metric;
