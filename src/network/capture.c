@@ -67,28 +67,55 @@ void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *p
   // pcap_dump_flush(dumpers[0]);
 }
 
+// void add_up_neighbours_filter_exp(char *s) {
+//   if (n_down_ifaces == 0) {
+//     return s;
+//   }
+//   char *s = (char *)malloc(32 * this->node.n_neighbours);
+//   strcat(s, "and not ( src host ");
+//   int n = 0;
+//   for (int i = 0; i < this->node.n_neighbours; i++) {
+//     for (int j = 0; j < this->node.n_neighbours; j++) {
+//       if (down_ifaces[j] == NULL)
+//         continue;
+//       if (strcmp(this->interfaces[i], down_ifaces[j])) {
+//         struct in_addr a;
+//         a.s_addr = this->node.source_ips[i];
+//         strcat(s, inet_ntoa(a));
+//         if (n != n_down_ifaces - 1) {
+//           strcat(s, " or ");
+//         }
+//         n++;
+//       }
+//     }
+//   }
+// }
+
+// not ( dst host ip1 or ip2 or ip3 )
 char *generate_filter_exp(void) {
-  // not src host ( ip1 and ip2 and ip3 )
   char *s = (char *)malloc(32 * this->node.n_neighbours);
-  strcat(s, "not dst host ( ");
+  memset(s, 0, 32 * this->node.n_neighbours);
+  strcat(s, "not ( dst host ");
   for (int i = 0; i < this->node.n_neighbours; i++) {
     struct in_addr a;
     a.s_addr = this->node.source_ips[i];
     strcat(s, inet_ntoa(a));
     if (i != this->node.n_neighbours - 1) {
-      strcat(s, " and ");
+      strcat(s, " or ");
     }
   }
   strcat(s, " )\0");
+  // add_up_neighbours_filter_exp(s);
+  // strcat(s, "\0");
   return s;
 }
 
-void set_filter(struct capture_info *info, bpf_u_int32 net) {
+void set_filter(struct capture_info *info) {
   if (info->has_fp) {
     pcap_freecode(&info->fp);
   }
   char *filter_exp = generate_filter_exp();
-  if (pcap_compile(info->handle, &info->fp, filter_exp, 0, net) == -1) {
+  if (pcap_compile(info->handle, &info->fp, filter_exp, 0, info->net) == -1) {
     log_f("couldn't parse filter %s: %s", filter_exp, pcap_geterr(info->handle));
     exit(EXIT_FAILURE);
   }
@@ -103,11 +130,10 @@ void set_filter(struct capture_info *info, bpf_u_int32 net) {
 void init_dev(struct capture_info *info, char *iface) {
   char errbuf[PCAP_ERRBUF_SIZE];
   bpf_u_int32 mask;
-  bpf_u_int32 net;
-  cap_infos->dev = iface;
-  if (pcap_lookupnet(iface, &net, &mask, errbuf) == -1) {
+  info->dev = iface;
+  if (pcap_lookupnet(iface, &info->net, &mask, errbuf) == -1) {
     log_f("couldn't get netmask for device %s: %s\n", iface, errbuf);
-    net = 0;
+    info->net = 0;
     mask = 0;
   }
   info->handle = pcap_open_live(iface, SNAP_LEN, 0, 1000, errbuf);
@@ -120,11 +146,11 @@ void init_dev(struct capture_info *info, char *iface) {
     log_f("%s is not ethernet", iface);
     exit(EXIT_FAILURE);
   }
-  set_filter(info, net);
   if (pcap_setnonblock(info->handle, 1, errbuf) == -1) {
     log_f("couldn't set handle nonblocking: %s", pcap_geterr(info->handle));
     exit(EXIT_FAILURE);
   }
+  set_filter(info);
 }
 
 void capture_init(LocalNode *node) {
@@ -138,12 +164,6 @@ void capture_init(LocalNode *node) {
   dumpers = (pcap_dumper_t **)malloc(this->node.n_neighbours * sizeof(pcap_dumper_t *));
   for (int i = 0; i < this->node.n_neighbours; i++) {
     init_dev(&cap_infos[i], this->interfaces[i]);
-  }
-}
-
-void capture_packets(void) {
-  for (int i = 0; i < this->node.n_neighbours; i++) {
-    pcap_dispatch(cap_infos[i].handle, -1, dump_packet, NULL);
   }
 }
 
@@ -187,3 +207,8 @@ void capture_end_iface(char* up_iface) {
   }
 }
 
+void capture_packets(void) {
+  for (int i = 0; i < this->node.n_neighbours; i++) {
+    pcap_dispatch(cap_infos[i].handle, -1, dump_packet, NULL);
+  }
+}

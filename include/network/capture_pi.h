@@ -64,14 +64,4 @@ struct sniff_udp {
   u_short udp_checksum;
 };
 
-void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
-
-
-
-
-
-
-
-
-
 #endif

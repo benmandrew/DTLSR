@@ -49,7 +49,6 @@ char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds) {
       if (this->node.link_statuses[i] == LINK_UP) {
         this->node.link_statuses[i] = LINK_DOWN;
         #ifdef DTLSR
-        log_f("%s", this->interfaces[i]);
         ts_toggle_state(&this->ls_time_series[i], get_now());
         capture_start_iface(this->interfaces[i]);
         #endif

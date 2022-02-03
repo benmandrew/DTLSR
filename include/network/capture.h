@@ -26,6 +26,7 @@ struct capture_info {
   pcap_t *handle;
   struct bpf_program fp;
   char has_fp;
+  bpf_u_int32 net;
 };
 
 char is_capturing;
