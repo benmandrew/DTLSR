@@ -64,4 +64,16 @@ struct sniff_udp {
   u_short udp_checksum;
 };
 
+void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
+
+char *generate_incoming_filter_exp(void);
+
+void set_filter(struct capture_info *info);
+
+void init_dev(struct capture_info *info, char *iface);
+
+char *generate_replay_command(char *up_iface, struct hop_dest *next_hops);
+
+
+
 #endif

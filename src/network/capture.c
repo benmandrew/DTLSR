@@ -10,29 +10,6 @@ LocalNode *this;
 char **down_ifaces;
 int n_down_ifaces;
 
-void dump_tcp(const struct pcap_pkthdr *header, const u_char *packet, int size_ip) {
-  const struct sniff_tcp *tcp = (struct sniff_tcp*)(packet + SIZE_ETHERNET + size_ip);
-  int size_tcp = TH_OFF(tcp) * 4;
-  if (size_tcp < 20) {
-		// log_f("invalid TCP header length: %u bytes", size_tcp);
-		return;
-	}
-  pcap_dump((u_char *)dumpers[0], header, packet);
-}
-
-void dump_udp(const struct pcap_pkthdr *header, const u_char *packet, int size_ip) {
-  const struct sniff_udp *udp = (struct sniff_udp*)(packet + SIZE_ETHERNET + size_ip);
-  int sport = (int)udp->udp_sport;
-  int dport = (int)udp->udp_dport;
-  int size_udp = (int)udp->udp_length;
-  log_f("udp - %d %d", sport, dport);
-  if (size_udp < 8) {
-		// log_f("invalid UDP length: %u bytes", size_udp);
-		return;
-	}
-  pcap_dump((u_char *)dumpers[0], header, packet);
-}
-
 void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {
   const struct sniff_ip *ip = (struct sniff_ip *)(packet + SIZE_ETHERNET);
   int size_ip = IP_HL(ip) * 4;
@@ -40,39 +17,15 @@ void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *p
     // log_f("invalid IP header length: %u bytes", size_ip);
     return;
   }
-  // TODO:
-  // Check that dst IP is not one of our interfaces
-  // log_f("From: %s", inet_ntoa(ip->ip_src));
-  // log_f("To: %s", inet_ntoa(ip->ip_dst));
-
-  // switch(ip->ip_p) {
-	// 	case IPPROTO_TCP:
-	// 		log_f("Protocol: TCP");
-  //     dump_tcp(header, packet, size_ip);
-	// 		break;
-	// 	case IPPROTO_UDP:
-	// 		log_f("Protocol: UDP");
-  //     dump_udp(header, packet, size_ip);
-	// 		break;
-	// 	case IPPROTO_ICMP:
-	// 		log_f("Protocol: ICMP");
-	// 		return;
-	// 	case IPPROTO_IP:
-	// 		log_f("Protocol: IP");
-	// 		return;
-	// 	default:
-	// 		log_f("Protocol: unknown");
-	// 		return;
-	// }
   pcap_dump((u_char *)dumpers[0], header, packet);
-  // pcap_dump_flush(dumpers[0]);
 }
 
+// We want to exclude packets meant specifically for us
 // not ( dst host ip1 or ip2 or ip3 )
-char *generate_filter_exp(void) {
+char *generate_incoming_filter_exp(void) {
   char *s = (char *)malloc(32 * this->node.n_neighbours);
   memset(s, 0, 32 * this->node.n_neighbours);
-  strcat(s, "not ( dst host ");
+  strcat(s, "not ( dst net ");
   for (int i = 0; i < this->node.n_neighbours; i++) {
     struct in_addr a;
     a.s_addr = this->node.source_ips[i];
@@ -89,7 +42,7 @@ void set_filter(struct capture_info *info) {
   if (info->has_fp) {
     pcap_freecode(&info->fp);
   }
-  char *filter_exp = generate_filter_exp();
+  char *filter_exp = generate_incoming_filter_exp();
   if (pcap_compile(info->handle, &info->fp, filter_exp, 0, info->net) == -1) {
     log_f("couldn't parse filter %s: %s", filter_exp, pcap_geterr(info->handle));
     exit(EXIT_FAILURE);
@@ -162,7 +115,11 @@ void capture_start_iface(char *down_iface) {
   n_down_ifaces++;
 }
 
-void capture_end_iface(char* up_iface) {
+void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
+  // Ignore if this is the first time the links have come up
+  // Annoying edge case
+  if (n_down_ifaces == 0)
+    return;
   n_down_ifaces--;
   // If all links are now up, stop pcap listeners
   if (n_down_ifaces == 0) {
@@ -173,7 +130,8 @@ void capture_end_iface(char* up_iface) {
   }
   // Close the pcap file for the newly up outgoing interface
   for (int i = 0; i < this->node.n_neighbours; i++) {
-    if (strcmp(down_ifaces[i], up_iface)) {
+    if (down_ifaces[i] != NULL && strcmp(down_ifaces[i], up_iface)) {
+      log_f("4 %s", down_ifaces[i]);
       down_ifaces[i] = NULL;
       pcap_dump_flush(dumpers[i]);
       pcap_dump_close(dumpers[i]);
@@ -188,6 +146,7 @@ void capture_packets(void) {
   }
 }
 
+// tcpdump -r dump.pcap -w- 'udp port 1234' | tcpreplay -ieth0 - 
 char *generate_replay_command(char *up_iface, struct hop_dest *next_hops) {
   // Get index of neighbour corresponding to the iface
   int up_idx;
@@ -196,30 +155,39 @@ char *generate_replay_command(char *up_iface, struct hop_dest *next_hops) {
       break;
     }
   }
-
-  // tcpdump -r dump.pcap -w- 'udp port 1234' | tcpreplay -ieth0 - 
-
-  char *s = (char *)malloc(32 * this->node.n_neighbours);
-  memset(s, 0, 32 * this->node.n_neighbours);
-  strcat(s, "dst host ");
+  char *fexp = (char *)malloc(32 * this->node.n_neighbours);
+  memset(fexp, 0, 32 * this->node.n_neighbours);
+  strcat(fexp, "dst net ");
   char first = 1;
   for (int i = 0; i < MAX_NODE_NUM; i++) {
     if (next_hops[i].next_hop == up_idx) {
-      // Hacky way to insert 'or' between host addresses
+      // Hacky way to insert 'or' between IP addresses
       if (!first) {
-        strcat(s, " or ");
-        first = 0;
+        strcat(fexp, " or ");
       }
+      first = 0;
+      // Add IP address
       struct in_addr a;
-      a.s_addr = this->node.source_ips[i];
-      strcat(s, inet_ntoa(a));
+      a.s_addr = next_hops[i].dest_ip;
+      strcat(fexp, inet_ntoa(a));
+      // Add subnet mask
+      strcat(fexp, "/24");
     }
   }
-  strcat(s, " \0");
+  strcat(fexp, " \0");
+  char *cmd = (char *)malloc(80 + 32 * this->node.n_neighbours);
+  sprintf(cmd, "tcpdump -r %s.pcap -w- '%s' | tcpreplay --topspeed -i%s -", up_iface, fexp, up_iface);
+  free(fexp);
+  return cmd;
 }
 
 void capture_replay_iface(char *up_iface, struct hop_dest *next_hops) {
-  const char *cmd = generate_replay_command(up_iface, next_hops);
-  system(cmd);
+  char *cmd = generate_replay_command(up_iface, next_hops);
+  int err;
+  if (err = system(cmd)) {
+    log_f("replay command returned error code %d: %s", err, cmd);
+  } else {
+    log_f("replay successful: %d", err);
+  }
   free(cmd);
 }

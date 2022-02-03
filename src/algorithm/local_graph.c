@@ -16,7 +16,7 @@ char register_heartbeat(LocalNode *this, struct hop_dest *next_hops, long source
         this->node.link_statuses[i] = LINK_UP;
         #ifdef DTLSR
         ts_toggle_state(&this->ls_time_series[i], get_now());
-        capture_end_iface(this->interfaces[i]);
+        capture_end_iface(this->interfaces[i], next_hops);
         #endif
         updated = 1;
         log_f("%s UP", ip_to_str(source_addr));

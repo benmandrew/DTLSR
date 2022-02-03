@@ -6,6 +6,8 @@
 #include "algorithm/graph.h"
 #include "algorithm/heap.h"
 
+typedef struct dijkstra_node DijkstraNode;
+
 struct hop_dest
 {
   int next_hop;

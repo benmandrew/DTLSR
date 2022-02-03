@@ -12,10 +12,13 @@
 #include <unistd.h>
 
 #include "algorithm/node.h"
+#include "algorithm/pathfind.h"
 #include "network/packetsend.h"
 #include "process/daemonise.h"
 #include "process/fd_event.h"
 #include "process/logging.h"
+
+struct hop_dest;
 
 struct rtentry *routes;
 
