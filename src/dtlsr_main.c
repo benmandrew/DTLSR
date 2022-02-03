@@ -40,10 +40,10 @@ void close_sockets(LSFD *fds) {
   event_timer_dealloc(fds->lsa_snd_timer);
 }
 
-void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds, int active_fd,
-                     char *send_status, char *graph_updated) {
+void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds, struct hop_dest *next_hops,
+                     int active_fd, char *send_status, char *graph_updated) {
   if (active_fd == fds->hb_sock) {
-    *graph_updated = receive_heartbeat(graph, this, fds);
+    *graph_updated = receive_heartbeat(graph, this, fds, next_hops);
   } else if (active_fd == fds->lsa_rec_sock) {
     *graph_updated = receive_lsa(graph, this, fds);
   } else if (active_fd == fds->lsa_snd_timer.fd) {
@@ -79,7 +79,7 @@ int driver(int argc, char **argv) {
       continue;
     }
     update_routing_table(&this, next_hops);
-    handle_event_fd(graph, &this, &fds, active_fd, &do_send_lsa,
+    handle_event_fd(graph, &this, &fds, next_hops, active_fd, &do_send_lsa,
                     &graph_updated);
     if (graph_updated) {
       local_node_update_metrics(&this, get_now());

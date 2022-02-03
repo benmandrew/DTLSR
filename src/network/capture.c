@@ -1,5 +1,6 @@
 
 #include "algorithm/node.h"
+#include "algorithm/pathfind.h"
 #include "process/logging.h"
 #include "network/capture_pi.h"
 
@@ -67,30 +68,6 @@ void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *p
   // pcap_dump_flush(dumpers[0]);
 }
 
-// void add_up_neighbours_filter_exp(char *s) {
-//   if (n_down_ifaces == 0) {
-//     return s;
-//   }
-//   char *s = (char *)malloc(32 * this->node.n_neighbours);
-//   strcat(s, "and not ( src host ");
-//   int n = 0;
-//   for (int i = 0; i < this->node.n_neighbours; i++) {
-//     for (int j = 0; j < this->node.n_neighbours; j++) {
-//       if (down_ifaces[j] == NULL)
-//         continue;
-//       if (strcmp(this->interfaces[i], down_ifaces[j])) {
-//         struct in_addr a;
-//         a.s_addr = this->node.source_ips[i];
-//         strcat(s, inet_ntoa(a));
-//         if (n != n_down_ifaces - 1) {
-//           strcat(s, " or ");
-//         }
-//         n++;
-//       }
-//     }
-//   }
-// }
-
 // not ( dst host ip1 or ip2 or ip3 )
 char *generate_filter_exp(void) {
   char *s = (char *)malloc(32 * this->node.n_neighbours);
@@ -105,8 +82,6 @@ char *generate_filter_exp(void) {
     }
   }
   strcat(s, " )\0");
-  // add_up_neighbours_filter_exp(s);
-  // strcat(s, "\0");
   return s;
 }
 
@@ -211,4 +186,40 @@ void capture_packets(void) {
   for (int i = 0; i < this->node.n_neighbours; i++) {
     pcap_dispatch(cap_infos[i].handle, -1, dump_packet, NULL);
   }
+}
+
+char *generate_replay_command(char *up_iface, struct hop_dest *next_hops) {
+  // Get index of neighbour corresponding to the iface
+  int up_idx;
+  for (up_idx = 0; up_idx < this->node.n_neighbours; up_idx++) {
+    if (strcmp(this->interfaces[up_idx], up_iface)) {
+      break;
+    }
+  }
+
+  // tcpdump -r dump.pcap -w- 'udp port 1234' | tcpreplay -ieth0 - 
+
+  char *s = (char *)malloc(32 * this->node.n_neighbours);
+  memset(s, 0, 32 * this->node.n_neighbours);
+  strcat(s, "dst host ");
+  char first = 1;
+  for (int i = 0; i < MAX_NODE_NUM; i++) {
+    if (next_hops[i].next_hop == up_idx) {
+      // Hacky way to insert 'or' between host addresses
+      if (!first) {
+        strcat(s, " or ");
+        first = 0;
+      }
+      struct in_addr a;
+      a.s_addr = this->node.source_ips[i];
+      strcat(s, inet_ntoa(a));
+    }
+  }
+  strcat(s, " \0");
+}
+
+void capture_replay_iface(char *up_iface, struct hop_dest *next_hops) {
+  const char *cmd = generate_replay_command(up_iface, next_hops);
+  system(cmd);
+  free(cmd);
 }

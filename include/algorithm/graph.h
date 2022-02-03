@@ -36,7 +36,7 @@ typedef struct LSFD {
 
 void graph_init(Node *graph);
 
-char receive_heartbeat(Node *graph, LocalNode *this, LSFD *fds);
+char receive_heartbeat(Node *graph, LocalNode *this, LSFD *fds, struct hop_dest *next_hops);
 
 void local_node_update_metrics(LocalNode *this, unsigned long long now);
 
