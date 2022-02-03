@@ -22,7 +22,7 @@ void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *p
 
 // We want to exclude packets meant specifically for us
 // not ( dst host ip1 or ip2 or ip3 )
-char *generate_incoming_filter_exp(void) {
+char *generate_incoming_filter_exp(LocalNode *this) {
   char *s = (char *)malloc(32 * this->node.n_neighbours);
   memset(s, 0, 32 * this->node.n_neighbours);
   strcat(s, "not ( dst net ");
@@ -42,7 +42,7 @@ void set_filter(struct capture_info *info) {
   if (info->has_fp) {
     pcap_freecode(&info->fp);
   }
-  char *filter_exp = generate_incoming_filter_exp();
+  char *filter_exp = generate_incoming_filter_exp(this);
   if (pcap_compile(info->handle, &info->fp, filter_exp, 0, info->net) == -1) {
     log_f("couldn't parse filter %s: %s", filter_exp, pcap_geterr(info->handle));
     exit(EXIT_FAILURE);
@@ -138,6 +138,7 @@ void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
       break;
     }
   }
+  capture_replay_iface(up_iface, next_hops);
 }
 
 void capture_packets(void) {
@@ -147,7 +148,7 @@ void capture_packets(void) {
 }
 
 // tcpdump -r dump.pcap -w- 'udp port 1234' | tcpreplay -ieth0 - 
-char *generate_replay_command(char *up_iface, struct hop_dest *next_hops) {
+char *generate_replay_command(LocalNode *this, char *up_iface, struct hop_dest *next_hops) {
   // Get index of neighbour corresponding to the iface
   int up_idx;
   for (up_idx = 0; up_idx < this->node.n_neighbours; up_idx++) {
@@ -160,7 +161,7 @@ char *generate_replay_command(char *up_iface, struct hop_dest *next_hops) {
   strcat(fexp, "dst net ");
   char first = 1;
   for (int i = 0; i < MAX_NODE_NUM; i++) {
-    if (next_hops[i].next_hop == up_idx) {
+    if (next_hops[i].next_hop == this->node.neighbour_ids[up_idx]) {
       // Hacky way to insert 'or' between IP addresses
       if (!first) {
         strcat(fexp, " or ");
@@ -174,7 +175,7 @@ char *generate_replay_command(char *up_iface, struct hop_dest *next_hops) {
       strcat(fexp, "/24");
     }
   }
-  strcat(fexp, " \0");
+  strcat(fexp, "\0");
   char *cmd = (char *)malloc(80 + 32 * this->node.n_neighbours);
   sprintf(cmd, "tcpdump -r %s.pcap -w- '%s' | tcpreplay --topspeed -i%s -", up_iface, fexp, up_iface);
   free(fexp);
@@ -182,12 +183,34 @@ char *generate_replay_command(char *up_iface, struct hop_dest *next_hops) {
 }
 
 void capture_replay_iface(char *up_iface, struct hop_dest *next_hops) {
-  char *cmd = generate_replay_command(up_iface, next_hops);
+  char *cmd = generate_replay_command(this, up_iface, next_hops);
   int err;
-  if (err = system(cmd)) {
-    log_f("replay command returned error code %d: %s", err, cmd);
-  } else {
-    log_f("replay successful: %d", err);
+  // if (err = system(cmd)) {
+  //   log_f("replay command returned error code %d: %s", err, cmd);
+  // } else {
+  //   log_f("replay successful: %d", err);
+  // }
+
+  FILE *fp;
+  char path[1035];
+
+  log_f("cmd: %s", cmd);
+
+  fp = popen(cmd, "r");
+  if (fp == NULL) {
+    log_f("failed to run replay command: %s", cmd);
+    return;
   }
+  while (fgets(path, sizeof(path), fp) != NULL) {
+    // for (int i = 2; i < sizeof(path); i++) {
+    //   if (path[i] == '\n') path[i] = '\0';
+    // }
+    log_f("%s", path);
+  }
+  pclose(fp);
+
+
+
+
   free(cmd);
 }

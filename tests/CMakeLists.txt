@@ -11,6 +11,7 @@ set(TEST_SOURCES
   algorithm/check_node.c
   algorithm/check_pathfind.c
   algorithm/check_link_hist.c
+  network/check_capture.c
 )
 
 set(LINK_LIBS algorithm ${CHECK_LIBRARIES})
