@@ -161,7 +161,7 @@ char *generate_replay_command(LocalNode *this, char *up_iface, struct hop_dest *
   strcat(fexp, "dst net ");
   char first = 1;
   for (int i = 0; i < MAX_NODE_NUM; i++) {
-    if (next_hops[i].next_hop + 1 == this->node.neighbour_ids[up_idx]) {
+    if (next_hops[i].next_hop == this->node.neighbour_ids[up_idx] - 1) {
       // Hacky way to insert 'or' between IP addresses
       if (!first) {
         strcat(fexp, " or ");
