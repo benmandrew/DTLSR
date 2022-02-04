@@ -66,6 +66,8 @@ struct sniff_udp {
 
 void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 
+char *generate_addresses_on_interface(LocalNode *this, char *iface, struct hop_dest *next_hops);
+
 char *generate_incoming_filter_exp(LocalNode *this);
 
 void set_filter(struct capture_info *info);

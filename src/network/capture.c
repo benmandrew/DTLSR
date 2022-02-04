@@ -20,13 +20,50 @@ void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *p
   pcap_dump((u_char *)dumpers[0], header, packet);
 }
 
+char *generate_addresses_on_interface(LocalNode *this, char *iface, struct hop_dest *next_hops) {
+  log_f("1");
+  // Get index of neighbour corresponding to the iface
+  int up_idx;
+  for (up_idx = 0; up_idx < this->node.n_neighbours; up_idx++) {
+    if (strcmp(this->interfaces[up_idx], iface) == 0) {
+      break;
+    }
+  }
+  log_f("2");
+  char *fexp = (char *)malloc(32 * this->node.n_neighbours);
+  memset(fexp, 0, 32 * this->node.n_neighbours);
+  strcat(fexp, "dst net ");
+  char first = 1;
+  for (int i = 0; i < MAX_NODE_NUM; i++) {
+    log_f("3");
+    if (next_hops[i].next_hop == this->node.neighbour_ids[up_idx]) {
+      // Hacky way to insert 'or' between IP addresses
+      if (!first) {
+        strcat(fexp, " or ");
+      }
+      first = 0;
+      // Add IP address
+      struct in_addr a;
+      a.s_addr = next_hops[i].dest_ip;
+      strcat(fexp, inet_ntoa(a));
+      // Add subnet mask
+      strcat(fexp, "/24");
+    }
+  }
+  log_f("4");
+  strcat(fexp, "\0");
+  return fexp;
+}
+
 // We want to exclude packets meant specifically for us
 // not ( dst host ip1 or ip2 or ip3 )
 char *generate_incoming_filter_exp(LocalNode *this) {
+  log_f("5");
   char *s = (char *)malloc(32 * this->node.n_neighbours);
   memset(s, 0, 32 * this->node.n_neighbours);
   strcat(s, "not ( dst net ");
   for (int i = 0; i < this->node.n_neighbours; i++) {
+    log_f("6");
     struct in_addr a;
     a.s_addr = this->node.source_ips[i];
     strcat(s, inet_ntoa(a));
@@ -34,6 +71,7 @@ char *generate_incoming_filter_exp(LocalNode *this) {
       strcat(s, " or ");
     }
   }
+  log_f("7");
   strcat(s, " )\0");
   return s;
 }
@@ -99,7 +137,7 @@ void capture_start_iface(char *down_iface) {
   is_capturing = 1;
   // Create the pcap file for the outgoing downed link
   for (int i = 0; i < this->node.n_neighbours; i++) {
-    if (strcmp(this->interfaces[i], down_iface)) {
+    if (strcmp(this->interfaces[i], down_iface) == 0) {
       char filename[24];
       sprintf(filename, "%s.pcap", down_iface);
       dumpers[i] = pcap_dump_open(cap_infos[i].handle, filename);
@@ -116,7 +154,6 @@ void capture_start_iface(char *down_iface) {
 }
 
 void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
-  log_f("capture_end_iface %d", n_down_ifaces);
   // Ignore if this is the first time the links have come up
   // Annoying edge case
   if (n_down_ifaces == 0)
@@ -131,12 +168,13 @@ void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
   }
   // Close the pcap file for the newly up outgoing interface
   for (int i = 0; i < this->node.n_neighbours; i++) {
+    log_f("HELLO");
     if (down_ifaces[i] != NULL && strcmp(down_ifaces[i], up_iface) == 0) {
       down_ifaces[i] = NULL;
-      log_f("pcap flush status: %d", pcap_dump_flush(dumpers[i]));
       pcap_dump_close(dumpers[i]);
       break;
     }
+    log_f("HELLO AGAIN");
   }
   capture_replay_iface(up_iface, next_hops);
 }
@@ -149,37 +187,13 @@ void capture_packets(void) {
 
 // tcpdump -r dump.pcap -w- 'udp port 1234' | tcpreplay -ieth0 - 
 char *generate_replay_command(LocalNode *this, char *up_iface, struct hop_dest *next_hops) {
-  // Get index of neighbour corresponding to the iface
-  int up_idx;
-  for (up_idx = 0; up_idx < this->node.n_neighbours; up_idx++) {
-    if (strcmp(this->interfaces[up_idx], up_iface)) {
-      break;
-    }
-  }
-  char *fexp = (char *)malloc(32 * this->node.n_neighbours);
-  memset(fexp, 0, 32 * this->node.n_neighbours);
-  strcat(fexp, "dst net ");
-  char first = 1;
-  for (int i = 0; i < MAX_NODE_NUM; i++) {
-    if (next_hops[i].next_hop == this->node.neighbour_ids[up_idx] - 1) {
-      // Hacky way to insert 'or' between IP addresses
-      if (!first) {
-        strcat(fexp, " or ");
-      }
-      first = 0;
-      // Add IP address
-      struct in_addr a;
-      a.s_addr = next_hops[i].dest_ip;
-      strcat(fexp, inet_ntoa(a));
-      // Add subnet mask
-      strcat(fexp, "/24");
-    }
-  }
-  strcat(fexp, "\0");
+  log_f("8");
+  char *fexp = generate_addresses_on_interface(this, up_iface, next_hops);
   char *cmd = (char *)malloc(80 + 32 * this->node.n_neighbours);
   // Append for error stream: 2>&1
   sprintf(cmd, "tcpdump -U -r %s.pcap -w- '%s' | tcpreplay --topspeed -i%s -", up_iface, fexp, up_iface);
   free(fexp);
+  log_f("9");
   return cmd;
 }
 

@@ -73,6 +73,7 @@ int driver(int argc, char **argv) {
     int active_fd;
     char graph_updated = 0, do_send_lsa = 0;
     if (is_capturing) {
+      log_f("CAP");
       capture_packets();
     }
     if ((active_fd = event_wait(fds.event_fds, fds.n_event_fds)) < 0) {
