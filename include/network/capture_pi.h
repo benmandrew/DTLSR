@@ -80,6 +80,10 @@ void init_dev(struct capture_info *info, char *iface, struct hop_dest *next_hops
 
 char *generate_replay_command(LocalNode *this, char *up_iface, struct hop_dest *next_hops);
 
+void capture_replay_iface(char *up_iface, struct hop_dest *next_hops);
 
+char *generate_remove_command(LocalNode *this, char *up_iface, struct hop_dest *next_hops);
+
+void capture_remove_replayed_packets(char *up_iface, struct hop_dest *next_hops);
 
 #endif

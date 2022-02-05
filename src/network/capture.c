@@ -23,7 +23,7 @@ void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *p
 char *generate_exclude_incoming(LocalNode *this) {
   char *fexp = (char *)malloc(32 * (this->node.n_neighbours + MAX_NODE_NUM));
   memset(fexp, 0, 32 * this->node.n_neighbours);
-  strcat(fexp, "not ( dst net ");
+  strcat(fexp, "( not ( dst net ");
   for (int i = 0; i < this->node.n_neighbours; i++) {
     struct in_addr a;
     a.s_addr = this->node.source_ips[i];
@@ -32,7 +32,7 @@ char *generate_exclude_incoming(LocalNode *this) {
       strcat(fexp, " or ");
     }
   }
-  strcat(fexp, " )\0");
+  strcat(fexp, " ) )\0");
   return fexp;
 }
 
@@ -47,7 +47,7 @@ char *generate_addresses_on_interface(LocalNode *this, char *iface, struct hop_d
   }
   char *fexp = (char *)malloc(32 * this->node.n_neighbours);
   memset(fexp, 0, 32 * this->node.n_neighbours);
-  strcat(fexp, "dst net ");
+  strcat(fexp, "( dst net ");
   char first = 1;
   for (int i = 0; i < MAX_NODE_NUM; i++) {
     if (next_hops[i].next_hop == this->node.neighbour_ids[up_idx]) {
@@ -65,7 +65,7 @@ char *generate_addresses_on_interface(LocalNode *this, char *iface, struct hop_d
       strcat(fexp, "/24");
     }
   }
-  strcat(fexp, "\0");
+  strcat(fexp, " )\0");
   if (no_addresses) {
     free(fexp);
     return NULL;
@@ -78,9 +78,8 @@ char *generate_incoming_filter_exp(LocalNode *this, char *iface, struct hop_dest
   char *outgoing = generate_addresses_on_interface(this, iface, next_hops);
 
   if (outgoing != NULL) {
-    strcat(incoming, " and ( ");
+    strcat(incoming, " and ");
     strcat(incoming, outgoing);
-    strcat(incoming, " )");
     free(outgoing);
   }
   return incoming;
@@ -169,6 +168,7 @@ void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
     }
   }
   capture_replay_iface(up_iface, next_hops);
+  capture_remove_replayed_packets(up_iface, next_hops);
 }
 
 void capture_packets(void) {
@@ -189,16 +189,34 @@ char *generate_replay_command(LocalNode *this, char *up_iface, struct hop_dest *
 
 void capture_replay_iface(char *up_iface, struct hop_dest *next_hops) {
   FILE *fp;
-  // char path[1035];
   char *cmd = generate_replay_command(this, up_iface, next_hops);
   fp = popen(cmd, "r");
   if (fp == NULL) {
     log_f("failed to run replay command: %s", cmd);
     return;
   }
-  // while (fgets(path, sizeof(path), fp) != NULL) {
-  //   log_f("%s", path);
-  // }
+  pclose(fp);
+  free(cmd);
+}
+
+// tcpdump -r dump.pcap -w dump.pcap 'not ( udp port 1234 )'
+char *generate_remove_command(LocalNode *this, char *up_iface, struct hop_dest *next_hops) {
+  char *fexp = generate_addresses_on_interface(this, up_iface, next_hops);
+  char *cmd = (char *)malloc(80 + 32 * this->node.n_neighbours);
+  // Append '2>&1' to output error stream
+  sprintf(cmd, "tcpdump -U -r '%s' -w '%s' '( not %s )'", PCAP_FILENAME, PCAP_FILENAME, fexp);
+  free(fexp);
+  return cmd;
+}
+
+void capture_remove_replayed_packets(char *up_iface, struct hop_dest *next_hops) {
+  FILE *fp;
+  char *cmd = generate_remove_command(this, up_iface, next_hops);
+  fp = popen(cmd, "r");
+  if (fp == NULL) {
+    log_f("failed to run remove command: %s", cmd);
+    return;
+  }
   pclose(fp);
   free(cmd);
 }
