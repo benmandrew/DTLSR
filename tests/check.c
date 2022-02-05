@@ -70,8 +70,10 @@ Suite *suite_algorithm(void) {
 
 TCase *case_capture(void) {
   TCase *tc = tcase_create("Capture");
-  tcase_add_test(tc, test_capture_generate_incoming_filter_exp_1);
-  tcase_add_test(tc, test_capture_generate_incoming_filter_exp_6);
+  tcase_add_test(tc, test_capture_generate_exclude_incoming_1);
+  tcase_add_test(tc, test_capture_generate_exclude_incoming_6);
+  tcase_add_test(tc, test_capture_generate_addresses_on_interface);
+  tcase_add_test(tc, test_capture_generate_incoming_filter_exp);
   tcase_add_test(tc, test_capture_generate_replay_command);
   return tc;
 }

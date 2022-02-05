@@ -29,21 +29,21 @@ char register_heartbeat(LocalNode *this, struct hop_dest *next_hops, long source
 
 char buffer[HB_SIZE];
 
-char receive_heartbeat(Node *graph, LocalNode *this, LSFD *socks, struct hop_dest *next_hops) {
+char receive_heartbeat(Node *graph, LocalNode *this, LSFD *fds, struct hop_dest *next_hops) {
   struct sockaddr_in from;
-  receive(socks->hb_sock, (void *)buffer, HB_SIZE, (struct sockaddr *)&from);
+  receive(fds->hb_sock, (void *)buffer, HB_SIZE, (struct sockaddr *)&from);
   // Update node timestamp to now
   node_update_time(&this->node);
   char updated = register_heartbeat(this, next_hops, (long)from.sin_addr.s_addr);
   if (updated) {
     // Update global graph
     update_global_this(graph, this);
-    send_lsa(graph, this, socks);
+    send_lsa(graph, this, fds);
   }
   return updated;
 }
 
-char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds) {
+char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds, struct hop_dest *next_hops) {
   char updated = 0;
   for (int i = 0; i < this->node.n_neighbours; i++) {
     if (this->timers[i].fd == active_fd) {
@@ -51,7 +51,7 @@ char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds) {
         this->node.link_statuses[i] = LINK_DOWN;
         #ifdef DTLSR
         ts_toggle_state(&this->ls_time_series[i], get_now());
-        capture_start_iface(this->interfaces[i]);
+        capture_start_iface(this->interfaces[i], next_hops);
         #endif
         event_timer_disarm(&this->timers[i]);
         updated = 1;

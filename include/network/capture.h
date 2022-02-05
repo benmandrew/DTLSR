@@ -32,13 +32,13 @@ struct capture_info {
 
 char is_capturing;
 
-void capture_init(LocalNode *this);
+void capture_init(LocalNode *node, struct hop_dest *next_hops);
 
 void capture_packets(void);
 
 void capture_replay_iface(char *up_iface, struct hop_dest *next_hops);
 
-void capture_start_iface(char *down_iface);
+void capture_start_iface(char *down_iface, struct hop_dest *next_hops);
 
 void capture_end_iface(char *up_iface, struct hop_dest *next_hops);
 

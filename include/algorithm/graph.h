@@ -45,7 +45,7 @@ void local_node_update_metrics(LocalNode *this, unsigned long long now);
 
 void update_global_this(Node *graph, LocalNode *this);
 
-char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds);
+char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds, struct hop_dest *next_hops);
 
 char receive_lsa(Node *graph, LocalNode *this, LSFD *fds);
 

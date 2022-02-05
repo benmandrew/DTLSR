@@ -4,6 +4,8 @@
 
 #include "capture.h"
 
+#define PCAP_FILENAME "dump.pcap"
+
 #define SNAP_LEN 1518
 #define SIZE_ETHERNET 14
 #define ETHER_ADDR_LEN 6
@@ -66,13 +68,15 @@ struct sniff_udp {
 
 void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet);
 
+char *generate_exclude_incoming(LocalNode *this);
+
 char *generate_addresses_on_interface(LocalNode *this, char *iface, struct hop_dest *next_hops);
 
-char *generate_incoming_filter_exp(LocalNode *this);
+char *generate_incoming_filter_exp(LocalNode *this, char *iface, struct hop_dest *next_hops);
 
-void set_filter(struct capture_info *info);
+void set_filter(struct capture_info *info, char *iface, struct hop_dest *next_hops);
 
-void init_dev(struct capture_info *info, char *iface);
+void init_dev(struct capture_info *info, char *iface, struct hop_dest *next_hops);
 
 char *generate_replay_command(LocalNode *this, char *up_iface, struct hop_dest *next_hops);
 

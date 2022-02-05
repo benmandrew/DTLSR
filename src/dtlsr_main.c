@@ -51,13 +51,14 @@ void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds, struct hop_dest *n
     *graph_updated = 1;
     *send_status = 1;
   } else {
-    *graph_updated = timeout_heartbeat(graph, this, active_fd, fds);
+    *graph_updated = timeout_heartbeat(graph, this, active_fd, fds, next_hops);
   }
 }
 
 int driver(int argc, char **argv) {
   Node graph[MAX_NODE_NUM];
   struct hop_dest next_hops[MAX_NODE_NUM];
+  memset(next_hops, 0, sizeof(next_hops));
   LocalNode this;
   graph_init(graph);
   local_node_init(&this, PROTOCOL, CONFIG, HEARTBEAT_TIMEOUT);
@@ -68,12 +69,11 @@ int driver(int argc, char **argv) {
   #endif
   routes = get_routes(&this);
   LSFD fds = init_descriptors(&this);
-  capture_init(&this);
+  capture_init(&this, next_hops);
   while (1) {
     int active_fd;
     char graph_updated = 0, do_send_lsa = 0;
     if (is_capturing) {
-      log_f("CAP");
       capture_packets();
     }
     if ((active_fd = event_wait(fds.event_fds, fds.n_event_fds)) < 0) {
