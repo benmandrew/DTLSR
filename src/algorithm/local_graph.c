@@ -46,17 +46,15 @@ char receive_heartbeat(Node *graph, LocalNode *this, LSFD *fds, struct hop_dest 
 char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds, struct hop_dest *next_hops) {
   char updated = 0;
   for (int i = 0; i < this->node.n_neighbours; i++) {
-    if (this->timers[i].fd == active_fd) {
-      if (this->node.link_statuses[i] == LINK_UP) {
-        this->node.link_statuses[i] = LINK_DOWN;
-        #ifdef DTLSR
-        ts_toggle_state(&this->ls_time_series[i], get_now());
-        capture_start_iface(this->interfaces[i], next_hops);
-        #endif
-        event_timer_disarm(&this->timers[i]);
-        updated = 1;
-        log_f("%s DOWN", ip_to_str(this->node.neighbour_ips[i]));
-      }
+    if (this->timers[i].fd == active_fd && this->node.link_statuses[i] == LINK_UP) {
+      this->node.link_statuses[i] = LINK_DOWN;
+      #ifdef DTLSR
+      ts_toggle_state(&this->ls_time_series[i], get_now());
+      // capture_start_iface(this->interfaces[i], next_hops);
+      #endif
+      event_timer_disarm(&this->timers[i]);
+      updated = 1;
+      log_f("%s DOWN", ip_to_str(this->node.neighbour_ips[i]));
       break;
     }
   }

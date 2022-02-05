@@ -4,6 +4,8 @@
 #include "process/logging.h"
 #include "network/capture_pi.h"
 
+#define NETMASK inet_addr("255.255.255.0");
+
 struct capture_info *cap_infos;
 pcap_dumper_t *dumper;
 LocalNode *this;
@@ -59,7 +61,7 @@ char *generate_addresses_on_interface(LocalNode *this, char *iface, struct hop_d
       no_addresses = 0;
       // Add IP address
       struct in_addr a;
-      a.s_addr = next_hops[i].dest_ip;
+      a.s_addr = next_hops[i].dest_ip & NETMASK;
       strcat(fexp, inet_ntoa(a));
       // Add subnet mask
       strcat(fexp, "/24");
@@ -145,7 +147,9 @@ void capture_start_iface(char *down_iface, struct hop_dest *next_hops) {
   is_capturing = 1;
   // Put downed link into the list
   for (int i = 0; i < this->node.n_neighbours; i++) {
-    set_filter(&cap_infos[i], this->interfaces[i], next_hops);
+    set_filter(&cap_infos[i], down_iface, next_hops);
+  }
+  for (int i = 0; i < this->node.n_neighbours; i++) {
     if (down_ifaces[i] == NULL) {
       down_ifaces[i] = down_iface;
       break;
@@ -172,6 +176,7 @@ void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
 }
 
 void capture_packets(void) {
+  log_f("dump");
   for (int i = 0; i < this->node.n_neighbours; i++) {
     pcap_dispatch(cap_infos[i].handle, -1, dump_packet, NULL);
   }
@@ -182,7 +187,7 @@ char *generate_replay_command(LocalNode *this, char *up_iface, struct hop_dest *
   char *fexp = generate_addresses_on_interface(this, up_iface, next_hops);
   char *cmd = (char *)malloc(80 + 32 * this->node.n_neighbours);
   // Append '2>&1' to output error stream
-  sprintf(cmd, "tcpdump -U -r '%s' -w- '%s' | tcpreplay --topspeed -i%s -", PCAP_FILENAME, fexp, up_iface);
+  sprintf(cmd, "tcpdump -U -r 'dump.pcap' -w- '%s' | tcpreplay --topspeed -i%s -", fexp, up_iface);
   free(fexp);
   return cmd;
 }
@@ -204,19 +209,35 @@ char *generate_remove_command(LocalNode *this, char *up_iface, struct hop_dest *
   char *fexp = generate_addresses_on_interface(this, up_iface, next_hops);
   char *cmd = (char *)malloc(80 + 32 * this->node.n_neighbours);
   // Append '2>&1' to output error stream
-  sprintf(cmd, "tcpdump -U -r '%s' -w '%s' '( not %s )'", PCAP_FILENAME, PCAP_FILENAME, fexp);
+  sprintf(cmd, "tcpdump -r 'dump.pcap' -w 'dump_tmp.pcap' '( not %s )'", fexp);
   free(fexp);
   return cmd;
 }
 
 void capture_remove_replayed_packets(char *up_iface, struct hop_dest *next_hops) {
   FILE *fp;
+  pcap_dump_close(dumper);
   char *cmd = generate_remove_command(this, up_iface, next_hops);
   fp = popen(cmd, "r");
   if (fp == NULL) {
     log_f("failed to run remove command: %s", cmd);
     return;
   }
-  pclose(fp);
   free(cmd);
+  pclose(fp);
+  cmd = "rm dump.pcap";
+  fp = popen(cmd, "r");
+  if (fp == NULL) {
+    log_f("failed to run rename command: %s", cmd);
+    return;
+  }
+  pclose(fp);
+  cmd = "mv dump_tmp.pcap dump.pcap";
+  fp = popen(cmd, "r");
+  if (fp == NULL) {
+    log_f("failed to run rename command: %s", cmd);
+    return;
+  }
+  pclose(fp);
+  dumper = pcap_dump_open(cap_infos[0].handle, "dump.pcap");
 }

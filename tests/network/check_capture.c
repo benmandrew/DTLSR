@@ -143,8 +143,8 @@ START_TEST(test_capture_generate_remove_command) {
   char *eth0_up = generate_remove_command(&n, "eth0", next_hops);
   char *eth1_up = generate_remove_command(&n, "eth1", next_hops);
 
-  ck_assert_str_eq(eth0_up, "tcpdump -U -r 'dump.pcap' -w 'dump.pcap' '( not ( dst net 10.0.5.9/24 ) )'");
-  ck_assert_str_eq(eth1_up, "tcpdump -U -r 'dump.pcap' -w 'dump.pcap' '( not ( dst net 10.0.0.1/24 or 10.5.1.5/24 ) )'");
+  ck_assert_str_eq(eth0_up, "tcpdump -U -r 'dump.pcap' -w 'dump_tmp.pcap' '( not ( dst net 10.0.5.9/24 ) )'");
+  ck_assert_str_eq(eth1_up, "tcpdump -U -r 'dump.pcap' -w 'dump_tmp.pcap' '( not ( dst net 10.0.0.1/24 or 10.5.1.5/24 ) )'");
 
   node_local_dealloc(&n);
   free(eth0_up);

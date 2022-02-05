@@ -41,7 +41,7 @@ void close_sockets(LSFD *fds) {
 }
 
 void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds, struct hop_dest *next_hops,
-                     int active_fd, char *send_status, char *graph_updated) {
+                     int active_fd, char *send_status, char *graph_updated, char *start_capture) {
   if (active_fd == fds->hb_sock) {
     *graph_updated = receive_heartbeat(graph, this, fds, next_hops);
   } else if (active_fd == fds->lsa_rec_sock) {
@@ -52,6 +52,16 @@ void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds, struct hop_dest *n
     *send_status = 1;
   } else {
     *graph_updated = timeout_heartbeat(graph, this, active_fd, fds, next_hops);
+    *start_capture = 1;
+  }
+}
+
+void start_capturing(LocalNode *this, int active_fd, struct hop_dest *next_hops) {
+  for (int i = 0; i < this->node.n_neighbours; i++) {
+    if (this->timers[i].fd == active_fd && this->node.link_statuses[i] == LINK_DOWN) {
+      capture_start_iface(this->interfaces[i], next_hops);
+      break;
+    }
   }
 }
 
@@ -72,16 +82,18 @@ int driver(int argc, char **argv) {
   capture_init(&this, next_hops);
   while (1) {
     int active_fd;
-    char graph_updated = 0, do_send_lsa = 0;
+    char graph_updated = 0, do_send_lsa = 0, start_capture = 0;
+    #ifdef DTLSR
     if (is_capturing) {
       capture_packets();
     }
+    #endif
     if ((active_fd = event_wait(fds.event_fds, fds.n_event_fds)) < 0) {
       continue;
     }
     update_routing_table(&this, next_hops);
     handle_event_fd(graph, &this, &fds, next_hops, active_fd, &do_send_lsa,
-                    &graph_updated);
+                    &graph_updated, &start_capture);
     if (graph_updated) {
       local_node_update_metrics(&this, get_now());
       pathfind(graph, this.node.id, next_hops);
@@ -90,6 +102,11 @@ int driver(int argc, char **argv) {
       update_global_this(graph, &this);
       send_lsa(graph, &this, &fds);
     }
+    #ifdef DTLSR
+    if (start_capture) {
+      start_capturing(&this, active_fd, next_hops);
+    }
+    #endif
   }
   close_sockets(&fds);
   return 0;
