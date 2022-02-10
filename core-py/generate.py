@@ -4,7 +4,7 @@ from core.emulator.data import IpPrefixes, NodeOptions
 from core.emulator.enumerations import EventTypes
 from core.emulator.session import Session
 from core.emulator.data import LinkOptions
-from core.nodes.base import CoreNode
+from core.nodes.base import CoreNode, CoreInterface
 from core.services.utility import DefaultRouteService, IPForwardService
 
 import dtlsr
@@ -19,6 +19,7 @@ class Configuration:
     self.session = session
     self.ns: List[Node] = []
     self.ip_prefixes: List[IpPrefixes] = []
+    self.iface_map: Dict[Tuple[int, int], Tuple[CoreInterface, CoreInterface]] = {}
 
     print("initing nodes")
     self._read_config(config)
@@ -85,6 +86,11 @@ class Configuration:
         a, b, if_a.ip4, if_a.id, if_b.ip4, if_b.id))
       self.session.add_link(cn_a.id, cn_b.id, if_a, if_b, options)
       self.ip_prefixes.append(pref)
+
+  def update_link(self, id_a: int, id_b: int, options: LinkOptions):
+    iface_a, iface_b = self.iface_map[(id_a, id_b)]
+    self.session.update_link(id_a, id_b, iface_a, iface_b, options)
+
 
   def init_nodes(self, ts: Dict[str, str]):
     for n in self.ns:

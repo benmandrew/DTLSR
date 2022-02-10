@@ -88,7 +88,7 @@ void remove_marked_routes(void) {
       set_addrs(&rt, curr_routes[i].gateway, curr_routes[i].dst);
       rt.rt_metric = curr_routes[i].metric;
       if (ioctl(ioctl_fd, SIOCDELRT, &rt) < 0) {
-        log_f("ioctl remove failed: errno %s", strerror(errno));
+        // log_f("ioctl remove failed: errno %s", strerror(errno));
       }
       memset(&curr_routes[i], 0, sizeof(struct simple_rt));
     }
