@@ -176,7 +176,6 @@ void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
 }
 
 void capture_packets(void) {
-  log_f("dump");
   for (int i = 0; i < this->node.n_neighbours; i++) {
     pcap_dispatch(cap_infos[i].handle, -1, dump_packet, NULL);
   }

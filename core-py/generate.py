@@ -85,12 +85,15 @@ class Configuration:
       print("n{} -- n{} : {} eth{} -- {} eth{}".format(
         a, b, if_a.ip4, if_a.id, if_b.ip4, if_b.id))
       self.session.add_link(cn_a.id, cn_b.id, if_a, if_b, options)
+      self.iface_map[(cn_a.id, cn_b.id)] = (if_a, if_b)
       self.ip_prefixes.append(pref)
 
   def update_link(self, id_a: int, id_b: int, options: LinkOptions):
-    iface_a, iface_b = self.iface_map[(id_a, id_b)]
-    self.session.update_link(id_a, id_b, iface_a, iface_b, options)
-
+    if ((id_a, id_b) in self.iface_map.keys()):
+      if_a, if_b = self.iface_map[(id_a, id_b)]
+    else:
+      if_b, if_a = self.iface_map[(id_b, id_a)]
+    self.session.update_link(id_a, id_b, if_a.id, if_b.id, options)
 
   def init_nodes(self, ts: Dict[str, str]):
     for n in self.ns:
