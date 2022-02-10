@@ -73,7 +73,6 @@ def operating_loop_manual(conf: Configuration) -> None:
       conf.update_link(1, 2, link_up)
     up = not up
 
-
 def main():
   ## create emulator instance for creating sessions and utility methods
   coreemu: CoreEmu = CoreEmu()

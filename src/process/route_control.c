@@ -17,7 +17,8 @@ struct simple_rt get_simple_rt(struct rtentry *rt) {
 }
 
 char simple_rt_eq(struct simple_rt *rt1, struct simple_rt *rt2) {
-  return (rt1->dst == rt2->dst && rt1->gateway == rt2->gateway && rt1->metric == rt2->metric);
+  return (rt1->dst == rt2->dst && rt1->gateway == rt2->gateway
+          && rt1->metric == rt2->metric);
 }
 
 char simple_rt_addr_eq(struct simple_rt *rt1, struct simple_rt *rt2) {
@@ -108,7 +109,6 @@ void derive_rtentries(LocalNode *this, struct hop_dest *next_hops,
                   next_hops[hop_i].dest_ip);
         routes[hop_i].rt_flags = RTF_UP | RTF_GATEWAY;
         routes[hop_i].rt_metric = next_hops[hop_i].metric;
-        // log_f("metric %hd", routes[hop_i].rt_metric);
         break;
       }
     }
@@ -126,22 +126,30 @@ void add_routes(LocalNode *this, struct hop_dest *next_hops,
   }
 }
 
-// Don't want to add routes to direct neighbours, as these should already exist
-void remove_neighbours(LocalNode *this, struct hop_dest *next_hops) {
+void filter_next_hops(LocalNode *this, struct hop_dest *next_hops) {
   for (int i = 0; i < MAX_NODE_NUM; i++) {
+    // if (next_hops[i].next_hop != -1 && next_hops[i].next_hop_state == LINK_DOWN) {
+    //   next_hops[i].next_hop = -1;
+    // }
     for (int j = 0; j < this->node.n_neighbours; j++) {
+      if (next_hops[i].next_hop == -1) {
+        break;
+      }
+      // Remove neighbours, as these routes should already exist by DefaultRoute
       if (this->node.neighbour_ips[j] == next_hops[i].dest_ip) {
         next_hops[i].next_hop = -1;
         break;
       }
     }
   }
+  reduce_routes_to_subnets(next_hops);
+  remove_duplicates(next_hops);
 }
 
 void remove_duplicates(struct hop_dest *next_hops) {
-  for (int i = 1; i < MAX_NODE_NUM; i++) {
+  for (int i = 0; i < MAX_NODE_NUM; i++) {
     for (int j = 0; j < i; j++) {
-      if (next_hops[i].next_hop == next_hops[j].next_hop &&
+      if (i != j && next_hops[i].next_hop == next_hops[j].next_hop &&
           next_hops[i].dest_ip == next_hops[j].dest_ip) {
         next_hops[i].next_hop = -1;
         break;
@@ -157,17 +165,14 @@ void reduce_routes_to_subnets(struct hop_dest *next_hops) {
       next_hops[i].dest_ip &= mask;
     }
   }
-  remove_duplicates(next_hops);
 }
 
 void update_routing_table(LocalNode *this, struct hop_dest *next_hops) {
   struct rtentry routes[MAX_NODE_NUM];
   ioctl_fd = socket(AF_INET, SOCK_DGRAM, 0);
-  remove_neighbours(this, next_hops);
-  reduce_routes_to_subnets(next_hops);
+  filter_next_hops(this, next_hops);
   derive_rtentries(this, next_hops, routes);
   add_routes(this, next_hops, routes);
-
   mark_routes_unseen();
   for (int i = 0; i < MAX_NODE_NUM; i++) {
     if (next_hops[i].next_hop != -1) {

@@ -177,7 +177,10 @@ void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
 
 void capture_packets(void) {
   for (int i = 0; i < this->node.n_neighbours; i++) {
-    pcap_dispatch(cap_infos[i].handle, -1, dump_packet, NULL);
+    if (this->node.link_statuses[i] == LINK_UP) {
+      log_f("%d %s", i, this->interfaces[i]);
+      pcap_dispatch(cap_infos[i].handle, -1, dump_packet, NULL);
+    }
   }
 }
 

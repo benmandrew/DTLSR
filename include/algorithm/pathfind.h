@@ -9,10 +9,11 @@
 typedef struct dijkstra_node DijkstraNode;
 
 struct hop_dest {
-  // 0-indexed
   int next_hop;
   uint32_t dest_ip;
   short metric;
+  // Is the link to the next hop down?
+  enum LinkState next_hop_state;
 };
 
 DijkstraNode *dijkstra(Node *graph, int src_id);

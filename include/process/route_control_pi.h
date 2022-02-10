@@ -42,7 +42,7 @@ void derive_rtentries(LocalNode *this, struct hop_dest *next_hops,
 void add_routes(LocalNode *this, struct hop_dest *next_hops,
                 struct rtentry *routes);
 
-void remove_neighbours(LocalNode *this, struct hop_dest *next_hops);
+void filter_next_hops(LocalNode *this, struct hop_dest *next_hops);
 
 void remove_duplicates(struct hop_dest *next_hops);
 

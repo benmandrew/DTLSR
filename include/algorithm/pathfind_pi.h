@@ -12,7 +12,7 @@ DijkstraNode *dijkstra_init(Node *graph, int src_id);
 
 MinHeap heap_init(DijkstraNode *nodes);
 
-int get_next_hop(Node *graph, DijkstraNode *nodes, int src_id, int dst_id, short *metric);
+int get_next_hop(Node *graph, DijkstraNode *nodes, int src_id, int dst_id, short *metric, enum LinkState *next_hop_state);
 
 uint32_t get_dst_ip(Node *graph, DijkstraNode *nodes, int dst_id);
 

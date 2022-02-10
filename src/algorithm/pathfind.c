@@ -52,7 +52,7 @@ short s_d_safe_add(short s, double d) {
 }
 
 int get_next_hop(Node *graph, DijkstraNode *nodes, int src_id, int dst_id,
-                 short *metric) {
+                 short *metric, enum LinkState *next_hop_state) {
   DijkstraNode *next;
   DijkstraNode *this = &nodes[dst_id - 1];
   *metric = 0;
@@ -62,6 +62,7 @@ int get_next_hop(Node *graph, DijkstraNode *nodes, int src_id, int dst_id,
     this = &nodes[this->prev_id - 1];
     for (int i = 0; i < this->n_neighbours; i++) {
       if (next->id == this->neighbour_ids[i]) {
+        *next_hop_state = this->link_statuses[i];
         *metric = s_d_safe_add(*metric, graph[this->id - 1].link_metrics[i]);
         break;
       }
@@ -94,7 +95,8 @@ void get_next_hops(Node *graph, DijkstraNode *nodes, int src_id,
   for (int i = 0; i < MAX_NODE_NUM; i++) {
     if (nodes[i].state != NODE_UNSEEN && nodes[i].prev_id != -1) {
       short metric;
-      int next_hop = get_next_hop(graph, nodes, src_id, i + 1, &metric);
+      enum LinkState next_hop_state;
+      int next_hop = get_next_hop(graph, nodes, src_id, i + 1, &metric, &next_hop_state);
       next_hops[i] =
           (struct hop_dest){.next_hop = next_hop,
                             .dest_ip = get_dst_ip(graph, nodes, i + 1),

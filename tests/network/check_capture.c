@@ -62,9 +62,9 @@ START_TEST(test_capture_generate_addresses_on_interface) {
   char *eth1_up = generate_addresses_on_interface(&n, "eth1", next_hops);
   char *eth2_up = generate_addresses_on_interface(&n, "eth2", next_hops);
 
-  ck_assert_str_eq(eth0_up, "( dst net 10.0.5.9/24 )");
-  ck_assert_str_eq(eth1_up, "( dst net 10.0.0.1/24 or 10.5.1.5/24 )");
-  ck_assert_str_eq(eth2_up, "( dst net 10.4.1.5/24 or 10.4.1.2/24 or 10.4.1.1/24 )");
+  ck_assert_str_eq(eth0_up, "( dst net 10.0.5.0/24 )");
+  ck_assert_str_eq(eth1_up, "( dst net 10.0.0.0/24 or 10.5.1.0/24 )");
+  ck_assert_str_eq(eth2_up, "( dst net 10.4.1.0/24 or 10.4.1.0/24 or 10.4.1.0/24 )");
 
   node_local_dealloc(&n);
   free(eth0_up);
@@ -93,7 +93,7 @@ START_TEST(test_capture_generate_incoming_filter_exp) {
   char *fexp = generate_incoming_filter_exp(&n, "eth0", next_hops);
 
   ck_assert_str_eq(fexp,
-    "( not ( dst net 192.168.4.1 or 192.168.2.1 or 192.168.1.8 ) ) and ( dst net 10.0.0.1/24 or 10.5.1.5/24 )");
+    "( not ( dst net 192.168.4.1 or 192.168.2.1 or 192.168.1.8 ) ) and ( dst net 10.0.0.0/24 or 10.5.1.0/24 )");
 
   node_local_dealloc(&n);
   free(fexp);
@@ -117,8 +117,8 @@ START_TEST(test_capture_generate_replay_command) {
   char *eth0_up = generate_replay_command(&n, "eth0", next_hops);
   char *eth1_up = generate_replay_command(&n, "eth1", next_hops);
 
-  ck_assert_str_eq(eth0_up, "tcpdump -U -r 'dump.pcap' -w- '( dst net 10.0.5.9/24 )' | tcpreplay --topspeed -ieth0 -");
-  ck_assert_str_eq(eth1_up, "tcpdump -U -r 'dump.pcap' -w- '( dst net 10.0.0.1/24 or 10.5.1.5/24 )' | tcpreplay --topspeed -ieth1 -");
+  ck_assert_str_eq(eth0_up, "tcpdump -U -r 'dump.pcap' -w- '( dst net 10.0.5.0/24 )' | tcpreplay --topspeed -ieth0 -");
+  ck_assert_str_eq(eth1_up, "tcpdump -U -r 'dump.pcap' -w- '( dst net 10.0.0.0/24 or 10.5.1.0/24 )' | tcpreplay --topspeed -ieth1 -");
 
   node_local_dealloc(&n);
   free(eth0_up);
@@ -143,8 +143,8 @@ START_TEST(test_capture_generate_remove_command) {
   char *eth0_up = generate_remove_command(&n, "eth0", next_hops);
   char *eth1_up = generate_remove_command(&n, "eth1", next_hops);
 
-  ck_assert_str_eq(eth0_up, "tcpdump -U -r 'dump.pcap' -w 'dump_tmp.pcap' '( not ( dst net 10.0.5.9/24 ) )'");
-  ck_assert_str_eq(eth1_up, "tcpdump -U -r 'dump.pcap' -w 'dump_tmp.pcap' '( not ( dst net 10.0.0.1/24 or 10.5.1.5/24 ) )'");
+  ck_assert_str_eq(eth0_up, "tcpdump -r 'dump.pcap' -w 'dump_tmp.pcap' '( not ( dst net 10.0.5.0/24 ) )'");
+  ck_assert_str_eq(eth1_up, "tcpdump -r 'dump.pcap' -w 'dump_tmp.pcap' '( not ( dst net 10.0.0.0/24 or 10.5.1.0/24 ) )'");
 
   node_local_dealloc(&n);
   free(eth0_up);
