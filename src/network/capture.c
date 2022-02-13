@@ -8,6 +8,7 @@
 
 struct capture_info *cap_infos;
 pcap_dumper_t *dumper;
+int dumper_curr_n;
 LocalNode *this;
 char **down_ifaces;
 int n_down_ifaces;
@@ -18,8 +19,6 @@ void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *p
   if (size_ip < 20) {
     return;
   }
-  struct in_addr a;
-  a = ip->ip_dst;
   pcap_dump((u_char *)dumper, header, packet);
   pcap_dump_flush(dumper);
 }
@@ -136,6 +135,7 @@ void capture_init(LocalNode *node, struct hop_dest *next_hops) {
   this = node;
   is_capturing = 0;
   n_down_ifaces = 0;
+  dumper_curr_n = 0;
   down_ifaces = (char **)malloc(this->node.n_neighbours * sizeof(char *));
   memset(down_ifaces, 0, this->node.n_neighbours * sizeof(char *));
   cap_infos = (struct capture_info *)malloc(this->node.n_neighbours * sizeof(struct capture_info));
@@ -143,12 +143,18 @@ void capture_init(LocalNode *node, struct hop_dest *next_hops) {
   for (int i = 0; i < this->node.n_neighbours; i++) {
     init_dev(&cap_infos[i], this->interfaces[i]);
   }
-  dumper = open_dump(PCAP_FILENAME);
+  dumper = open_dump();
+}
+
+char *get_dumper_filename(int n) {
+  char *s = (char *)malloc(16 * sizeof(char));
+  sprintf(s, "dump_%d.pcap", n);
+  return s;
 }
 
 #define STD_IFACE "eth0"
 
-pcap_dumper_t *open_dump(const char *filename) {
+pcap_dumper_t *open_dump(void) {
   char errbuf[PCAP_ERRBUF_SIZE];
   pcap_t *handle;
   handle = pcap_open_live(STD_IFACE, SNAP_LEN, 0, 1000, errbuf);
@@ -160,7 +166,9 @@ pcap_dumper_t *open_dump(const char *filename) {
     log_f("%s is not ethernet", STD_IFACE);
     exit(EXIT_FAILURE);
   }
-  pcap_dumper_t *d = pcap_dump_open(handle, PCAP_FILENAME);
+  char *filename = get_dumper_filename(dumper_curr_n);
+  pcap_dumper_t *d = pcap_dump_open(handle, filename);
+  free(filename);
   pcap_close(handle);
   return d;
 }
@@ -199,20 +207,21 @@ void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
 
 void capture_packets(void) {
   for (int i = 0; i < this->node.n_neighbours; i++) {
-    if (this->node.link_statuses[i] == LINK_UP) {
+    // if (this->node.link_statuses[i] == LINK_UP) {
       pcap_dispatch(cap_infos[i].handle, -1, dump_packet, NULL);
-    }
+    // }
   }
 }
 
 // tcpdump -r dump.pcap -w- 'udp port 1234' | tcpreplay -ieth0 - 
 char *generate_replay_command(LocalNode *this, char *up_iface, struct hop_dest *next_hops) {
+  char *filename = get_dumper_filename(dumper_curr_n);
   char *fexp = generate_addresses_on_interface(this, up_iface, next_hops);
   char *cmd = (char *)malloc(80 + 32 * this->node.n_neighbours);
   // Append '2>&1' to output error stream
-  // sprintf(cmd, "tcpdump -U -r 'dump.pcap' -w- '%s' | tcpreplay --topspeed -i%s -", fexp, up_iface);
-  sprintf(cmd, "tcpdump -U -r 'dump.pcap' -w- '%s' | tcpreplay -x 10 -i%s -", fexp, up_iface);
+  sprintf(cmd, "tcpdump -U -r '%s' -w- '%s' | tcpreplay --topspeed -i%s -", filename, fexp, up_iface);
   free(fexp);
+  free(filename);
   return cmd;
 }
 
@@ -230,11 +239,11 @@ void capture_replay_iface(char *up_iface, struct hop_dest *next_hops) {
 }
 
 // tcpdump -r dump.pcap -w dump.pcap 'not ( udp port 1234 )'
-char *generate_remove_command(LocalNode *this, char *up_iface, struct hop_dest *next_hops) {
+char *generate_filter_command(LocalNode *this, char *up_iface, char *old_filename, char *new_filename, struct hop_dest *next_hops) {
   char *fexp = generate_addresses_on_interface(this, up_iface, next_hops);
   char *cmd = (char *)malloc(80 + 32 * this->node.n_neighbours);
   // Append '2>&1' to output error stream
-  sprintf(cmd, "tcpdump -r 'dump.pcap' -w 'dump_tmp.pcap' '( not %s )'", fexp);
+  sprintf(cmd, "tcpdump -r '%s' -w '%s' '( not %s )'", old_filename, new_filename, fexp);
   free(fexp);
   return cmd;
 }
@@ -242,27 +251,24 @@ char *generate_remove_command(LocalNode *this, char *up_iface, struct hop_dest *
 void capture_remove_replayed_packets(char *up_iface, struct hop_dest *next_hops) {
   FILE *fp;
   pcap_dump_close(dumper);
-  char *cmd = generate_remove_command(this, up_iface, next_hops);
+  char *old_filename = get_dumper_filename(dumper_curr_n);
+  char *new_filename = get_dumper_filename(dumper_curr_n + 1);
+  char *cmd = generate_filter_command(this, up_iface, old_filename, new_filename, next_hops);
   fp = popen(cmd, "r");
   if (fp == NULL) {
-    log_f("failed to run remove command: %s", cmd);
-    return;
-  }
-  free(cmd);
-  pclose(fp);
-  cmd = "rm dump.pcap";
-  fp = popen(cmd, "r");
-  if (fp == NULL) {
-    log_f("failed to run rename command: %s", cmd);
+    log_f("failed to run filter command: %s", cmd);
     return;
   }
   pclose(fp);
-  cmd = "mv dump_tmp.pcap dump.pcap";
+  sprintf(cmd, "rm '%s'", old_filename);
   fp = popen(cmd, "r");
   if (fp == NULL) {
     log_f("failed to run rename command: %s", cmd);
     return;
   }
   pclose(fp);
-  dumper = pcap_dump_open(cap_infos[0].handle, "dump.pcap");
+  free(old_filename);
+  free(new_filename);
+  dumper_curr_n++;
+  dumper = open_dump();
 }

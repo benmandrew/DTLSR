@@ -100,10 +100,11 @@ void get_next_hops(Node *graph, DijkstraNode *nodes, int src_id,
       next_hops[i] =
           (struct hop_dest){.next_hop = next_hop,
                             .dest_ip = get_dst_ip(graph, nodes, i + 1),
-                            .metric = metric};
+                            .metric = metric,
+                            .next_hop_state = next_hop_state};
     } else {
       next_hops[i] =
-          (struct hop_dest){.next_hop = -1, .dest_ip = 0, .metric = 0};
+          (struct hop_dest){.next_hop = -1, .dest_ip = 0, .metric = 0, .next_hop_state = LINK_DOWN};
     }
   }
 }

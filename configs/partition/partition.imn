@@ -22,8 +22,8 @@ node n1 {
     labelcoords {216.0 261.0}
     interface-peer {eth0 n3}
     interface-peer {eth1 n5}
-    interface-peer {eth2 n2}
     services {DTLSR Heartbeat IPForward}
+    interface-peer {eth2 n7}
 }
 
 node n2 {
@@ -33,8 +33,8 @@ node n2 {
 	hostname n2
 	!
 	interface eth2
-	 ip address 10.0.4.2/24
-	 ipv6 address 2001:4::2/64
+	 ip address 10.0.6.2/24
+	 ipv6 address 2001:6::2/64
 	!
 	interface eth1
 	 ip address 10.0.3.1/24
@@ -46,12 +46,12 @@ node n2 {
 	!
     }
     canvas c1
-    iconcoords {396.0 287.0}
-    labelcoords {396.0 319.0}
+    iconcoords {592.0 286.0}
+    labelcoords {592.0 318.0}
     interface-peer {eth0 n6}
     interface-peer {eth1 n4}
-    interface-peer {eth2 n1}
     services {DTLSR Heartbeat IPForward}
+    interface-peer {eth2 n8}
 }
 
 node n3 {
@@ -84,8 +84,8 @@ node n4 {
 	!
     }
     canvas c1
-    iconcoords {457.0 147.0}
-    labelcoords {457.0 179.0}
+    iconcoords {653.0 146.0}
+    labelcoords {653.0 178.0}
     interface-peer {eth0 n2}
     services {DefaultRoute2 Heartbeat}
 }
@@ -120,10 +120,56 @@ node n6 {
 	!
     }
     canvas c1
-    iconcoords {455.0 369.0}
-    labelcoords {455.0 401.0}
+    iconcoords {651.0 368.0}
+    labelcoords {651.0 400.0}
     interface-peer {eth0 n2}
     services {DefaultRoute2 Heartbeat}
+}
+
+node n7 {
+    type router
+    model router
+    network-config {
+	hostname n7
+	!
+	interface eth1
+	 ip address 10.0.5.1/24
+	 ipv6 address 2001:5::1/64
+	!
+	interface eth0
+	 ip address 10.0.4.2/24
+	 ipv6 address 2001:4::2/64
+	!
+    }
+    canvas c1
+    iconcoords {383.0 144.0}
+    labelcoords {383.0 176.0}
+    interface-peer {eth0 n1}
+    interface-peer {eth1 n8}
+    services {DTLSR Heartbeat IPForward}
+}
+
+node n8 {
+    type router
+    model router
+    network-config {
+	hostname n8
+	!
+	interface eth1
+	 ip address 10.0.6.1/24
+	 ipv6 address 2001:6::1/64
+	!
+	interface eth0
+	 ip address 10.0.5.2/24
+	 ipv6 address 2001:5::2/64
+	!
+    }
+    canvas c1
+    iconcoords {439.0 322.0}
+    labelcoords {439.0 354.0}
+    interface-peer {eth0 n7}
+    interface-peer {eth1 n2}
+    services {DTLSR Heartbeat IPForward}
 }
 
 link l1 {
@@ -147,7 +193,17 @@ link l4 {
 }
 
 link l5 {
-    nodes {n1 n2}
+    nodes {n1 n7}
+    bandwidth 0
+}
+
+link l6 {
+    nodes {n7 n8}
+    bandwidth 0
+}
+
+link l7 {
+    nodes {n8 n2}
     bandwidth 0
 }
 

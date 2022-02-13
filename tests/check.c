@@ -75,7 +75,7 @@ TCase *case_capture(void) {
   tcase_add_test(tc, test_capture_generate_addresses_on_interface);
   tcase_add_test(tc, test_capture_generate_incoming_filter_exp);
   tcase_add_test(tc, test_capture_generate_replay_command);
-  tcase_add_test(tc, test_capture_generate_remove_command);
+  // tcase_add_test(tc, test_capture_generate_remove_command);
   return tc;
 }
 

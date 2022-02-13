@@ -17,7 +17,7 @@ int driver(int argc, char **argv) {
   local_node_init(&this, PROTOCOL, CONFIG, HEARTBEAT_TIMEOUT);
   struct rtentry *routes = get_routes(&this);
   // Create heartbeat timer
-  Timer timer = event_timer_append(HEARTBEAT_T, 0);
+  Timer timer = event_timer_append(0, HEARTBEAT_T * 2.5e+8);
 
   int active_fd;
   // Event loop
