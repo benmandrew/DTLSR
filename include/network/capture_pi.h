@@ -76,7 +76,9 @@ char *generate_incoming_filter_exp(LocalNode *this, char *iface, struct hop_dest
 
 void set_filter(struct capture_info *info, char *iface, struct hop_dest *next_hops);
 
-void init_dev(struct capture_info *info, char *iface, struct hop_dest *next_hops);
+void init_dev(struct capture_info *info, char *iface);
+
+pcap_dumper_t *open_dump(const char *filename);
 
 char *generate_replay_command(LocalNode *this, char *up_iface, struct hop_dest *next_hops);
 

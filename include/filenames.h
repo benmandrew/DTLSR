@@ -4,7 +4,7 @@
 
 // #define CONFIG "loop_headless"
 // #define CONFIG "loop"
-#define CONFIG "partition_headless"
-// #define CONFIG "partition"
+// #define CONFIG "partition_headless"
+#define CONFIG "partition"
 
 #endif

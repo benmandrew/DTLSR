@@ -168,19 +168,23 @@ void reduce_routes_to_subnets(struct hop_dest *next_hops) {
 }
 
 void update_routing_table(LocalNode *this, struct hop_dest *next_hops) {
+  // Don't modify 'next_hops'
+  struct hop_dest *nh_cpy = (struct hop_dest *)malloc(sizeof(struct hop_dest) * MAX_NODE_NUM);
+  memcpy(nh_cpy, next_hops, sizeof(struct hop_dest) * MAX_NODE_NUM);
   struct rtentry routes[MAX_NODE_NUM];
   ioctl_fd = socket(AF_INET, SOCK_DGRAM, 0);
-  filter_next_hops(this, next_hops);
-  derive_rtentries(this, next_hops, routes);
-  add_routes(this, next_hops, routes);
+  filter_next_hops(this, nh_cpy);
+  derive_rtentries(this, nh_cpy, routes);
+  add_routes(this, nh_cpy, routes);
   mark_routes_unseen();
   for (int i = 0; i < MAX_NODE_NUM; i++) {
-    if (next_hops[i].next_hop != -1) {
+    if (nh_cpy[i].next_hop != -1) {
       mark_route_seen(&routes[i]);
     }
   }
   remove_marked_routes();
   close(ioctl_fd);
+  free(nh_cpy);
 }
 
 void log_routes(void) {

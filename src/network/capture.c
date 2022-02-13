@@ -18,7 +18,10 @@ void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *p
   if (size_ip < 20) {
     return;
   }
+  struct in_addr a;
+  a = ip->ip_dst;
   pcap_dump((u_char *)dumper, header, packet);
+  pcap_dump_flush(dumper);
 }
 
 // We want to exclude packets meant specifically for us
@@ -104,7 +107,7 @@ void set_filter(struct capture_info *info, char *iface, struct hop_dest *next_ho
   free(filter_exp);
 }
 
-void init_dev(struct capture_info *info, char *iface, struct hop_dest *next_hops) {
+void init_dev(struct capture_info *info, char *iface) {
   char errbuf[PCAP_ERRBUF_SIZE];
   bpf_u_int32 mask;
   info->dev = iface;
@@ -138,9 +141,28 @@ void capture_init(LocalNode *node, struct hop_dest *next_hops) {
   cap_infos = (struct capture_info *)malloc(this->node.n_neighbours * sizeof(struct capture_info));
   memset(cap_infos, 0, this->node.n_neighbours * sizeof(struct capture_info));
   for (int i = 0; i < this->node.n_neighbours; i++) {
-    init_dev(&cap_infos[i], this->interfaces[i], next_hops);
+    init_dev(&cap_infos[i], this->interfaces[i]);
   }
-  dumper = pcap_dump_open(cap_infos[0].handle, PCAP_FILENAME);
+  dumper = open_dump(PCAP_FILENAME);
+}
+
+#define STD_IFACE "eth0"
+
+pcap_dumper_t *open_dump(const char *filename) {
+  char errbuf[PCAP_ERRBUF_SIZE];
+  pcap_t *handle;
+  handle = pcap_open_live(STD_IFACE, SNAP_LEN, 0, 1000, errbuf);
+  if (handle == NULL) {
+    log_f("couldn't open device %s: %s", STD_IFACE, errbuf);
+    exit(EXIT_FAILURE);
+  }
+  if (pcap_datalink(handle) != DLT_EN10MB) {
+    log_f("%s is not ethernet", STD_IFACE);
+    exit(EXIT_FAILURE);
+  }
+  pcap_dumper_t *d = pcap_dump_open(handle, PCAP_FILENAME);
+  pcap_close(handle);
+  return d;
 }
 
 void capture_start_iface(char *down_iface, struct hop_dest *next_hops) {
@@ -178,7 +200,6 @@ void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
 void capture_packets(void) {
   for (int i = 0; i < this->node.n_neighbours; i++) {
     if (this->node.link_statuses[i] == LINK_UP) {
-      log_f("%d %s", i, this->interfaces[i]);
       pcap_dispatch(cap_infos[i].handle, -1, dump_packet, NULL);
     }
   }
@@ -189,7 +210,8 @@ char *generate_replay_command(LocalNode *this, char *up_iface, struct hop_dest *
   char *fexp = generate_addresses_on_interface(this, up_iface, next_hops);
   char *cmd = (char *)malloc(80 + 32 * this->node.n_neighbours);
   // Append '2>&1' to output error stream
-  sprintf(cmd, "tcpdump -U -r 'dump.pcap' -w- '%s' | tcpreplay --topspeed -i%s -", fexp, up_iface);
+  // sprintf(cmd, "tcpdump -U -r 'dump.pcap' -w- '%s' | tcpreplay --topspeed -i%s -", fexp, up_iface);
+  sprintf(cmd, "tcpdump -U -r 'dump.pcap' -w- '%s' | tcpreplay -x 10 -i%s -", fexp, up_iface);
   free(fexp);
   return cmd;
 }
@@ -197,6 +219,7 @@ char *generate_replay_command(LocalNode *this, char *up_iface, struct hop_dest *
 void capture_replay_iface(char *up_iface, struct hop_dest *next_hops) {
   FILE *fp;
   char *cmd = generate_replay_command(this, up_iface, next_hops);
+  log_f("%s", cmd);
   fp = popen(cmd, "r");
   if (fp == NULL) {
     log_f("failed to run replay command: %s", cmd);
