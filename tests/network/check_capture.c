@@ -73,32 +73,32 @@ START_TEST(test_capture_generate_addresses_on_interface) {
 }
 END_TEST
 
-START_TEST(test_capture_generate_incoming_filter_exp) {
-  LocalNode n = node_local_alloc(1, 3, 3);
-  n.node.source_ips[0] = inet_addr("192.168.4.1");
-  n.node.source_ips[1] = inet_addr("192.168.2.1");
-  n.node.source_ips[2] = inet_addr("192.168.1.8");
-  n.interfaces[0] = "eth0";
-  n.interfaces[1] = "eth1";
-  n.interfaces[2] = "eth2";
-  n.node.neighbour_ids[0] = 2;
-  n.node.neighbour_ids[1] = 3;
-  n.node.neighbour_ids[2] = 4;
-  struct hop_dest next_hops[MAX_NODE_NUM];
-  memset(next_hops, 0, sizeof(next_hops));
-  next_hops[0].next_hop = 2;
-  next_hops[0].dest_ip = (uint32_t)inet_addr("10.0.0.1");
-  next_hops[1].next_hop = 2;
-  next_hops[1].dest_ip = (uint32_t)inet_addr("10.5.1.5");
-  char *fexp = generate_incoming_filter_exp(&n, "eth0", next_hops);
+// START_TEST(test_capture_generate_incoming_filter_exp) {
+//   LocalNode n = node_local_alloc(1, 3, 3);
+//   n.node.source_ips[0] = inet_addr("192.168.4.1");
+//   n.node.source_ips[1] = inet_addr("192.168.2.1");
+//   n.node.source_ips[2] = inet_addr("192.168.1.8");
+//   n.interfaces[0] = "eth0";
+//   n.interfaces[1] = "eth1";
+//   n.interfaces[2] = "eth2";
+//   n.node.neighbour_ids[0] = 2;
+//   n.node.neighbour_ids[1] = 3;
+//   n.node.neighbour_ids[2] = 4;
+//   struct hop_dest next_hops[MAX_NODE_NUM];
+//   memset(next_hops, 0, sizeof(next_hops));
+//   next_hops[0].next_hop = 2;
+//   next_hops[0].dest_ip = (uint32_t)inet_addr("10.0.0.1");
+//   next_hops[1].next_hop = 2;
+//   next_hops[1].dest_ip = (uint32_t)inet_addr("10.5.1.5");
+//   char *fexp = generate_incoming_filter_exp(&n, "eth0", next_hops);
 
-  ck_assert_str_eq(fexp,
-    "( not ( dst net 192.168.4.1 or 192.168.2.1 or 192.168.1.8 ) ) and ( dst net 10.0.0.0/24 or 10.5.1.0/24 )");
+//   ck_assert_str_eq(fexp,
+//     "( not ( dst net 192.168.4.1 or 192.168.2.1 or 192.168.1.8 ) ) and ( dst net 10.0.0.0/24 or 10.5.1.0/24 )");
 
-  node_local_dealloc(&n);
-  free(fexp);
-}
-END_TEST
+//   node_local_dealloc(&n);
+//   free(fexp);
+// }
+// END_TEST
 
 START_TEST(test_capture_generate_replay_command) {
   LocalNode n = node_local_alloc(1, 2, 3);

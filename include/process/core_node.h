@@ -17,6 +17,6 @@ unsigned long long get_now(void);
 
 // Initialise 'this' node, allocating and populating neighbour information
 void local_node_init(LocalNode *this, char *protocol, char *config,
-                    int hb_timeout);
+                    double hb_timeout);
 
 #endif

@@ -14,13 +14,19 @@ char **down_ifaces;
 int n_down_ifaces;
 
 void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {
+  if ((enum LinkState)*args == LINK_DOWN) {
+    return;
+  }
   const struct sniff_ip *ip = (struct sniff_ip *)(packet + SIZE_ETHERNET);
   int size_ip = IP_HL(ip) * 4;
   if (size_ip < 20) {
     return;
   }
+  // log_f("src: %s", inet_ntoa(ip->ip_src));
+  // log_f("dst: %s", inet_ntoa(ip->ip_dst));
+  // log_f("");
   pcap_dump((u_char *)dumper, header, packet);
-  pcap_dump_flush(dumper);
+  // pcap_dump_flush(dumper);
 }
 
 // We want to exclude packets meant specifically for us
@@ -49,11 +55,12 @@ char *generate_addresses_on_interface(LocalNode *this, char *iface, struct hop_d
       break;
     }
   }
-  char *fexp = (char *)malloc(32 * this->node.n_neighbours);
-  memset(fexp, 0, 32 * this->node.n_neighbours);
+  char *fexp = (char *)malloc(1024);
+  memset(fexp, 0, 1024);
   strcat(fexp, "( dst net ");
   char first = 1;
   for (int i = 0; i < MAX_NODE_NUM; i++) {
+    // Add if the next hop is along the correct interface
     if (next_hops[i].next_hop == this->node.neighbour_ids[up_idx]) {
       // Hacky way to insert 'or' between IP addresses
       if (!first) {
@@ -77,9 +84,45 @@ char *generate_addresses_on_interface(LocalNode *this, char *iface, struct hop_d
   return fexp;
 }
 
-char *generate_incoming_filter_exp(LocalNode *this, char *iface, struct hop_dest *next_hops) {
+char *generate_addresses_on_down_interfaces(LocalNode *this, struct hop_dest *next_hops) {
+  char no_addresses = 1;
+  char first = 1;
+  char *fexp = (char *)malloc(1024);
+  memset(fexp, 0, 1024);
+  strcat(fexp, "( dst net ");
+  for (int i = 0; i < this->node.n_neighbours; i++) {
+    if (down_ifaces[i] == NULL) {
+      continue;
+    }
+    for (int j = 0; j < MAX_NODE_NUM; j++) {
+      // Add if the next hop is along the correct interface
+      if (this->node.neighbour_ids[i] == next_hops[j].next_hop) {
+        // Hacky way to insert 'or' between IP addresses
+        if (!first) {
+          strcat(fexp, " or ");
+        }
+        first = 0;
+        no_addresses = 0;
+        // Add IP address
+        struct in_addr a;
+        a.s_addr = next_hops[i].dest_ip & NETMASK;
+        strcat(fexp, inet_ntoa(a));
+        // Add subnet mask
+        strcat(fexp, "/24");
+      }
+    }
+  }
+  strcat(fexp, " )\0");
+  if (no_addresses) {
+    free(fexp);
+    return NULL;
+  }
+  return fexp;
+}
+
+char *generate_incoming_filter_exp(LocalNode *this, struct hop_dest *next_hops) {
   char *incoming = generate_exclude_incoming(this);
-  char *outgoing = generate_addresses_on_interface(this, iface, next_hops);
+  char *outgoing = generate_addresses_on_down_interfaces(this, next_hops);
 
   if (outgoing != NULL) {
     strcat(incoming, " and ");
@@ -89,11 +132,11 @@ char *generate_incoming_filter_exp(LocalNode *this, char *iface, struct hop_dest
   return incoming;
 }
 
-void set_filter(struct capture_info *info, char *iface, struct hop_dest *next_hops) {
+void set_filter(struct capture_info *info, struct hop_dest *next_hops) {
   if (info->has_fp) {
     pcap_freecode(&info->fp);
   }
-  char *filter_exp = generate_incoming_filter_exp(this, iface, next_hops);
+  char *filter_exp = generate_incoming_filter_exp(this, next_hops);
   if (pcap_compile(info->handle, &info->fp, filter_exp, 0, info->net) == -1) {
     log_f("couldn't parse filter %s: %s", filter_exp, pcap_geterr(info->handle));
     exit(EXIT_FAILURE);
@@ -175,15 +218,16 @@ pcap_dumper_t *open_dump(void) {
 
 void capture_start_iface(char *down_iface, struct hop_dest *next_hops) {
   is_capturing = 1;
-  // Put downed link into the list
-  for (int i = 0; i < this->node.n_neighbours; i++) {
-    set_filter(&cap_infos[i], down_iface, next_hops);
-  }
+  // Add iface to down_ifaces array
   for (int i = 0; i < this->node.n_neighbours; i++) {
     if (down_ifaces[i] == NULL) {
       down_ifaces[i] = down_iface;
       break;
     }
+  }
+  // Put downed link into the list
+  for (int i = 0; i < this->node.n_neighbours; i++) {
+    set_filter(&cap_infos[i], next_hops);
   }
   n_down_ifaces++;
 }
@@ -193,6 +237,12 @@ void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
   // Annoying edge case
   if (n_down_ifaces == 0)
     return;
+  for (int i = 0; i < this->node.n_neighbours; i++) {
+    if (strcmp(up_iface, down_ifaces[i]) == 0) {
+      down_ifaces[i] = NULL;
+      break;
+    }
+  }
   n_down_ifaces--;
   // If all links are now up, stop pcap listeners
   if (n_down_ifaces == 0) {
@@ -201,6 +251,7 @@ void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
       pcap_breakloop(cap_infos[i].handle);
     }
   }
+  pcap_dump_flush(dumper);
   capture_replay_iface(up_iface, next_hops);
   capture_remove_replayed_packets(up_iface, next_hops);
 }
@@ -208,7 +259,7 @@ void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
 void capture_packets(void) {
   for (int i = 0; i < this->node.n_neighbours; i++) {
     // if (this->node.link_statuses[i] == LINK_UP) {
-      pcap_dispatch(cap_infos[i].handle, -1, dump_packet, NULL);
+    pcap_dispatch(cap_infos[i].handle, -1, dump_packet, (u_char *)&this->node.link_statuses[i]);
     // }
   }
 }

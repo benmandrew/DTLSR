@@ -72,9 +72,11 @@ char *generate_exclude_incoming(LocalNode *this);
 
 char *generate_addresses_on_interface(LocalNode *this, char *iface, struct hop_dest *next_hops);
 
-char *generate_incoming_filter_exp(LocalNode *this, char *iface, struct hop_dest *next_hops);
+char *generate_addresses_on_down_interfaces(LocalNode *this, struct hop_dest *next_hops);
 
-void set_filter(struct capture_info *info, char *iface, struct hop_dest *next_hops);
+char *generate_incoming_filter_exp(LocalNode *this, struct hop_dest *next_hops);
+
+void set_filter(struct capture_info *info, struct hop_dest *next_hops);
 
 void init_dev(struct capture_info *info, char *iface);
 

@@ -10,7 +10,7 @@ char register_heartbeat(LocalNode *this, struct hop_dest *next_hops, long source
   for (int i = 0; i < this->node.n_neighbours; i++) {
     if (this->node.neighbour_ips[i] == source_addr) {
       // Reset timer
-      event_timer_arm(&this->timers[i], HEARTBEAT_TIMEOUT, 0);
+      event_timer_arm(&this->timers[i], 0, HEARTBEAT_TIMEOUT);
       // If link was DOWN then it is now UP
       if (this->node.link_statuses[i] == LINK_DOWN) {
         this->node.link_statuses[i] = LINK_UP;
@@ -38,7 +38,7 @@ char receive_heartbeat(Node *graph, LocalNode *this, LSFD *fds, struct hop_dest 
   if (updated) {
     // Update global graph
     update_global_this(graph, this);
-    send_lsa(graph, this, fds);
+    // send_lsa(graph, this, fds);
   }
   return updated;
 }
@@ -50,7 +50,6 @@ char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds, s
       this->node.link_statuses[i] = LINK_DOWN;
       #ifdef DTLSR
       ts_toggle_state(&this->ls_time_series[i], get_now());
-      // capture_start_iface(this->interfaces[i], next_hops);
       #endif
       event_timer_disarm(&this->timers[i]);
       updated = 1;
@@ -61,7 +60,7 @@ char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds, s
   if (updated) {
     // Update global graph
     update_global_this(graph, this);
-    send_lsa(graph, this, fds);
+    // send_lsa(graph, this, fds);
   }
   return updated;
 }

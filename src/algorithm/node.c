@@ -29,13 +29,13 @@ char nodes_eq(Node *n1, Node *n2) {
 // 'eth' + max 2 digit ID + null terminator
 #define IFACE_STR_MAX_LEN 6
 
-LocalNode node_local_alloc(int id, int n, int hb_timeout) {
+LocalNode node_local_alloc(int id, int n, double hb_timeout) {
   LocalNode node;
   node_init(&node.node, n);
   node.node.id = id;
   node.if_arena_ptr = (char *)malloc(IFACE_STR_MAX_LEN * n * sizeof(char));
   for (int i = 0; i < n; i++) {
-    node.timers[i] = event_timer_append(hb_timeout, 0);
+    node.timers[i] = event_timer_append(0, (long)hb_timeout);
     node.interfaces[i] =
         node.if_arena_ptr + i * (IFACE_STR_MAX_LEN * sizeof(char));
   }
