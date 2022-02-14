@@ -26,7 +26,7 @@ LSFD init_descriptors(LocalNode *this) {
   fds.hb_sock = get_open_socket(HB_PORT);
   fds.lsa_rec_sock = get_open_socket(LSA_PORT);
   fds.lsa_snd_sock = get_socket();
-  fds.lsa_snd_timer = event_timer_append(METRIC_RECOMPUTATION_T, 0);
+  fds.lsa_snd_timer = event_timer_append(0, METRIC_RECOMPUTATION_T);
   event_append(fds.hb_sock);
   event_append(fds.lsa_rec_sock);
   aggregate_fds(this, &fds, N_AUX_FDS);
@@ -84,9 +84,7 @@ int driver(int argc, char **argv) {
     int active_fd;
     char graph_updated = 0, do_send_lsa = 0, start_capture = 0;
     #ifdef DTLSR
-    if (is_capturing) {
-      capture_packets();
-    }
+    capture_packets();
     #endif
     if ((active_fd = event_wait(fds.event_fds, fds.n_event_fds)) < 0) {
       continue;

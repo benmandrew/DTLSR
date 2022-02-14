@@ -117,8 +117,8 @@ START_TEST(test_capture_generate_replay_command) {
   char *eth0_up = generate_replay_command(&n, "eth0", next_hops);
   char *eth1_up = generate_replay_command(&n, "eth1", next_hops);
 
-  ck_assert_str_eq(eth0_up, "tcpdump -U -r 'dump.pcap' -w- '( dst net 10.0.5.0/24 )' | tcpreplay --topspeed -ieth0 -");
-  ck_assert_str_eq(eth1_up, "tcpdump -U -r 'dump.pcap' -w- '( dst net 10.0.0.0/24 or 10.5.1.0/24 )' | tcpreplay --topspeed -ieth1 -");
+  ck_assert_str_eq(eth0_up, "tcpdump -U -r 'dump_0.pcap' -w- '( dst net 10.0.5.0/24 )' | tcpreplay --topspeed -ieth0 -");
+  ck_assert_str_eq(eth1_up, "tcpdump -U -r 'dump_0.pcap' -w- '( dst net 10.0.0.0/24 or 10.5.1.0/24 )' | tcpreplay --topspeed -ieth1 -");
 
   node_local_dealloc(&n);
   free(eth0_up);

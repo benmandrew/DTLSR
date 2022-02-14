@@ -14,19 +14,18 @@ char **down_ifaces;
 int n_down_ifaces;
 
 void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {
-  if ((enum LinkState)*args == LINK_DOWN) {
+  if (!is_capturing) {
     return;
   }
+  // if ((enum LinkState)*args == LINK_DOWN) {
+  //   return;
+  // }
   const struct sniff_ip *ip = (struct sniff_ip *)(packet + SIZE_ETHERNET);
   int size_ip = IP_HL(ip) * 4;
   if (size_ip < 20) {
     return;
   }
-  // log_f("src: %s", inet_ntoa(ip->ip_src));
-  // log_f("dst: %s", inet_ntoa(ip->ip_dst));
-  // log_f("");
   pcap_dump((u_char *)dumper, header, packet);
-  // pcap_dump_flush(dumper);
 }
 
 // We want to exclude packets meant specifically for us
@@ -94,9 +93,15 @@ char *generate_addresses_on_down_interfaces(LocalNode *this, struct hop_dest *ne
     if (down_ifaces[i] == NULL) {
       continue;
     }
-    for (int j = 0; j < MAX_NODE_NUM; j++) {
+    int j;
+    for (j = 0; j < this->node.n_neighbours; j++) {
+      if (strcmp(down_ifaces[i], this->interfaces[j]) == 0) {
+        break;
+      }
+    }
+    for (int k = 0; k < MAX_NODE_NUM; k++) {
       // Add if the next hop is along the correct interface
-      if (this->node.neighbour_ids[i] == next_hops[j].next_hop) {
+      if (this->node.neighbour_ids[j] == next_hops[k].next_hop) {
         // Hacky way to insert 'or' between IP addresses
         if (!first) {
           strcat(fexp, " or ");
@@ -105,7 +110,7 @@ char *generate_addresses_on_down_interfaces(LocalNode *this, struct hop_dest *ne
         no_addresses = 0;
         // Add IP address
         struct in_addr a;
-        a.s_addr = next_hops[i].dest_ip & NETMASK;
+        a.s_addr = next_hops[k].dest_ip & NETMASK;
         strcat(fexp, inet_ntoa(a));
         // Add subnet mask
         strcat(fexp, "/24");
@@ -129,6 +134,7 @@ char *generate_incoming_filter_exp(LocalNode *this, struct hop_dest *next_hops) 
     strcat(incoming, outgoing);
     free(outgoing);
   }
+  log_f("%s", incoming);
   return incoming;
 }
 
@@ -251,6 +257,7 @@ void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
       pcap_breakloop(cap_infos[i].handle);
     }
   }
+  capture_packets();
   pcap_dump_flush(dumper);
   capture_replay_iface(up_iface, next_hops);
   capture_remove_replayed_packets(up_iface, next_hops);
