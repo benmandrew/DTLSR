@@ -134,6 +134,8 @@ char *generate_incoming_filter_exp(LocalNode *this, struct hop_dest *next_hops) 
     strcat(incoming, outgoing);
     free(outgoing);
   }
+  // Filter out DTLSR traffic (heartbeats and LSAs)
+  strcat(incoming, " and ( not ( port 45000 or 45001 ) )");
   log_f("%s", incoming);
   return incoming;
 }
