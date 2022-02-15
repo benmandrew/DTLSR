@@ -7,7 +7,6 @@
 #define PCAP_FILENAME "dump.pcap"
 
 #define SNAP_LEN 1518
-#define SIZE_ETHERNET 14
 #define ETHER_ADDR_LEN 6
 #define SIZE_UDP 8
 
@@ -16,24 +15,6 @@ struct sniff_ethernet {
   u_char ether_shost[ETHER_ADDR_LEN];
   u_short ether_type;
 };
-
-struct sniff_ip {
-  u_char ip_vhl; // version << 4 | header length >> 2
-  u_char ip_tos;
-  u_short ip_len; // total length
-  u_short ip_id;
-  u_short ip_off;
-#define IP_RF 0x8000
-#define IP_DF 0x4000
-#define IP_MF 0x2000
-#define IP_OFFMASK 0x1fff
-  u_char ip_ttl;
-  u_char ip_p;
-  u_short ip_sum;
-  struct in_addr ip_src, ip_dst;
-};
-#define IP_HL(ip) (((ip)->ip_vhl) & 0x0f)
-#define IP_V(ip) (((ip)->ip_vhl) >> 4)
 
 typedef u_int tcp_seq;
 

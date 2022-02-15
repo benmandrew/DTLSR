@@ -15,12 +15,36 @@
 
 #include "algorithm/node.h"
 
+#define SIZE_ETHERNET 14
+
 typedef struct local_node LocalNode;
 struct hop_dest;
 
 typedef unsigned int u_int;
 typedef unsigned short u_short;
 typedef unsigned char u_char;
+
+struct sniff_ip {
+  u_char ip_vhl; // version << 4 | header length >> 2
+  u_char ip_tos;
+  u_short ip_len; // total length
+  u_short ip_id;
+  u_short ip_off;
+#define IP_RF 0x8000
+#define IP_DF 0x4000
+#define IP_MF 0x2000
+#define IP_OFFMASK 0x1fff
+  u_char ip_ttl;
+  u_char ip_p;
+  u_short ip_sum;
+  struct in_addr ip_src, ip_dst;
+};
+#define IP_HL(ip) (((ip)->ip_vhl) & 0x0f)
+#define IP_V(ip) (((ip)->ip_vhl) >> 4)
+// Switch byte order
+#define IP_LEN(len) ((u_short)((len & 0xFF00) >> 8) | ((len & 0x00FF) << 8))
+
+#define PACKET_LEN(ip_len) (IP_LEN(ip_len) + SIZE_ETHERNET)
 
 struct capture_info {
   char *dev;

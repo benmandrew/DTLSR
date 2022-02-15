@@ -79,6 +79,10 @@ char receive_lsa(Node *graph, LocalNode *this, LSFD *fds) {
 void send_lsa_except(Node *graph, LocalNode *this, LSFD *fds,
                      long source_addr) {
   for (int i = 0; i < this->node.n_neighbours; i++) {
+    // Don't send on DOWN links
+    if (this->node.link_statuses[i] == LINK_DOWN) {
+      continue;
+    }
     // Skip neighbour from which LSA was originally received
     if (this->node.neighbour_ips[i] == source_addr)
       continue;

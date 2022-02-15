@@ -13,6 +13,62 @@ LocalNode *this;
 char **down_ifaces;
 int n_down_ifaces;
 
+// #define MAX_HANDLED_IP_LEN 65535
+#define MAX_HANDLED_IP_LEN (u_short)1500
+#define PACKETS_IN_BUFFER 320
+
+// Flags for occupancy in 'packet_buffer'
+u_char occupancy[PACKETS_IN_BUFFER];
+u_char packet_buffer[PACKETS_IN_BUFFER * MAX_HANDLED_IP_LEN];
+
+int n_in_buffer = 0;
+
+void insert_into_array(const struct sniff_ip *ip_new, const u_char *packet_new) {
+  char inserted = 0;
+  // We've not seen this packet before: add to array
+  for (int i = 0; i < PACKETS_IN_BUFFER; i++) {
+    if (occupancy[i] == 0) {
+      log_f("%d in buffer", ++n_in_buffer);
+      memcpy(&packet_buffer[i * MAX_HANDLED_IP_LEN], packet_new, (size_t)PACKET_LEN(ip_new->ip_len));
+      occupancy[i] = 1;
+      inserted = 1;
+      break;
+    }
+  }
+  if (!inserted) {
+    log_f("packet buffer overflowed");
+    exit(EXIT_FAILURE);
+  }
+}
+
+char should_send_packet(const struct sniff_ip *ip_new, const u_char *packet_new) {
+  if (IP_LEN(ip_new->ip_len) > MAX_HANDLED_IP_LEN) {
+    log_f("packet too large: %hu bytes > %hu bytes", IP_LEN(ip_new->ip_len), MAX_HANDLED_IP_LEN);
+    return 0;
+  }
+  for (int i = 0; i < PACKETS_IN_BUFFER; i++) {
+    if (occupancy[i] == 0) {
+      continue;
+    }
+    const u_char *packet = &packet_buffer[i * MAX_HANDLED_IP_LEN];
+    const struct sniff_ip *ip = (struct sniff_ip *)(packet + SIZE_ETHERNET);
+    // Packet lengths differ
+    if (ip->ip_len != ip_new->ip_len) {
+      continue;
+    }
+    log_f("cmp");
+    // We've seen this packet before: remove from array and send
+    if (memcmp(packet_new, packet, (size_t)(PACKET_LEN(ip_new->ip_len))) == 0) {
+      log_f("%d in buffer", --n_in_buffer);
+      // memset(p, (u_short)0, ip->ip_len);
+      occupancy[i] = 0;
+      return 1;
+    }
+  }
+  insert_into_array(ip_new, packet_new);
+  return 0;
+}
+
 void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {
   if (!is_capturing) {
     return;
@@ -25,6 +81,9 @@ void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *p
   if (size_ip < 20) {
     return;
   }
+  if (!should_send_packet(ip, packet)) {
+    return;
+  }
   pcap_dump((u_char *)dumper, header, packet);
 }
 
@@ -33,6 +92,23 @@ char *generate_exclude_incoming(LocalNode *this) {
   char *fexp = (char *)malloc(32 * (this->node.n_neighbours + MAX_NODE_NUM));
   memset(fexp, 0, 32 * this->node.n_neighbours);
   strcat(fexp, "( not ( dst net ");
+  for (int i = 0; i < this->node.n_neighbours; i++) {
+    struct in_addr a;
+    a.s_addr = this->node.source_ips[i];
+    strcat(fexp, inet_ntoa(a));
+    if (i != this->node.n_neighbours - 1) {
+      strcat(fexp, " or ");
+    }
+  }
+  strcat(fexp, " ) )\0");
+  return fexp;
+}
+
+// We want to exclude packets sent specifically by us
+char *generate_exclude_our_outgoing(LocalNode *this) {
+  char *fexp = (char *)malloc(32 * (this->node.n_neighbours + MAX_NODE_NUM));
+  memset(fexp, 0, 32 * this->node.n_neighbours);
+  strcat(fexp, "( not ( src net ");
   for (int i = 0; i < this->node.n_neighbours; i++) {
     struct in_addr a;
     a.s_addr = this->node.source_ips[i];
@@ -127,8 +203,11 @@ char *generate_addresses_on_down_interfaces(LocalNode *this, struct hop_dest *ne
 
 char *generate_incoming_filter_exp(LocalNode *this, struct hop_dest *next_hops) {
   char *incoming = generate_exclude_incoming(this);
+  char *our_outgoing = generate_exclude_our_outgoing(this);
   char *outgoing = generate_addresses_on_down_interfaces(this, next_hops);
 
+  strcat(incoming, " and ");
+  strcat(incoming, our_outgoing);
   if (outgoing != NULL) {
     strcat(incoming, " and ");
     strcat(incoming, outgoing);
@@ -191,6 +270,7 @@ void capture_init(LocalNode *node, struct hop_dest *next_hops) {
   memset(down_ifaces, 0, this->node.n_neighbours * sizeof(char *));
   cap_infos = (struct capture_info *)malloc(this->node.n_neighbours * sizeof(struct capture_info));
   memset(cap_infos, 0, this->node.n_neighbours * sizeof(struct capture_info));
+  memset(occupancy, 0, PACKETS_IN_BUFFER);
   for (int i = 0; i < this->node.n_neighbours; i++) {
     init_dev(&cap_infos[i], this->interfaces[i]);
   }

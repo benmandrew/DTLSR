@@ -26,7 +26,7 @@ LSFD init_descriptors(LocalNode *this) {
   fds.hb_sock = get_open_socket(HB_PORT);
   fds.lsa_rec_sock = get_open_socket(LSA_PORT);
   fds.lsa_snd_sock = get_socket();
-  fds.lsa_snd_timer = event_timer_append(0, METRIC_RECOMPUTATION_T);
+  fds.lsa_snd_timer = event_timer_append(METRIC_RECOMPUTATION_T, 0);
   event_append(fds.hb_sock);
   event_append(fds.lsa_rec_sock);
   aggregate_fds(this, &fds, N_AUX_FDS);
