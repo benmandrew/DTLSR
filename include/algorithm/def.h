@@ -4,25 +4,26 @@
 
 #include <assert.h>
 
-#define HB_PORT 45000
-#define HB_SIZE sizeof(int)
-#define LSA_PORT 45001
+#define HB_PORT (45000)
+#define HB_SIZE (sizeof(int))
+#define LSA_PORT (45001)
 
-#define MS2NS 1e+6
+#define MS2NS (1e+6)
 
 // Heartbeat period
-#define HEARTBEAT_T 250 * MS2NS
+#define HEARTBEAT_T (250 * MS2NS)
 // Add a bit of fudge factor
-#define HEARTBEAT_TIMEOUT 2.25 * HEARTBEAT_T
+#define HEARTBEAT_TIMEOUT (2.25 * HEARTBEAT_T)
 // #define HEARTBEAT_TIMEOUT 1
 // How often we recompute the link metric
-#define METRIC_RECOMPUTATION_T 2
+#define METRIC_RECOMPUTATION_T (2)
+#define REPLAY_DELAY_T (100 * MS2NS)
 
 #define LOGGING_ACTIVE
 
 // Maximum number of nodes in the network
-#define MAX_NODE_NUM 10
+#define MAX_NODE_NUM (10)
 // Maximum number of neighbours
-#define MAX_NODE_FAN 6
+#define MAX_NODE_FAN (6)
 
 #endif

@@ -357,8 +357,6 @@ void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
   }
   capture_packets();
   pcap_dump_flush(dumper);
-  capture_replay_iface(up_iface, next_hops);
-  capture_remove_replayed_packets(up_iface, next_hops);
 }
 
 void capture_packets(void) {

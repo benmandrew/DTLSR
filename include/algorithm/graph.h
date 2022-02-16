@@ -32,6 +32,8 @@ typedef struct LSFD {
   int lsa_snd_sock;
   // LS metric recomputation
   Timer lsa_snd_timer;
+  // Delay for packet replaying on newly IP link
+  Timer replay_delay_timer;
   // Event system file descriptors
   int *event_fds;
   int n_event_fds;
