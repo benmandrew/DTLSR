@@ -44,7 +44,10 @@ struct sniff_ip {
 // Switch byte order
 #define IP_LEN(len) ((u_short)((len & 0xFF00) >> 8) | ((len & 0x00FF) << 8))
 
+#define IP_PTR(packet) ((struct sniff_ip *)(packet + SIZE_ETHERNET))
 #define PACKET_LEN(ip_len) (IP_LEN(ip_len) + SIZE_ETHERNET)
+#define PAYLOAD_PTR(ip) ((u_char *)((ip) + (IP_HL(ip) * 4)))
+#define PAYLOAD_LEN(ip) (IP_LEN((ip)->ip_len) - (IP_HL(ip) * 4))
 
 struct capture_info {
   char *dev;

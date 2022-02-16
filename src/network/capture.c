@@ -19,17 +19,34 @@ int n_down_ifaces;
 
 // Flags for occupancy in 'packet_buffer'
 u_char occupancy[PACKETS_IN_BUFFER];
-u_char packet_buffer[PACKETS_IN_BUFFER * MAX_HANDLED_IP_LEN];
+u_char ip_buffer[PACKETS_IN_BUFFER * MAX_HANDLED_IP_LEN];
 
 int n_in_buffer = 0;
 
-void insert_into_array(const struct sniff_ip *ip_new, const u_char *packet_new) {
+char ip_packets_eq(const struct sniff_ip *ip1, const struct sniff_ip *ip2) {
+  uint32_t src1 = ip1->ip_src.s_addr;
+  uint32_t src2 = ip2->ip_src.s_addr;
+  uint32_t dst1 = ip1->ip_dst.s_addr;
+  uint32_t dst2 = ip2->ip_dst.s_addr;
+  if (ip1->ip_len != ip2->ip_len || src1 != src2 || dst1 != dst2) {
+    return 0;
+  }
+  const u_char *payload1 = PAYLOAD_PTR(ip1);
+  const u_char *payload2 = PAYLOAD_PTR(ip2);
+  size_t len = (size_t)PAYLOAD_LEN(ip1);
+  if (memcmp(payload1, payload2, len) == 0) {
+    return 1;
+  }
+  return 0;
+}
+
+void insert_into_array(const struct sniff_ip *ip) {
   char inserted = 0;
   // We've not seen this packet before: add to array
   for (int i = 0; i < PACKETS_IN_BUFFER; i++) {
     if (occupancy[i] == 0) {
       log_f("%d in buffer", ++n_in_buffer);
-      memcpy(&packet_buffer[i * MAX_HANDLED_IP_LEN], packet_new, (size_t)PACKET_LEN(ip_new->ip_len));
+      memcpy(&ip_buffer[i * MAX_HANDLED_IP_LEN], ip, IP_LEN(ip->ip_len));
       occupancy[i] = 1;
       inserted = 1;
       break;
@@ -41,7 +58,8 @@ void insert_into_array(const struct sniff_ip *ip_new, const u_char *packet_new) 
   }
 }
 
-char should_send_packet(const struct sniff_ip *ip_new, const u_char *packet_new) {
+char should_send_packet(const u_char *packet_new) {
+  const struct sniff_ip *ip_new = IP_PTR(packet_new);
   if (IP_LEN(ip_new->ip_len) > MAX_HANDLED_IP_LEN) {
     log_f("packet too large: %hu bytes > %hu bytes", IP_LEN(ip_new->ip_len), MAX_HANDLED_IP_LEN);
     return 0;
@@ -50,22 +68,20 @@ char should_send_packet(const struct sniff_ip *ip_new, const u_char *packet_new)
     if (occupancy[i] == 0) {
       continue;
     }
-    const u_char *packet = &packet_buffer[i * MAX_HANDLED_IP_LEN];
-    const struct sniff_ip *ip = (struct sniff_ip *)(packet + SIZE_ETHERNET);
+    const struct sniff_ip *ip = (struct sniff_ip *)&ip_buffer[i * MAX_HANDLED_IP_LEN];
     // Packet lengths differ
     if (ip->ip_len != ip_new->ip_len) {
       continue;
     }
-    log_f("cmp");
     // We've seen this packet before: remove from array and send
-    if (memcmp(packet_new, packet, (size_t)(PACKET_LEN(ip_new->ip_len))) == 0) {
+    if (ip_packets_eq(ip, ip_new)) {
       log_f("%d in buffer", --n_in_buffer);
       // memset(p, (u_short)0, ip->ip_len);
       occupancy[i] = 0;
       return 1;
     }
   }
-  insert_into_array(ip_new, packet_new);
+  insert_into_array(ip_new);
   return 0;
 }
 
@@ -73,17 +89,17 @@ void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *p
   if (!is_capturing) {
     return;
   }
-  // if ((enum LinkState)*args == LINK_DOWN) {
-  //   return;
-  // }
-  const struct sniff_ip *ip = (struct sniff_ip *)(packet + SIZE_ETHERNET);
+  if ((enum LinkState)*args == LINK_DOWN) {
+    return;
+  }
+  const struct sniff_ip *ip = IP_PTR(packet);
   int size_ip = IP_HL(ip) * 4;
   if (size_ip < 20) {
     return;
   }
-  if (!should_send_packet(ip, packet)) {
-    return;
-  }
+  // if (!should_send_packet(packet)) {
+  //   return;
+  // }
   pcap_dump((u_char *)dumper, header, packet);
 }
 
