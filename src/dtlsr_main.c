@@ -43,14 +43,18 @@ void close_sockets(LSFD *fds) {
 void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds, struct hop_dest *next_hops,
                      int active_fd, char *send_status, char *graph_updated, char *start_capture) {
   if (active_fd == fds->hb_sock) {
+    // Heartbeat receive event
     *graph_updated = receive_heartbeat(graph, this, fds, next_hops);
   } else if (active_fd == fds->lsa_rec_sock) {
+    // LSA receive event
     *graph_updated = receive_lsa(graph, this, fds);
   } else if (active_fd == fds->lsa_snd_timer.fd) {
+    // LSA send event
     event_timer_reset(&fds->lsa_snd_timer);
     *graph_updated = 1;
     *send_status = 1;
   } else {
+    // Heartbeat timeout event
     *graph_updated = timeout_heartbeat(graph, this, active_fd, fds, next_hops);
     *start_capture = 1;
   }
