@@ -2,7 +2,7 @@
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 set(algorithm_source_files
-  heap.c
+	heap.c
 	local_graph.c
 	ls_graph.c
 	node.c

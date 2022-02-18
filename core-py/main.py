@@ -1,11 +1,12 @@
 
+from io import TextIOWrapper
 import sys
 sys.path.insert(0, "/home/ben/projects/core/daemon")
 
 from threading import Event, Thread
 import traceback
 import signal
-from time import sleep
+import time
 from core.emulator.coreemu import CoreEmu
 from core.emulator.data import IpPrefixes, NodeOptions
 from core.emulator.enumerations import EventTypes
@@ -20,6 +21,7 @@ from generate import Configuration
 def sigint_handler(signum, frame):
   # res = input("Ctrl-c was pressed. Do you really want to exit? y/n ")
   # if res == 'y':
+  log.close()
   session.shutdown()
   print("\nSession shutdown complete")
   exit(1)
@@ -40,24 +42,29 @@ link_down = LinkOptions(
     loss=100.0,
     jitter=0)
 
-FLAP_TIME: float = 6.0
+FLAP_TIME: float = 2.0
 
 def timer():
-  sleep(FLAP_TIME)
+  time.sleep(FLAP_TIME)
 
-def operating_loop_timer(conf: Configuration) -> None:
+def operating_loop_timer(conf: Configuration, log: TextIOWrapper) -> None:
   timer_thread = Thread(target=timer)
   timer_thread.start()
   up = True
   while True:
     if not timer_thread.is_alive():
+      t = time.time()
+      text = None
       if up:
-        print("link down")
-        conf.update_link(1, 2, link_down)
+        text = "[{}] link down\n".format(t)
+        conf.update_link(1, 4, link_down)
       else:
-        print("link up")
-        conf.update_link(1, 2, link_up)
+        text = "[{}] link up\n".format(t)
+        conf.update_link(1, 4, link_up)
       up = not up
+      print(text, end="")
+      log.write(text)
+      log.flush()
       timer_thread = Thread(target=timer)
       timer_thread.start()
 
@@ -67,10 +74,10 @@ def operating_loop_manual(conf: Configuration) -> None:
     input()
     if up:
       print("link down")
-      conf.update_link(1, 2, link_down)
+      conf.update_link(1, 4, link_down)
     else:
       print("link up")
-      conf.update_link(1, 2, link_up)
+      conf.update_link(1, 4, link_up)
     up = not up
 
 def main():
@@ -78,18 +85,20 @@ def main():
   coreemu: CoreEmu = CoreEmu()
   global session
   session = coreemu.create_session()
+  global log
+  log = open("core_log", "w")
   try:
     session.service_manager.add(dtlsr.Heartbeat)
     session.service_manager.add(dtlsr.DTLSR)
     session.set_state(EventTypes.CONFIGURATION_STATE)
     ## Initialise
-    conf = Configuration("partition_headless", link_up, session)
+    conf = Configuration("box_headless", link_up, session)
     conf.start_services()
 
     session.instantiate()
 
-    operating_loop_manual(conf)
-    # operating_loop_timer(conf)
+    # operating_loop_manual(conf)
+    operating_loop_timer(conf, log)
   except Exception as e:
     try:
       exc_info = sys.exc_info()
