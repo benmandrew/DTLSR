@@ -89,10 +89,11 @@ void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *p
   if (!is_capturing) {
     return;
   }
-  if ((enum LinkState)*args == LINK_DOWN) {
+  // Only dump packets doing out on the DOWN link's interface
+  if ((enum LinkState)*args == LINK_UP) {
     return;
   }
-  const struct sniff_ip *ip = IP_PTR(packet);
+  const struct sniff_ip *ip = (struct sniff_ip *)(packet + SIZE_ETHERNET);
   int size_ip = IP_HL(ip) * 4;
   if (size_ip < 20) {
     return;
