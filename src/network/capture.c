@@ -17,6 +17,7 @@ void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *p
   if (!is_capturing) {
     return;
   }
+  // Only dump packets doing out on the DOWN link's interface
   if ((enum LinkState)*args == LINK_UP) {
     return;
   }
