@@ -390,6 +390,7 @@ void capture_replay_iface(char *up_iface, struct hop_dest *next_hops) {
   }
   pclose(fp);
   free(cmd);
+  capture_remove_replayed_packets(up_iface, next_hops);
 }
 
 // tcpdump -r dump.pcap -w dump.pcap 'not ( udp port 1234 )'

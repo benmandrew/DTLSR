@@ -26,4 +26,12 @@
 // Maximum number of neighbours
 #define MAX_NODE_FAN (6)
 
+struct status {
+  char graph_updated;
+  char do_send_lsa;
+  char start_capture;
+  char do_replay;
+  char *replay_iface;
+};
+
 #endif

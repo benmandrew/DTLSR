@@ -21,6 +21,6 @@
 
 char merge_in(Node *these, Node *others);
 
-char register_heartbeat(LocalNode *this, struct hop_dest *next_hops, long source_addr);
+char register_heartbeat(LocalNode *this, struct hop_dest *next_hops, long source_addr, struct status *s);
 
 #endif

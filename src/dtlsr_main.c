@@ -9,14 +9,6 @@
 #define PROTOCOL "dtlsr"
 #define N_AUX_FDS 4
 
-struct status {
-  char graph_updated;
-  char do_send_lsa;
-  char start_capture;
-  char do_replay;
-  char *replay_iface;
-};
-
 // Aggregate timer and socket file descriptors into a single array
 void aggregate_fds(LocalNode *this, LSFD *fds, int n_aux_fds) {
   fds->n_event_fds = this->node.n_neighbours + n_aux_fds;
@@ -54,7 +46,7 @@ void close_sockets(LSFD *fds) {
 void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds, struct hop_dest *next_hops,
                      int active_fd, struct status *s) {
   if (active_fd == fds->hb_sock) {
-    s->graph_updated = receive_heartbeat(graph, this, fds, next_hops);
+    s->graph_updated = receive_heartbeat(graph, this, fds, next_hops, s);
   } else if (active_fd == fds->lsa_rec_sock) {
     s->graph_updated = receive_lsa(graph, this, fds);
   } else if (active_fd == fds->lsa_snd_timer.fd) {
@@ -117,9 +109,8 @@ int driver(int argc, char **argv) {
     if (s.start_capture) {
       start_capturing(&this, active_fd, next_hops);
     }
-    if (s.do_replay) {
+    if (s.do_replay && s.replay_iface != NULL) {
       capture_replay_iface(s.replay_iface, next_hops);
-      capture_remove_replayed_packets(s.replay_iface, next_hops);
     }
     #endif
   }
