@@ -55,6 +55,7 @@ TCase *case_pathfind(void) {
   tcase_add_test(tc, test_pathfind_partition);
   tcase_add_test(tc, test_pathfind_opaque);
   tcase_add_test(tc, test_pathfind_metric);
+  tcase_add_test(tc, test_pathfind_line);
   return tc;
 }
 

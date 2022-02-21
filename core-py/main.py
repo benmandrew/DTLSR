@@ -88,6 +88,7 @@ def main():
   global log
   log = open("core.log", "w")
   try:
+    session.service_manager.add(dtlsr.DefaultRoute2)
     session.service_manager.add(dtlsr.Heartbeat)
     session.service_manager.add(dtlsr.DTLSR)
     session.set_state(EventTypes.CONFIGURATION_STATE)

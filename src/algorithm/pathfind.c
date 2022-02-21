@@ -124,6 +124,7 @@ DijkstraNode *dijkstra(Node *graph, int src_id) {
 #ifndef DTLSR
       // Discard neighbours connected to by DOWN links
       if (curr_node->link_statuses[i] == LINK_DOWN) {
+        log_f("DOWN %d -> %d", curr_node->id, curr_node->neighbour_ids[i]);
         continue;
       }
 #endif
