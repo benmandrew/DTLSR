@@ -17,8 +17,8 @@ struct simple_rt get_simple_rt(struct rtentry *rt) {
 }
 
 char simple_rt_eq(struct simple_rt *rt1, struct simple_rt *rt2) {
-  return (rt1->dst == rt2->dst && rt1->gateway == rt2->gateway
-          && rt1->metric == rt2->metric);
+  return (rt1->dst == rt2->dst && rt1->gateway == rt2->gateway &&
+          rt1->metric == rt2->metric);
 }
 
 char simple_rt_addr_eq(struct simple_rt *rt1, struct simple_rt *rt2) {
@@ -171,7 +171,8 @@ void reduce_routes_to_subnets(struct hop_dest *next_hops) {
 
 void update_routing_table(LocalNode *this, struct hop_dest *next_hops) {
   // Don't modify 'next_hops'
-  struct hop_dest *nh_cpy = (struct hop_dest *)malloc(sizeof(struct hop_dest) * MAX_NODE_NUM);
+  struct hop_dest *nh_cpy =
+      (struct hop_dest *)malloc(sizeof(struct hop_dest) * MAX_NODE_NUM);
   memcpy(nh_cpy, next_hops, sizeof(struct hop_dest) * MAX_NODE_NUM);
   struct rtentry routes[MAX_NODE_NUM];
   ioctl_fd = socket(AF_INET, SOCK_DGRAM, 0);

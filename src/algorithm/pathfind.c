@@ -96,15 +96,18 @@ void get_next_hops(Node *graph, DijkstraNode *nodes, int src_id,
     if (nodes[i].state != NODE_UNSEEN && nodes[i].prev_id != -1) {
       short metric;
       enum LinkState next_hop_state;
-      int next_hop = get_next_hop(graph, nodes, src_id, i + 1, &metric, &next_hop_state);
+      int next_hop =
+          get_next_hop(graph, nodes, src_id, i + 1, &metric, &next_hop_state);
       next_hops[i] =
           (struct hop_dest){.next_hop = next_hop,
                             .dest_ip = get_dst_ip(graph, nodes, i + 1),
                             .metric = metric,
                             .next_hop_state = next_hop_state};
     } else {
-      next_hops[i] =
-          (struct hop_dest){.next_hop = -1, .dest_ip = 0, .metric = 0, .next_hop_state = LINK_DOWN};
+      next_hops[i] = (struct hop_dest){.next_hop = -1,
+                                       .dest_ip = 0,
+                                       .metric = 0,
+                                       .next_hop_state = LINK_DOWN};
     }
   }
 }
@@ -118,12 +121,12 @@ DijkstraNode *dijkstra(Node *graph, int src_id) {
       continue;
     }
     for (int i = 0; i < curr_node->n_neighbours; i++) {
-      #ifndef DTLSR
+#ifndef DTLSR
       // Discard neighbours connected to by DOWN links
       if (curr_node->link_statuses[i] == LINK_DOWN) {
         continue;
       }
-      #endif
+#endif
       DijkstraNode *neighbour = &nodes[curr_node->neighbour_ids[i] - 1];
       int alt = curr_node->tent_dist + 1;
       if (alt < neighbour->tent_dist) {

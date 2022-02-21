@@ -1,0 +1,257 @@
+node n1 {
+    type router
+    model host
+    network-config {
+	hostname n1
+	!
+	interface eth0
+	 ip address 10.0.7.10/24
+	 ipv6 address 2001:7::10/64
+	!
+    }
+    canvas c1
+    iconcoords {106.0 366.0}
+    labelcoords {106.0 398.0}
+    interface-peer {eth0 n9}
+    services {DefaultRoute2 Heartbeat}
+}
+
+node n2 {
+    type router
+    model host
+    network-config {
+	hostname n2
+	!
+	interface eth0
+	 ip address 10.0.0.10/24
+	 ipv6 address 2001:0::10/64
+	!
+    }
+    canvas c1
+    iconcoords {615.0 401.0}
+    labelcoords {615.0 433.0}
+    interface-peer {eth0 n3}
+    services {DTLSR Heartbeat}
+}
+
+node n3 {
+    type router
+    model router
+    network-config {
+	hostname n3
+	!
+	interface eth1
+	 ip address 10.0.1.1/24
+	 ipv6 address 2001:1::1/64
+	!
+	interface eth0
+	 ip address 10.0.0.1/24
+	 ipv6 address 2001:0::1/64
+	!
+    }
+    canvas c1
+    iconcoords {633.0 267.0}
+    labelcoords {633.0 299.0}
+    interface-peer {eth0 n2}
+    interface-peer {eth1 n4}
+    services {DTLSR Heartbeat IPForward}
+}
+
+node n4 {
+    type router
+    model router
+    network-config {
+	hostname n4
+	!
+	interface eth1
+	 ip address 10.0.2.1/24
+	 ipv6 address 2001:2::1/64
+	!
+	interface eth0
+	 ip address 10.0.1.2/24
+	 ipv6 address 2001:1::2/64
+	!
+    }
+    canvas c1
+    iconcoords {512.0 343.0}
+    labelcoords {512.0 375.0}
+    interface-peer {eth0 n3}
+    interface-peer {eth1 n5}
+    services {DTLSR Heartbeat IPForward}
+}
+
+node n5 {
+    type router
+    model router
+    network-config {
+	hostname n5
+	!
+	interface eth1
+	 ip address 10.0.3.1/24
+	 ipv6 address 2001:3::1/64
+	!
+	interface eth0
+	 ip address 10.0.2.2/24
+	 ipv6 address 2001:2::2/64
+	!
+    }
+    canvas c1
+    iconcoords {433.0 256.0}
+    labelcoords {433.0 288.0}
+    interface-peer {eth0 n4}
+    interface-peer {eth1 n6}
+    services {DTLSR Heartbeat IPForward}
+}
+
+node n6 {
+    type router
+    model router
+    network-config {
+	hostname n6
+	!
+	interface eth1
+	 ip address 10.0.4.1/24
+	 ipv6 address 2001:4::1/64
+	!
+	interface eth0
+	 ip address 10.0.3.2/24
+	 ipv6 address 2001:3::2/64
+	!
+    }
+    canvas c1
+    iconcoords {342.0 352.0}
+    labelcoords {342.0 384.0}
+    interface-peer {eth0 n5}
+    interface-peer {eth1 n7}
+    services {DTLSR Heartbeat IPForward}
+}
+
+node n7 {
+    type router
+    model router
+    network-config {
+	hostname n7
+	!
+	interface eth1
+	 ip address 10.0.5.1/24
+	 ipv6 address 2001:5::1/64
+	!
+	interface eth0
+	 ip address 10.0.4.2/24
+	 ipv6 address 2001:4::2/64
+	!
+    }
+    canvas c1
+    iconcoords {295.0 228.0}
+    labelcoords {295.0 260.0}
+    interface-peer {eth0 n6}
+    interface-peer {eth1 n8}
+    services {DTLSR Heartbeat IPForward}
+}
+
+node n8 {
+    type router
+    model router
+    network-config {
+	hostname n8
+	!
+	interface eth1
+	 ip address 10.0.6.2/24
+	 ipv6 address 2001:6::2/64
+	!
+	interface eth0
+	 ip address 10.0.5.2/24
+	 ipv6 address 2001:5::2/64
+	!
+    }
+    canvas c1
+    iconcoords {218.0 309.0}
+    labelcoords {218.0 341.0}
+    interface-peer {eth0 n7}
+    interface-peer {eth1 n9}
+    services {DTLSR Heartbeat IPForward}
+}
+
+node n9 {
+    type router
+    model router
+    network-config {
+	hostname n9
+	!
+	interface eth1
+	 ip address 10.0.7.1/24
+	 ipv6 address 2001:7::1/64
+	!
+	interface eth0
+	 ip address 10.0.6.1/24
+	 ipv6 address 2001:6::1/64
+	!
+    }
+    canvas c1
+    iconcoords {113.0 226.0}
+    labelcoords {113.0 258.0}
+    interface-peer {eth0 n8}
+    interface-peer {eth1 n1}
+    services {DTLSR Heartbeat IPForward}
+}
+
+link l1 {
+    nodes {n3 n2}
+    bandwidth 0
+}
+
+link l2 {
+    nodes {n3 n4}
+    bandwidth 0
+}
+
+link l3 {
+    nodes {n4 n5}
+    bandwidth 0
+}
+
+link l4 {
+    nodes {n5 n6}
+    bandwidth 0
+}
+
+link l5 {
+    nodes {n6 n7}
+    bandwidth 0
+}
+
+link l6 {
+    nodes {n7 n8}
+    bandwidth 0
+}
+
+link l7 {
+    nodes {n9 n8}
+    bandwidth 0
+}
+
+link l8 {
+    nodes {n9 n1}
+    bandwidth 0
+}
+
+canvas c1 {
+    name {Canvas1}
+}
+
+option global {
+    interface_names no
+    ip_addresses yes
+    ipv6_addresses no
+    node_labels yes
+    link_labels yes
+    show_api no
+    background_images no
+    annotations yes
+    grid yes
+    traffic_start 0
+}
+
+option session {
+}
+

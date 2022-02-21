@@ -68,6 +68,7 @@ char receive_lsa(Node *graph, LocalNode *this, LSFD *fds) {
   struct sockaddr_in from;
   receive(fds->lsa_rec_sock, (void *)buffer, LSA_SIZE,
           (struct sockaddr *)&from);
+  // log_f("LSA from %s", inet_ntoa(from.sin_addr));
   char updated = merge_in(graph, (Node *)buffer);
   if (updated) {
     send_lsa_except(graph, this, fds, (long)from.sin_addr.s_addr);

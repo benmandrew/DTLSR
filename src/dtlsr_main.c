@@ -3,8 +3,8 @@
 #include "algorithm/graph.h"
 #include "algorithm/pathfind.h"
 #include "filenames.h"
-#include "process/route_control.h"
 #include "network/capture.h"
+#include "process/route_control.h"
 
 #define PROTOCOL "dtlsr"
 #define N_AUX_FDS 3
@@ -26,7 +26,7 @@ LSFD init_descriptors(LocalNode *this) {
   fds.hb_sock = get_open_socket(HB_PORT);
   fds.lsa_rec_sock = get_open_socket(LSA_PORT);
   fds.lsa_snd_sock = get_socket();
-  fds.lsa_snd_timer = event_timer_append(0, METRIC_RECOMPUTATION_T);
+  fds.lsa_snd_timer = event_timer_append(METRIC_RECOMPUTATION_T, 0);
   event_append(fds.hb_sock);
   event_append(fds.lsa_rec_sock);
   aggregate_fds(this, &fds, N_AUX_FDS);
@@ -40,8 +40,10 @@ void close_sockets(LSFD *fds) {
   event_timer_dealloc(fds->lsa_snd_timer);
 }
 
-void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds, struct hop_dest *next_hops,
-                     int active_fd, char *send_status, char *graph_updated, char *start_capture) {
+void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds,
+                     struct hop_dest *next_hops, int active_fd,
+                     char *send_status, char *graph_updated,
+                     char *start_capture) {
   if (active_fd == fds->hb_sock) {
     // Heartbeat receive event
     *graph_updated = receive_heartbeat(graph, this, fds, next_hops);
@@ -60,9 +62,11 @@ void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds, struct hop_dest *n
   }
 }
 
-void start_capturing(LocalNode *this, int active_fd, struct hop_dest *next_hops) {
+void start_capturing(LocalNode *this, int active_fd,
+                     struct hop_dest *next_hops) {
   for (int i = 0; i < this->node.n_neighbours; i++) {
-    if (this->timers[i].fd == active_fd && this->node.link_statuses[i] == LINK_DOWN) {
+    if (this->timers[i].fd == active_fd &&
+        this->node.link_statuses[i] == LINK_DOWN) {
       capture_start_iface(this->interfaces[i], next_hops);
       break;
     }
@@ -77,19 +81,19 @@ int driver(int argc, char **argv) {
   graph_init(graph);
   local_node_init(&this, PROTOCOL, CONFIG, HEARTBEAT_TIMEOUT);
   update_global_this(graph, &this);
-  #ifdef DTLSR
+#ifdef DTLSR
   ts_set_falloff_param(64000.0);
   ts_set_power_param(10.0);
-  #endif
+#endif
   routes = get_routes(&this);
   LSFD fds = init_descriptors(&this);
   capture_init(&this, next_hops);
   while (1) {
     int active_fd;
     char graph_updated = 0, do_send_lsa = 0, start_capture = 0;
-    #ifdef DTLSR
+#ifdef DTLSR
     capture_packets();
-    #endif
+#endif
     if ((active_fd = event_wait(fds.event_fds, fds.n_event_fds)) < 0) {
       continue;
     }
@@ -104,11 +108,11 @@ int driver(int argc, char **argv) {
       update_global_this(graph, &this);
       send_lsa(graph, &this, &fds);
     }
-    #ifdef DTLSR
+#ifdef DTLSR
     if (start_capture) {
       start_capturing(&this, active_fd, next_hops);
     }
-    #endif
+#endif
   }
   close_sockets(&fds);
   return 0;

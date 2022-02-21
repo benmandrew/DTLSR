@@ -1,8 +1,8 @@
 
 #include "algorithm/node.h"
 #include "algorithm/pathfind.h"
-#include "process/logging.h"
 #include "network/capture_pi.h"
+#include "process/logging.h"
 
 #define NETMASK inet_addr("255.255.255.0");
 
@@ -13,11 +13,12 @@ LocalNode *this;
 char **down_ifaces;
 int n_down_ifaces;
 
-void dump_packet(u_char *args, const struct pcap_pkthdr *header, const u_char *packet) {
+void dump_packet(u_char *args, const struct pcap_pkthdr *header,
+                 const u_char *packet) {
   if (!is_capturing) {
     return;
   }
-  if ((enum LinkState)*args == LINK_UP) {
+  if ((enum LinkState) * args == LINK_UP) {
     return;
   }
   const struct sniff_ip *ip = (struct sniff_ip *)(packet + SIZE_ETHERNET);
@@ -45,7 +46,8 @@ char *generate_exclude_incoming(LocalNode *this) {
   return fexp;
 }
 
-char *generate_addresses_on_interface(LocalNode *this, char *iface, struct hop_dest *next_hops) {
+char *generate_addresses_on_interface(LocalNode *this, char *iface,
+                                      struct hop_dest *next_hops) {
   char no_addresses = 1;
   // Get index of neighbour corresponding to the iface
   int up_idx;
@@ -83,7 +85,8 @@ char *generate_addresses_on_interface(LocalNode *this, char *iface, struct hop_d
   return fexp;
 }
 
-char *generate_addresses_on_down_interfaces(LocalNode *this, struct hop_dest *next_hops) {
+char *generate_addresses_on_down_interfaces(LocalNode *this,
+                                            struct hop_dest *next_hops) {
   char no_addresses = 1;
   char first = 1;
   char *fexp = (char *)malloc(1024);
@@ -125,7 +128,8 @@ char *generate_addresses_on_down_interfaces(LocalNode *this, struct hop_dest *ne
   return fexp;
 }
 
-char *generate_incoming_filter_exp(LocalNode *this, struct hop_dest *next_hops) {
+char *generate_incoming_filter_exp(LocalNode *this,
+                                   struct hop_dest *next_hops) {
   char *incoming = generate_exclude_incoming(this);
   char *outgoing = generate_addresses_on_down_interfaces(this, next_hops);
 
@@ -146,11 +150,13 @@ void set_filter(struct capture_info *info, struct hop_dest *next_hops) {
   }
   char *filter_exp = generate_incoming_filter_exp(this, next_hops);
   if (pcap_compile(info->handle, &info->fp, filter_exp, 0, info->net) == -1) {
-    log_f("couldn't parse filter %s: %s", filter_exp, pcap_geterr(info->handle));
+    log_f("couldn't parse filter %s: %s", filter_exp,
+          pcap_geterr(info->handle));
     exit(EXIT_FAILURE);
   }
   if (pcap_setfilter(info->handle, &info->fp) == -1) {
-    log_f("couldn't install filter %s: %s", filter_exp, pcap_geterr(info->handle));
+    log_f("couldn't install filter %s: %s", filter_exp,
+          pcap_geterr(info->handle));
     exit(EXIT_FAILURE);
   }
   info->has_fp = 1;
@@ -189,7 +195,8 @@ void capture_init(LocalNode *node, struct hop_dest *next_hops) {
   dumper_curr_n = 0;
   down_ifaces = (char **)malloc(this->node.n_neighbours * sizeof(char *));
   memset(down_ifaces, 0, this->node.n_neighbours * sizeof(char *));
-  cap_infos = (struct capture_info *)malloc(this->node.n_neighbours * sizeof(struct capture_info));
+  cap_infos = (struct capture_info *)malloc(this->node.n_neighbours *
+                                            sizeof(struct capture_info));
   memset(cap_infos, 0, this->node.n_neighbours * sizeof(struct capture_info));
   for (int i = 0; i < this->node.n_neighbours; i++) {
     init_dev(&cap_infos[i], this->interfaces[i]);
@@ -240,7 +247,7 @@ void capture_start_iface(char *down_iface, struct hop_dest *next_hops) {
   n_down_ifaces++;
 }
 
-void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
+void capture_end_iface(char *up_iface, struct hop_dest *next_hops) {
   // Ignore if this is the first time the links have come up
   // Annoying edge case
   if (n_down_ifaces == 0)
@@ -268,18 +275,21 @@ void capture_end_iface(char* up_iface, struct hop_dest *next_hops) {
 void capture_packets(void) {
   for (int i = 0; i < this->node.n_neighbours; i++) {
     // if (this->node.link_statuses[i] == LINK_UP) {
-    pcap_dispatch(cap_infos[i].handle, -1, dump_packet, (u_char *)&this->node.link_statuses[i]);
+    pcap_dispatch(cap_infos[i].handle, -1, dump_packet,
+                  (u_char *)&this->node.link_statuses[i]);
     // }
   }
 }
 
-// tcpdump -r dump.pcap -w- 'udp port 1234' | tcpreplay -ieth0 - 
-char *generate_replay_command(LocalNode *this, char *up_iface, struct hop_dest *next_hops) {
+// tcpdump -r dump.pcap -w- 'udp port 1234' | tcpreplay -ieth0 -
+char *generate_replay_command(LocalNode *this, char *up_iface,
+                              struct hop_dest *next_hops) {
   char *filename = get_dumper_filename(dumper_curr_n);
   char *fexp = generate_addresses_on_interface(this, up_iface, next_hops);
   char *cmd = (char *)malloc(80 + 32 * this->node.n_neighbours);
   // Append '2>&1' to output error stream
-  sprintf(cmd, "tcpdump -U -r '%s' -w- '%s' | tcpreplay --topspeed -i%s -", filename, fexp, up_iface);
+  sprintf(cmd, "tcpdump -U -r '%s' -w- '%s' | tcpreplay --topspeed -i%s -",
+          filename, fexp, up_iface);
   free(fexp);
   free(filename);
   return cmd;
@@ -299,21 +309,26 @@ void capture_replay_iface(char *up_iface, struct hop_dest *next_hops) {
 }
 
 // tcpdump -r dump.pcap -w dump.pcap 'not ( udp port 1234 )'
-char *generate_filter_command(LocalNode *this, char *up_iface, char *old_filename, char *new_filename, struct hop_dest *next_hops) {
+char *generate_filter_command(LocalNode *this, char *up_iface,
+                              char *old_filename, char *new_filename,
+                              struct hop_dest *next_hops) {
   char *fexp = generate_addresses_on_interface(this, up_iface, next_hops);
   char *cmd = (char *)malloc(80 + 32 * this->node.n_neighbours);
   // Append '2>&1' to output error stream
-  sprintf(cmd, "tcpdump -r '%s' -w '%s' '( not %s )'", old_filename, new_filename, fexp);
+  sprintf(cmd, "tcpdump -r '%s' -w '%s' '( not %s )'", old_filename,
+          new_filename, fexp);
   free(fexp);
   return cmd;
 }
 
-void capture_remove_replayed_packets(char *up_iface, struct hop_dest *next_hops) {
+void capture_remove_replayed_packets(char *up_iface,
+                                     struct hop_dest *next_hops) {
   FILE *fp;
   pcap_dump_close(dumper);
   char *old_filename = get_dumper_filename(dumper_curr_n);
   char *new_filename = get_dumper_filename(dumper_curr_n + 1);
-  char *cmd = generate_filter_command(this, up_iface, old_filename, new_filename, next_hops);
+  char *cmd = generate_filter_command(this, up_iface, old_filename,
+                                      new_filename, next_hops);
   fp = popen(cmd, "r");
   if (fp == NULL) {
     log_f("failed to run filter command: %s", cmd);

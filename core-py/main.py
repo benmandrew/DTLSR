@@ -86,19 +86,19 @@ def main():
   global session
   session = coreemu.create_session()
   global log
-  log = open("core_log", "w")
+  log = open("core.log", "w")
   try:
     session.service_manager.add(dtlsr.Heartbeat)
     session.service_manager.add(dtlsr.DTLSR)
     session.set_state(EventTypes.CONFIGURATION_STATE)
     ## Initialise
-    conf = Configuration("box_headless", link_up, session)
+    conf = Configuration("convergence_headless", link_up, session)
     conf.start_services()
 
     session.instantiate()
 
     # operating_loop_manual(conf)
-    operating_loop_timer(conf, log)
+    # operating_loop_timer(conf, log)
   except Exception as e:
     try:
       exc_info = sys.exc_info()
