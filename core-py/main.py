@@ -1,6 +1,7 @@
 
 from io import TextIOWrapper
 import sys
+from typing import Tuple
 sys.path.insert(0, "/home/ben/projects/core/daemon")
 
 from threading import Event, Thread
@@ -21,7 +22,7 @@ from generate import Configuration
 def sigint_handler(signum, frame):
   # res = input("Ctrl-c was pressed. Do you really want to exit? y/n ")
   # if res == 'y':
-  log.close()
+  # log.close()
   session.shutdown()
   print("\nSession shutdown complete")
   exit(1)
@@ -42,43 +43,47 @@ link_down = LinkOptions(
     loss=100.0,
     jitter=0)
 
-FLAP_TIME: float = 2.0
+CONFIG_NAME: str = "box_headless"
+FLAP_NODES: Tuple[int, int] = (1, 4)
+UP_TIME: float = 10.0
+DOWN_TIME: float = 10.0
 
-def timer():
-  time.sleep(FLAP_TIME)
+def timer(is_up: bool):
+  if is_up:
+    time.sleep(UP_TIME)
+  else:
+    time.sleep(DOWN_TIME)
 
-def operating_loop_timer(conf: Configuration, log: TextIOWrapper) -> None:
-  timer_thread = Thread(target=timer)
+def operating_loop_timer(conf: Configuration) -> None:
+  is_up = True
+  timer_thread = Thread(target=timer, args=[is_up])
   timer_thread.start()
-  up = True
   while True:
     if not timer_thread.is_alive():
       t = time.time()
       text = None
-      if up:
-        text = "[{}] link down\n".format(t)
-        conf.update_link(1, 4, link_down)
+      if is_up:
+        text = "[{}] link down".format(t)
+        conf.update_link(FLAP_NODES[0], FLAP_NODES[1], link_down)
       else:
-        text = "[{}] link up\n".format(t)
-        conf.update_link(1, 4, link_up)
-      up = not up
-      print(text, end="")
-      log.write(text)
-      log.flush()
-      timer_thread = Thread(target=timer)
+        text = "[{}] link up".format(t)
+        conf.update_link(FLAP_NODES[0], FLAP_NODES[1], link_up)
+      is_up = not is_up
+      print(text)
+      timer_thread = Thread(target=timer, args=[is_up])
       timer_thread.start()
 
-def operating_loop_manual(conf: Configuration) -> None:
-  up = True
-  while True:
-    input()
-    if up:
-      print("link down")
-      conf.update_link(1, 4, link_down)
-    else:
-      print("link up")
-      conf.update_link(1, 4, link_up)
-    up = not up
+# def operating_loop_manual(conf: Configuration) -> None:
+#   up = True
+#   while True:
+#     input()
+#     if up:
+#       print("link down")
+#       conf.update_link(1, 2, link_down)
+#     else:
+#       print("link up")
+#       conf.update_link(1, 2, link_up)
+#     up = not up
 
 def main():
   ## create emulator instance for creating sessions and utility methods
@@ -86,20 +91,20 @@ def main():
   global session
   session = coreemu.create_session()
   global log
-  log = open("core.log", "w")
+  # log = open("core.log", "w")
   try:
     session.service_manager.add(dtlsr.DefaultRoute2)
     session.service_manager.add(dtlsr.Heartbeat)
     session.service_manager.add(dtlsr.DTLSR)
     session.set_state(EventTypes.CONFIGURATION_STATE)
     ## Initialise
-    conf = Configuration("convergence_headless", link_up, session)
+    conf = Configuration(CONFIG_NAME, link_up, session)
     conf.start_services()
 
     session.instantiate()
 
     # operating_loop_manual(conf)
-    # operating_loop_timer(conf, log)
+    operating_loop_timer(conf)
   except Exception as e:
     try:
       exc_info = sys.exc_info()

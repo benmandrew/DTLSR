@@ -69,6 +69,12 @@ class Configuration:
         return n.core_node
 
   def _create_links(self, options: LinkOptions):
+    link_high_delay = LinkOptions(
+      bandwidth=100_000_000_000,
+      delay=100000,
+      dup=0,
+      loss=0.0,
+      jitter=0)
     seen_pairs: Set[Tuple[int, int]] = set()
     for n in self.ns:
       for neighbour_id in n.neighbour_ids:
@@ -82,9 +88,15 @@ class Configuration:
         ip4_prefix="10.0.{}.0/24".format(i))
       if_a = pref.create_iface(cn_a)
       if_b = pref.create_iface(cn_b)
-      print("n{} -- n{} : {} eth{} -- {} eth{}".format(
-        a, b, if_a.ip4, if_a.id, if_b.ip4, if_b.id))
-      self.session.add_link(cn_a.id, cn_b.id, if_a, if_b, options)
+      
+      if (cn_a.id == 2 and cn_b.id == 3) or (cn_a.id == 3 and cn_b.id == 2):
+        print("n{} -- n{} : {} eth{} -- {} eth{} : HIGH DELAY".format(
+          a, b, if_a.ip4, if_a.id, if_b.ip4, if_b.id))
+        self.session.add_link(cn_a.id, cn_b.id, if_a, if_b, link_high_delay)
+      else:
+        print("n{} -- n{} : {} eth{} -- {} eth{}".format(
+          a, b, if_a.ip4, if_a.id, if_b.ip4, if_b.id))
+        self.session.add_link(cn_a.id, cn_b.id, if_a, if_b, options)
       self.iface_map[(cn_a.id, cn_b.id)] = (if_a, if_b)
       self.ip_prefixes.append(pref)
 

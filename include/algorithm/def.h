@@ -16,7 +16,7 @@
 #define HEARTBEAT_TIMEOUT 2.25 * HEARTBEAT_T
 // #define HEARTBEAT_TIMEOUT 1
 // How often we recompute the link metric
-#define METRIC_RECOMPUTATION_T 2.0
+#define METRIC_RECOMPUTATION_T 1.0
 
 #define LOGGING_ACTIVE
 
