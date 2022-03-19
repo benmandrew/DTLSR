@@ -43,10 +43,10 @@ link_down = LinkOptions(
     loss=100.0,
     jitter=0)
 
-CONFIG_NAME: str = "box_headless"
-FLAP_NODES: Tuple[int, int] = (1, 4)
-UP_TIME: float = 10.0
-DOWN_TIME: float = 10.0
+CONFIG_NAME: str = "convergence_headless"
+FLAP_NODES: Tuple[int, int] = (1, 9)
+UP_TIME: float = 4.0
+DOWN_TIME: float = 4.0
 
 def timer(is_up: bool):
   if is_up:
