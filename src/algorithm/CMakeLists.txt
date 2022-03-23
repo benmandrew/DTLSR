@@ -10,8 +10,12 @@ set(algorithm_source_files
 	link_hist.c
 )
 
-add_library(algorithm ${algorithm_source_files})
+add_library(algorithm STATIC ${algorithm_source_files})
+add_library(algorithm_dt STATIC ${algorithm_source_files})
 
-target_link_libraries(algorithm network)
-target_link_libraries(algorithm process)
-target_link_libraries(algorithm m)
+target_compile_definitions(algorithm_dt PRIVATE DTLSR)
+
+target_link_libraries(algorithm network process m)
+target_link_libraries(algorithm_dt network_dt process_dt m)
+
+# install(TARGETS algorithm DESTINATION lib)

@@ -127,23 +127,23 @@ void add_routes(LocalNode *this, struct hop_dest *next_hops,
 }
 
 void filter_next_hops(LocalNode *this, struct hop_dest *next_hops) {
-  for (int i = 0; i < MAX_NODE_NUM; i++) {
-    // filter out down links
-    // if (next_hops[i].next_hop_state == LINK_DOWN) {
-    //   next_hops[i].next_hop = -1;
-    //   continue;
-    // }
-    for (int j = 0; j < this->node.n_neighbours; j++) {
-      if (next_hops[i].next_hop == -1) {
-        break;
-      }
-      // Remove neighbours, as these routes should already exist by DefaultRoute
-      if (this->node.neighbour_ips[j] == next_hops[i].dest_ip) {
-        next_hops[i].next_hop = -1;
-        break;
-      }
-    }
-  }
+  // for (int i = 0; i < MAX_NODE_NUM; i++) {
+  //   // filter out down links
+  //   // if (next_hops[i].next_hop_state == LINK_DOWN) {
+  //   //   next_hops[i].next_hop = -1;
+  //   //   continue;
+  //   // }
+  //   for (int j = 0; j < this->node.n_neighbours; j++) {
+  //     if (next_hops[i].next_hop == -1) {
+  //       break;
+  //     }
+  //     // Remove neighbours, as these routes should already exist by DefaultRoute
+  //     if (this->node.neighbour_ips[j] == next_hops[i].dest_ip) {
+  //       next_hops[i].next_hop = -1;
+  //       break;
+  //     }
+  //   }
+  // }
   reduce_routes_to_subnets(next_hops);
   remove_duplicates(next_hops);
 }

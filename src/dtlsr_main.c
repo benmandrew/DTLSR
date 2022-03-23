@@ -6,7 +6,11 @@
 #include "network/capture.h"
 #include "process/route_control.h"
 
+#ifdef DTLSR
 #define PROTOCOL "dtlsr"
+#else
+#define PROTOCOL "lsr"
+#endif
 #define N_AUX_FDS 3
 
 // Aggregate timer and socket file descriptors into a single array
@@ -119,8 +123,8 @@ int driver(int argc, char **argv) {
 }
 
 int main(int argc, char *argv[]) {
-  set_logfile_name("dtlsr");
-  log_f("dtlsr started");
+  set_logfile_name(PROTOCOL);
+  log_f(PROTOCOL " started");
   int daemonise = 0;
   int opt;
   while ((opt = getopt(argc, argv, "d")) != -1) {
@@ -129,7 +133,7 @@ int main(int argc, char *argv[]) {
       daemonise = 1;
       break;
     default:
-      log_f("dtlsr usage: %s [-d]", argv[0]);
+      log_f(PROTOCOL " usage: %s [-d]", argv[0]);
       exit(EXIT_FAILURE);
     }
   }

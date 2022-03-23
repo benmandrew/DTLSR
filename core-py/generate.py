@@ -15,18 +15,19 @@ from typing import Dict, List, Set, Tuple
 CONFIG_BASE = "/home/ben/projects/dtlsr/configs"
 
 class Configuration:
-  def __init__(self, config: str, link_options: LinkOptions, session: Session) -> None:
+  def __init__(self, config: str, link_options: LinkOptions, session: Session, delay_tolerant: bool) -> None:
     self.session = session
     self.ns: List[Node] = []
     self.ip_prefixes: List[IpPrefixes] = []
     self.iface_map: Dict[Tuple[int, int], Tuple[CoreInterface, CoreInterface]] = {}
 
     print("initing nodes")
-    self._read_config(config)
+    ts: Dict[str, str] = self._read_config(config)
+    self.init_nodes(ts, delay_tolerant)
     print("creating links")
     self._create_links(link_options)
 
-  def _read_config(self, config: str):
+  def _read_config(self, config: str) -> Dict[str, str]:
     config_path = "{}/{}".format(CONFIG_BASE, config)
     ts: Dict[str, str] = {}
     for file in os.listdir(config_path):
@@ -42,7 +43,7 @@ class Configuration:
         with open(full_path) as f:
           rows = f.readlines()
         self._decode_types(rows, ts)
-    self.init_nodes(ts)
+    return ts
 
   def _decode_node_config(self, filename: str, rows: List[str]):
     n = Node(filename[1:], self.session)
@@ -107,13 +108,13 @@ class Configuration:
       if_b, if_a = self.iface_map[(id_b, id_a)]
     self.session.update_link(id_a, id_b, if_a.id, if_b.id, options)
 
-  def init_nodes(self, ts: Dict[str, str]):
+  def init_nodes(self, ts: Dict[str, str], delay_tolerant: bool):
     for n in self.ns:
       t = ts["n{}".format(n.id)]
       if t == "host":
         n.init_host(self.session)
       elif t == "router":
-        n.init_router(self.session)
+        n.init_router(self.session, delay_tolerant)
       else:
         print("Unknown type: {}".format(t))
 
@@ -128,6 +129,7 @@ class Configuration:
 
 class Node:
   service_map = {
+    "LSR" : dtlsr.LSR,
     "DTLSR" : dtlsr.DTLSR,
     "Heartbeat" : dtlsr.Heartbeat,
     "DefaultRoute2" : dtlsr.DefaultRoute2,
@@ -144,12 +146,16 @@ class Node:
                                                 options=options)
     self.services: List[str] = []
 
-  def init_router(self, session: Session):
-    session.services.set_service(self.core_node.id, "DTLSR")
+  def init_router(self, session: Session, delay_tolerant: bool):
+    if delay_tolerant:
+      self.services.append("DTLSR")
+      session.services.set_service(self.core_node.id, "DTLSR")
+    else:
+      self.services.append("LSR")
+      session.services.set_service(self.core_node.id, "LSR")
     session.services.set_service(self.core_node.id, "Heartbeat")
-    session.services.set_service(self.core_node.id, "IPForward")
-    self.services.append("DTLSR")
     self.services.append("Heartbeat")
+    session.services.set_service(self.core_node.id, "IPForward")
     self.services.append("IPForward")
 
   def init_host(self, session: Session):

@@ -11,7 +11,7 @@ char register_heartbeat(LocalNode *this, struct hop_dest *next_hops,
   for (int i = 0; i < this->node.n_neighbours; i++) {
     if (this->node.neighbour_ips[i] == source_addr) {
       // Reset timer
-      event_timer_arm(&this->timers[i], 0, HEARTBEAT_TIMEOUT);
+      event_timer_arm(&this->timers[i], HEARTBEAT_TIMEOUT, 5e+8);
       // If link was DOWN then it is now UP
       if (this->node.link_statuses[i] == LINK_DOWN) {
         this->node.link_statuses[i] = LINK_UP;

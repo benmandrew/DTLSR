@@ -29,24 +29,27 @@ def sigint_handler(signum, frame):
  
 signal.signal(signal.SIGINT, sigint_handler)
 
+DELAY = 1000 # 1ms
+# DELAY = 200_000 # 200ms
+
+CONFIG_NAME: str = "convergence_headless"
+FLAP_NODES: Tuple[int, int] = (1, 9)
+UP_TIME: float = 4.0
+DOWN_TIME: float = 4.0
+
 link_up = LinkOptions(
     bandwidth=100_000_000_000,
-    delay=1000,
+    delay=DELAY,
     dup=0,
     loss=0.0,
     jitter=0)
 
 link_down = LinkOptions(
     bandwidth=100_000_000_000,
-    delay=1000,
+    delay=DELAY,
     dup=0,
     loss=100.0,
     jitter=0)
-
-CONFIG_NAME: str = "convergence_headless"
-FLAP_NODES: Tuple[int, int] = (1, 9)
-UP_TIME: float = 4.0
-DOWN_TIME: float = 4.0
 
 def timer(is_up: bool):
   if is_up:
@@ -92,19 +95,24 @@ def main():
   session = coreemu.create_session()
   global log
   # log = open("core.log", "w")
+  delay_tolerant = False
+  if len(sys.argv) > 1 and  sys.argv[1].lower() in ["delay_tolerant", "dt"]:
+    print("delay-tolerant mode")
+    delay_tolerant = True
   try:
     session.service_manager.add(dtlsr.DefaultRoute2)
     session.service_manager.add(dtlsr.Heartbeat)
+    session.service_manager.add(dtlsr.LSR)
     session.service_manager.add(dtlsr.DTLSR)
     session.set_state(EventTypes.CONFIGURATION_STATE)
     ## Initialise
-    conf = Configuration(CONFIG_NAME, link_up, session)
+    conf = Configuration(CONFIG_NAME, link_up, session, delay_tolerant)
     conf.start_services()
 
     session.instantiate()
 
     # operating_loop_manual(conf)
-    operating_loop_timer(conf)
+    # operating_loop_timer(conf)
   except Exception as e:
     try:
       exc_info = sys.exc_info()

@@ -35,7 +35,7 @@ LocalNode node_local_alloc(int id, int n, double hb_timeout) {
   node.node.id = id;
   node.if_arena_ptr = (char *)malloc(IFACE_STR_MAX_LEN * n * sizeof(char));
   for (int i = 0; i < n; i++) {
-    node.timers[i] = event_timer_append(0, (long)hb_timeout);
+    node.timers[i] = event_timer_append((long)hb_timeout, 5e+8);
     node.interfaces[i] =
         node.if_arena_ptr + i * (IFACE_STR_MAX_LEN * sizeof(char));
   }

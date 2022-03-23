@@ -44,7 +44,7 @@ add_compile_options(-O3 -D_FORTIFY_SOURCE=2 -fasynchronous-unwind-tables -fpie -
 # SET(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
 
 add_subdirectory(src)
-add_subdirectory(tests)
+# add_subdirectory(tests)
 
-enable_testing()
-add_test(NAME check COMMAND check)
+# enable_testing()
+# add_test(NAME check COMMAND check)
