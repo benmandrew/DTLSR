@@ -10,6 +10,8 @@ CORE is a tool for emulating networks on a single machine, using topologies of l
 
 CORE also provides a Python API for scripting, which allows modifying network conditions in real time and extracting testing data. This is used extensively for evaluation.
 
+Project Link: [nrl.navy.mil/core](https://www.nrl.navy.mil/Our-Work/Areas-of-Research/Information-Technology/NCS/CORE/)
+
 ## Quick Start
 
 ### Install
