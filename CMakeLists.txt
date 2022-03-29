@@ -31,12 +31,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/bin)
 
 set(CMAKE_BUILD_TYPE Debug)
 
-# OPTION(DTLSR "Delay-Tolerant modifications" ON)
-
-# IF(DTLSR)
-#     ADD_DEFINITIONS(-DDTLSR)
-# ENDIF(DTLSR)
-
 add_compile_options(-O3 -D_FORTIFY_SOURCE=2 -fasynchronous-unwind-tables -fpie -Wl,-pie -fpic -shared -fstack-clash-protection -fstack-protector -Werror=implicit-function-declaration)
 
 # SET(GCC_COVERAGE_COMPILE_FLAGS "-fprofile-arcs -ftest-coverage -fsanitize=address -fsanitize=undefined")

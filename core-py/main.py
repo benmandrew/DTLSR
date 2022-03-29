@@ -32,8 +32,9 @@ signal.signal(signal.SIGINT, sigint_handler)
 DELAY = 1000 # 1ms
 # DELAY = 200_000 # 200ms
 
-CONFIG_NAME: str = "convergence_headless"
-FLAP_NODES: Tuple[int, int] = (1, 9)
+CONFIG_NAME: str = "full_partition_headless"
+FLAP_NODES: Tuple[int, int] = (1, 2)
+FLAP_NODES_OTHER: Tuple[int, int] = (2, 3)
 UP_TIME: float = 4.0
 DOWN_TIME: float = 4.0
 
@@ -71,6 +72,27 @@ def operating_loop_timer(conf: Configuration) -> None:
       else:
         text = "[{}] link up".format(t)
         conf.update_link(FLAP_NODES[0], FLAP_NODES[1], link_up)
+      is_up = not is_up
+      print(text)
+      timer_thread = Thread(target=timer, args=[is_up])
+      timer_thread.start()
+
+def operating_loop_timer_anticorrelated(conf: Configuration) -> None:
+  is_up = True
+  timer_thread = Thread(target=timer, args=[is_up])
+  timer_thread.start()
+  while True:
+    if not timer_thread.is_alive():
+      t = time.time()
+      text = None
+      if is_up:
+        text = "[{}] switch".format(t)
+        conf.update_link(FLAP_NODES[0], FLAP_NODES[1], link_down)
+        conf.update_link(FLAP_NODES_OTHER[0], FLAP_NODES_OTHER[1], link_up)
+      else:
+        text = "[{}] switch".format(t)
+        conf.update_link(FLAP_NODES[0], FLAP_NODES[1], link_up)
+        conf.update_link(FLAP_NODES_OTHER[0], FLAP_NODES_OTHER[1], link_down)
       is_up = not is_up
       print(text)
       timer_thread = Thread(target=timer, args=[is_up])
