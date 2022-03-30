@@ -32,6 +32,8 @@ typedef struct LSFD {
   int lsa_snd_sock;
   // LS metric recomputation
   Timer lsa_snd_timer;
+  // LS metric recomputation
+  Timer replay_timer;
   // Event system file descriptors
   int *event_fds;
   int n_event_fds;
@@ -39,7 +41,7 @@ typedef struct LSFD {
 
 void graph_init(Node *graph);
 
-char receive_heartbeat(Node *graph, LocalNode *this, LSFD *fds, struct hop_dest *next_hops);
+char receive_heartbeat(Node *graph, LocalNode *this, LSFD *fds, struct hop_dest *next_hops, char** up_iface);
 
 void local_node_update_metrics(LocalNode *this, unsigned long long now);
 
