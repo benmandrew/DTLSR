@@ -32,11 +32,11 @@ signal.signal(signal.SIGINT, sigint_handler)
 DELAY = 1000 # 1ms
 # DELAY = 200_000 # 200ms
 
-CONFIG_NAME: str = "full_partition_headless"
-FLAP_NODES: Tuple[int, int] = (1, 2)
-FLAP_NODES_OTHER: Tuple[int, int] = (2, 3)
-UP_TIME: float = 4.0
-DOWN_TIME: float = 4.0
+CONFIG_NAME: str = "box_headless"
+FLAP_NODES: Tuple[int, int] = (1, 4)
+# FLAP_NODES_OTHER: Tuple[int, int] = (2, 3)
+UP_TIME: float = 10.0
+DOWN_TIME: float = 10.0
 
 link_up = LinkOptions(
     bandwidth=100_000_000_000,
@@ -134,7 +134,8 @@ def main():
     session.instantiate()
 
     # operating_loop_manual(conf)
-    # operating_loop_timer(conf)
+    operating_loop_timer(conf)
+    # operating_loop_timer_anticorrelated(conf)
   except Exception as e:
     try:
       exc_info = sys.exc_info()

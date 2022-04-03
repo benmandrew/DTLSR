@@ -42,4 +42,6 @@ void capture_start_iface(char *down_iface, struct hop_dest *next_hops);
 
 void capture_end_iface(char *up_iface, struct hop_dest *next_hops);
 
+void capture_remove_replayed_packets(char *up_iface, struct hop_dest *next_hops);
+
 #endif

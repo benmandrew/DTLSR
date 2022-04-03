@@ -84,10 +84,6 @@ pcap_dumper_t *open_dump();
 
 char *generate_replay_command(LocalNode *this, char *up_iface, struct hop_dest *next_hops);
 
-void capture_replay_iface(char *up_iface, struct hop_dest *next_hops);
-
 char *generate_remove_command(LocalNode *this, char *up_iface, struct hop_dest *next_hops);
-
-void capture_remove_replayed_packets(char *up_iface, struct hop_dest *next_hops);
 
 #endif

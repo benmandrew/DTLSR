@@ -18,7 +18,7 @@ char register_heartbeat(LocalNode *this, LSFD *fds, struct hop_dest *next_hops,
 #ifdef DTLSR
         ts_toggle_state(&this->ls_time_series[i], get_now());
         capture_end_iface(this->interfaces[i], next_hops);
-        event_timer_arm(fds->replay_timer, 0, REPLAY_DELAY_T);
+        event_timer_arm(&fds->replay_timer, 0, REPLAY_DELAY_T);
         *up_iface = this->interfaces[i];
 #endif
         updated = 1;

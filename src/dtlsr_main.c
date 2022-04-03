@@ -32,7 +32,9 @@ LSFD init_descriptors(LocalNode *this) {
   fds.lsa_rec_sock = get_open_socket(LSA_PORT);
   fds.lsa_snd_sock = get_socket();
   fds.lsa_snd_timer = event_timer_append(METRIC_RECOMPUTATION_T, 0);
+#ifdef DTLSR
   fds.replay_timer = event_timer_append(REPLAY_DELAY_T, 0);
+#endif
   event_timer_disarm(&fds.replay_timer);
   event_append(fds.hb_sock);
   event_append(fds.lsa_rec_sock);
@@ -60,12 +62,14 @@ void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds,
   } else if (active_fd == fds->lsa_snd_timer.fd) {
     // LSA send event
     event_timer_reset(&fds->lsa_snd_timer);
-    *graph_updated = 1;
+    // *graph_updated = 1;
     *send_status = 1;
   } else if (active_fd == fds->replay_timer.fd) {
+#ifdef DTLSR
     event_timer_disarm(&fds->replay_timer);
     capture_replay_iface(*up_iface, next_hops);
     capture_remove_replayed_packets(*up_iface, next_hops);
+#endif
   } else {
     // Heartbeat timeout event
     *graph_updated = timeout_heartbeat(graph, this, active_fd, fds, next_hops);
@@ -96,10 +100,10 @@ int driver(int argc, char **argv) {
 #ifdef DTLSR
   ts_set_falloff_param(64000.0);
   ts_set_power_param(10.0);
+  capture_init(&this, next_hops);
 #endif
   routes = get_routes(&this);
   LSFD fds = init_descriptors(&this);
-  capture_init(&this, next_hops);
   while (1) {
     int active_fd;
     char graph_updated = 0, do_send_lsa = 0, start_capture = 0;
@@ -114,10 +118,11 @@ int driver(int argc, char **argv) {
                     &graph_updated, &start_capture, &up_iface);
     if (graph_updated) {
       local_node_update_metrics(&this, get_now());
+      update_global_this(graph, &this);
       pathfind(graph, this.node.id, next_hops);
+      update_routing_table(&this, next_hops);
     }
     if (do_send_lsa) {
-      update_global_this(graph, &this);
       send_lsa(graph, &this, &fds);
     }
 #ifdef DTLSR
