@@ -57,7 +57,7 @@ unsigned long long get_now(void) {
 }
 
 void local_node_init(LocalNode *this, char *protocol, char *config,
-                     double hb_timeout) {
+                     long hb_timeout) {
   unsigned long long now = get_now();
   char *contents = read_node_conf_file(protocol, config);
   // Get number of neighbours

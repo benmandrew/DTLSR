@@ -279,6 +279,7 @@ void capture_packets(void) {
                   (u_char *)&this->node.link_statuses[i]);
     // }
   }
+  pcap_dump_flush(dumper);
 }
 
 // tcpdump -r dump.pcap -w- 'udp port 1234' | tcpreplay -ieth0 -

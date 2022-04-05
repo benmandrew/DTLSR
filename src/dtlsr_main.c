@@ -8,10 +8,11 @@
 
 #ifdef DTLSR
 #define PROTOCOL "dtlsr"
+#define N_AUX_FDS 4
 #else
 #define PROTOCOL "lsr"
+#define N_AUX_FDS 3
 #endif
-#define N_AUX_FDS 4
 
 // Aggregate timer and socket file descriptors into a single array
 void aggregate_fds(LocalNode *this, LSFD *fds, int n_aux_fds) {
@@ -23,7 +24,9 @@ void aggregate_fds(LocalNode *this, LSFD *fds, int n_aux_fds) {
   fds->event_fds[this->node.n_neighbours] = fds->hb_sock;
   fds->event_fds[this->node.n_neighbours + 1] = fds->lsa_rec_sock;
   fds->event_fds[this->node.n_neighbours + 2] = fds->lsa_snd_timer.fd;
+#ifdef DTLSR
   fds->event_fds[this->node.n_neighbours + 3] = fds->replay_timer.fd;
+#endif
 }
 
 LSFD init_descriptors(LocalNode *this) {
@@ -33,9 +36,9 @@ LSFD init_descriptors(LocalNode *this) {
   fds.lsa_snd_sock = get_socket();
   fds.lsa_snd_timer = event_timer_append(METRIC_RECOMPUTATION_T, 0);
 #ifdef DTLSR
-  fds.replay_timer = event_timer_append(REPLAY_DELAY_T, 0);
-#endif
+  fds.replay_timer = event_timer_append(0, REPLAY_DELAY_T);
   event_timer_disarm(&fds.replay_timer);
+#endif
   event_append(fds.hb_sock);
   event_append(fds.lsa_rec_sock);
   aggregate_fds(this, &fds, N_AUX_FDS);
@@ -62,10 +65,9 @@ void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds,
   } else if (active_fd == fds->lsa_snd_timer.fd) {
     // LSA send event
     event_timer_reset(&fds->lsa_snd_timer);
-    // *graph_updated = 1;
     *send_status = 1;
-  } else if (active_fd == fds->replay_timer.fd) {
 #ifdef DTLSR
+  } else if (active_fd == fds->replay_timer.fd) {
     event_timer_disarm(&fds->replay_timer);
     capture_replay_iface(*up_iface, next_hops);
     capture_remove_replayed_packets(*up_iface, next_hops);
@@ -117,6 +119,7 @@ int driver(int argc, char **argv) {
     handle_event_fd(graph, &this, &fds, next_hops, active_fd, &do_send_lsa,
                     &graph_updated, &start_capture, &up_iface);
     if (graph_updated) {
+      log_f("update");
       local_node_update_metrics(&this, get_now());
       update_global_this(graph, &this);
       pathfind(graph, this.node.id, next_hops);
