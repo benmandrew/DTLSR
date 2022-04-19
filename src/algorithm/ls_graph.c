@@ -96,5 +96,6 @@ void send_lsa_except(Node *graph, LocalNode *this, LSFD *fds,
 
 // Send LSA to all neighbours
 void send_lsa(Node *graph, LocalNode *this, LSFD *fds) {
-  send_lsa_except(graph, this, fds, 0);
+  // zero address matches no neighbours
+  send_lsa_except(graph, this, fds, 0L);
 }

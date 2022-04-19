@@ -11,11 +11,13 @@
 #define MS2NS 1e+6
 
 // Heartbeat period
-#define HEARTBEAT_T (400 * MS2NS)
+#define HEARTBEAT_T (250 * MS2NS)
 // Add a bit of fudge factor
 #define HEARTBEAT_TIMEOUT (900 * MS2NS)
 // How often we recompute the link metric
-#define METRIC_RECOMPUTATION_T 1
+#define METRIC_RECOMPUTATION_T (50 * MS2NS)
+// How often we send LSAs
+#define LSA_SEND_T (50 * MS2NS)
 // How long after the link comes up that we replay the buffered packets
 #define REPLAY_DELAY_T (5 * MS2NS)
 

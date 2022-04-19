@@ -42,10 +42,10 @@ typedef struct local_node {
   Node node;
   // Heartbeat timer array
   Timer timers[MAX_NODE_FAN];
-  #ifdef DTLSR
+#ifdef DTLSR
   // Link status history array
   LSTimeSeries ls_time_series[MAX_NODE_FAN];
-  #endif
+#endif
   // Outgoing interfaces
   char *interfaces[MAX_NODE_FAN];
   // Book-keeping pointer for interface string arena

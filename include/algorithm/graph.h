@@ -30,9 +30,11 @@ typedef struct LSFD {
   int lsa_rec_sock;
   // LSA sending
   int lsa_snd_sock;
-  // LS metric recomputation
+  // LS sending timer
   Timer lsa_snd_timer;
-  // LS metric recomputation
+  // LS metric and pathfinding recomputation
+  Timer recomputation_timer;
+  // Buffered packet replay delay
   Timer replay_timer;
   // Event system file descriptors
   int *event_fds;

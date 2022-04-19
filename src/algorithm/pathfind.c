@@ -2,6 +2,8 @@
 #include "algorithm/pathfind.h"
 #include "algorithm/pathfind_pi.h"
 
+#include <math.h>
+
 // Disgusting, but the Linux kernel uses this exact thing so oh well
 #define FIELD_SIZEOF(t, f) (sizeof(((t *)0)->f))
 
@@ -13,19 +15,30 @@ DijkstraNode *dijkstra_init(Node *graph, int src_id) {
   for (int i = 0; i < MAX_NODE_NUM; i++) {
     nodes[i].id = graph[i].id;
     nodes[i].state = graph[i].state;
-    // INT32_MAX - 100 so that incrementing doesn't cause overflow
-    nodes[i].tent_dist = INT32_MAX - 100;
+    // Large number `approximating' infinity; just needs to be bigger than
+    // a series of max-metric links (each of which has maximum 50,000)
+    nodes[i].tent_dist = 65565.0 * 65565.0;
     nodes[i].prev_id = -1;
     if (graph[i].state == NODE_SEEN) {
       if (i + 1 == src_id) {
-        nodes[i].tent_dist = 0;
+        nodes[i].tent_dist = 0.0;
       }
       nodes[i].n_neighbours = graph[i].n_neighbours;
       memcpy(nodes[i].neighbour_ids, graph[i].neighbour_ids,
              FIELD_SIZEOF(Node, neighbour_ids));
       memcpy(nodes[i].link_statuses, graph[i].link_statuses,
              FIELD_SIZEOF(Node, link_statuses));
+      memcpy(nodes[i].link_metrics, graph[i].link_metrics,
+             FIELD_SIZEOF(Node, link_metrics));
     }
+    // Reduce the metrics for local links to add some hysteresis to switching
+    // off down links, so that other nodes will switch away first.
+    // This prevents TTL failures by looping
+    // if (nodes[i].id == src_id) {
+    //   for (int j = 0; j < nodes[i].n_neighbours; j++) {
+    //     nodes[i].link_metrics[j] = sqrt(nodes[i].link_metrics[j]);
+    //   }
+    // }
   }
   return nodes;
 }
@@ -33,7 +46,7 @@ DijkstraNode *dijkstra_init(Node *graph, int src_id) {
 MinHeap heap_init(DijkstraNode *nodes) {
   MinHeap h = minheap_alloc(MAX_NODE_NUM);
   for (int i = 0; i < MAX_NODE_NUM; i++) {
-    if (nodes[i].state != NODE_UNSEEN) {
+    if (nodes[i].state == NODE_SEEN) {
       minheap_insert(&h, &nodes[i]);
     }
   }
@@ -42,12 +55,12 @@ MinHeap heap_init(DijkstraNode *nodes) {
 
 // Add short and double without risk of overflowing short
 short s_d_safe_add(short s, double d) {
-  if (d >= (double)INT16_MAX || s >= INT16_MAX)
-    return INT16_MAX;
+  if (d >= (double)UINT16_MAX || s >= UINT16_MAX)
+    return UINT16_MAX;
   short ds = (short)d;
   short res = ds + s;
   if (res < s)
-    return INT16_MAX;
+    return UINT16_MAX;
   return res;
 }
 
@@ -55,7 +68,7 @@ int get_next_hop(Node *graph, DijkstraNode *nodes, int src_id, int dst_id,
                  short *metric, enum LinkState *next_hop_state) {
   DijkstraNode *next;
   DijkstraNode *this = &nodes[dst_id - 1];
-  *metric = 0;
+  *metric = 1;
   // Backtrace the route, keeping track of the 'next' hop
   while (this->prev_id != -1) {
     next = this;
@@ -124,12 +137,12 @@ DijkstraNode *dijkstra(Node *graph, int src_id) {
 #ifndef DTLSR
       // Discard neighbours connected to by DOWN links
       if (curr_node->link_statuses[i] == LINK_DOWN) {
-        // log_f("DOWN %d -> %d", curr_node->id, curr_node->neighbour_ids[i]);
         continue;
       }
 #endif
-      DijkstraNode *neighbour = &nodes[curr_node->neighbour_ids[i] - 1];
-      int alt = curr_node->tent_dist + 1;
+      int neighbour_index = curr_node->neighbour_ids[i] - 1;
+      DijkstraNode *neighbour = &nodes[neighbour_index];
+      double alt = curr_node->tent_dist + curr_node->link_metrics[i];
       if (alt < neighbour->tent_dist) {
         neighbour->prev_id = curr_node->id;
         neighbour->tent_dist = alt;

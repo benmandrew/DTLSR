@@ -73,6 +73,7 @@ char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds,
 }
 
 void local_node_update_metrics(LocalNode *this, unsigned long long now) {
+  this->node.timestamp = now;
   for (int i = 0; i < this->node.n_neighbours; i++) {
 #ifdef DTLSR
     // For DTLSR, we use our complicated metric

@@ -10,10 +10,11 @@ typedef struct dijkstra_node
 {
 	int id;
 	enum NodeState state;
-	int tent_dist;
+	double tent_dist;
 	int n_neighbours;
 	int neighbour_ids[MAX_NODE_FAN];
 	enum LinkState link_statuses[MAX_NODE_FAN];
+	double link_metrics[MAX_NODE_FAN];
 	int prev_id;
 } DijkstraNode;
 

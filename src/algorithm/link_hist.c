@@ -30,7 +30,7 @@ char link_state_to_bool(enum LinkState ls) {
 #ifdef DTLSR
 
 double falloff = 3200.0;
-double power = 1.0;
+double power = 4.0;
 
 void ts_set_falloff_param(double f) { falloff = f; }
 
@@ -52,6 +52,10 @@ size_t last_idx(LSTimeSeries *ts) {
 }
 
 double ts_compute_metric(LSTimeSeries *ts, unsigned long long now) {
+  // No hysteresis for links going up
+  if (ts->curr_link_state == LINK_UP) {
+    return 1.0;
+  }
   return 1.0 / (ts_weighted_average_uptime(ts, now) + 0.0001);
 }
 
