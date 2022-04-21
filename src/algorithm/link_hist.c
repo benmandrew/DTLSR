@@ -29,7 +29,7 @@ char link_state_to_bool(enum LinkState ls) {
 
 #ifdef DTLSR
 
-double falloff = 3200.0;
+double falloff = 320.0;
 double power = 4.0;
 
 void ts_set_falloff_param(double f) { falloff = f; }

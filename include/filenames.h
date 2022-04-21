@@ -6,8 +6,8 @@
 // #define CONFIG "loop"
 // #define CONFIG "partition_headless"
 // #define CONFIG "partition"
-#define CONFIG "box_headless"
-// #define CONFIG "convergence_headless"
+// #define CONFIG "box_headless"
+#define CONFIG "convergence_headless"
 // #define CONFIG "full_partition_headless"
 
 #endif

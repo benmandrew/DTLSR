@@ -29,14 +29,14 @@ def sigint_handler(signum, frame):
  
 signal.signal(signal.SIGINT, sigint_handler)
 
-DELAY = 1000 # 1ms
-# DELAY = 200_000 # 200ms
+# DELAY = 1000 # 1ms
+DELAY = 100_000 # 200ms
 
-CONFIG_NAME: str = "box_headless"
-FLAP_NODES: Tuple[int, int] = (1, 4)
+CONFIG_NAME: str = "convergence_headless"
+FLAP_NODES: Tuple[int, int] = (1, 9)
 FLAP_NODES_OTHER: Tuple[int, int] = (2, 3)
-UP_TIME: float = 5.0
-DOWN_TIME: float = 5.0
+UP_TIME: float = 10.0
+DOWN_TIME: float = 10.0
 
 link_up = LinkOptions(
     bandwidth=100_000_000_000,

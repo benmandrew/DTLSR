@@ -90,14 +90,14 @@ class Configuration:
       if_a = pref.create_iface(cn_a)
       if_b = pref.create_iface(cn_b)
       
-      if (cn_a.id == 2 and cn_b.id == 3) or (cn_a.id == 3 and cn_b.id == 2):
-        print("n{} -- n{} : {} eth{} -- {} eth{} : HIGH DELAY".format(
-          a, b, if_a.ip4, if_a.id, if_b.ip4, if_b.id))
-        self.session.add_link(cn_a.id, cn_b.id, if_a, if_b, link_high_delay)
-      else:
-        print("n{} -- n{} : {} eth{} -- {} eth{}".format(
-          a, b, if_a.ip4, if_a.id, if_b.ip4, if_b.id))
-        self.session.add_link(cn_a.id, cn_b.id, if_a, if_b, options)
+      # if (cn_a.id == 2 and cn_b.id == 3) or (cn_a.id == 3 and cn_b.id == 2):
+      #   print("n{} -- n{} : {} eth{} -- {} eth{} : HIGH DELAY".format(
+      #     a, b, if_a.ip4, if_a.id, if_b.ip4, if_b.id))
+      #   self.session.add_link(cn_a.id, cn_b.id, if_a, if_b, link_high_delay)
+      # else:
+      print("n{} -- n{} : {} eth{} -- {} eth{}".format(
+        a, b, if_a.ip4, if_a.id, if_b.ip4, if_b.id))
+      self.session.add_link(cn_a.id, cn_b.id, if_a, if_b, options)
       self.iface_map[(cn_a.id, cn_b.id)] = (if_a, if_b)
       self.ip_prefixes.append(pref)
 
