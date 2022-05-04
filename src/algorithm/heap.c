@@ -1,7 +1,8 @@
 
+#include "algorithm/heap.h"
+
 #include <stdio.h>
 
-#include "algorithm/heap.h"
 #include "algorithm/heap_pi.h"
 
 void swap(DijkstraNode **a, DijkstraNode **b) {
@@ -48,8 +49,7 @@ void minheap_decrease_dist(MinHeap *h, int id, int new_dist) {
       break;
     }
   }
-  if (!found)
-    return;
+  if (!found) return;
   (*h->node_ptrs[i]).tent_dist = new_dist;
   while (i != 0 &&
          (*h->node_ptrs[parent(i)]).tent_dist > (*h->node_ptrs[i]).tent_dist) {

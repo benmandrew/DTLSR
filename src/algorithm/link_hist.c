@@ -1,28 +1,28 @@
 
 #include "algorithm/link_hist.h"
-#include "algorithm/link_hist_pi.h"
 
 #include <math.h>
 #include <stdio.h>
 
+#include "algorithm/link_hist_pi.h"
 #include "process/logging.h"
 
 enum LinkState link_state_toggle(enum LinkState ls) {
   switch (ls) {
-  case LINK_UP:
-    return LINK_DOWN;
-  case LINK_DOWN:
-    return LINK_UP;
+    case LINK_UP:
+      return LINK_DOWN;
+    case LINK_DOWN:
+      return LINK_UP;
   }
   abort();
 }
 
 char link_state_to_bool(enum LinkState ls) {
   switch (ls) {
-  case LINK_UP:
-    return 1;
-  case LINK_DOWN:
-    return 0;
+    case LINK_UP:
+      return 1;
+    case LINK_DOWN:
+      return 0;
   }
   abort();
 }
@@ -46,8 +46,7 @@ double integral_between(unsigned long long t_l, unsigned long long t_r,
 }
 
 size_t last_idx(LSTimeSeries *ts) {
-  if (ts->full)
-    return ts->front % TS_SIZE;
+  if (ts->full) return ts->front % TS_SIZE;
   return 0;
 }
 
@@ -60,8 +59,7 @@ double ts_compute_metric(LSTimeSeries *ts, unsigned long long now) {
 }
 
 double ts_average_uptime(LSTimeSeries *ts, unsigned long long now) {
-  if (ts->n_states == 1)
-    return (double)link_state_to_bool(ts->curr_link_state);
+  if (ts->n_states == 1) return (double)link_state_to_bool(ts->curr_link_state);
   double summation, total;
   // Index to first element
   size_t first = (ts->front - 1) % TS_SIZE;
@@ -81,8 +79,7 @@ double ts_average_uptime(LSTimeSeries *ts, unsigned long long now) {
 
 // Compute the average uptime weighted by an exponential falloff
 double ts_weighted_average_uptime(LSTimeSeries *ts, unsigned long long now) {
-  if (ts->n_states == 1)
-    return (double)link_state_to_bool(ts->curr_link_state);
+  if (ts->n_states == 1) return (double)link_state_to_bool(ts->curr_link_state);
   double summation, total;
   // Index to first element
   size_t first = (ts->front - 1) % TS_SIZE;

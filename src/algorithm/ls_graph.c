@@ -12,7 +12,7 @@ void graph_init(Node *graph) {
   for (int i = 0; i < MAX_NODE_NUM; i++) {
     graph[i].id = i + 1;
     graph[i].state = NODE_UNSEEN;
-    graph[i].timestamp = 0;
+    graph[i].timestamp = 0ULL;
   }
 }
 
@@ -23,7 +23,7 @@ void update_global_this(Node *graph, LocalNode *this) {
   for (int i = 0; i < this->node.n_neighbours; i++) {
     int id = this->node.neighbour_ids[i];
     Node *n = &graph[id - 1];
-    n->timestamp = this->node.timestamp;
+    // n->timestamp = this->node.timestamp;
     if (n->state == NODE_UNSEEN) {
       n->id = id;
       n->state = NODE_OPAQUE;
@@ -64,6 +64,7 @@ char merge_in_graph(Node *these, Node *others) {
 
 char merge_in_node(Node *graph, Node *other) {
   Node *this = &graph[other->id - 1];
+  char updated = 0;
   // Node exists in neither graph, or only exists in our graph,
   if (other->state == NODE_UNSEEN) {
     return 0;
@@ -73,23 +74,25 @@ char merge_in_node(Node *graph, Node *other) {
   if (this->state == NODE_UNSEEN ||
       (this->state == NODE_OPAQUE && other->state == NODE_SEEN)) {
     memcpy(this, other, sizeof(Node));
-    return 1;
+    updated = 1;
   }
   // other is a seen node we have also seen, but a more recent version
   if (other->state == NODE_SEEN && (other->timestamp > this->timestamp)) {
     if (!nodes_eq(this, other)) {
       memcpy(this, other, sizeof(Node));
-      return 1;
+      updated = 1;
     }
   }
-  // Mark neighbours of the new node as opaque if we haven't already seen them
-  for (int i = 0; i < other->n_neighbours; i++) {
-    int other_neighbour_index = other->neighbour_ids[i] - 1;
-    if (graph[other_neighbour_index].state == NODE_UNSEEN) {
-      graph[other_neighbour_index].state == NODE_OPAQUE;
+  if (updated) {
+    // Mark neighbours of the new node as opaque if we haven't already seen them
+    for (int i = 0; i < other->n_neighbours; i++) {
+      int other_neighbour_index = other->neighbour_ids[i] - 1;
+      if (graph[other_neighbour_index].state == NODE_UNSEEN) {
+        graph[other_neighbour_index].state = NODE_OPAQUE;
+      }
     }
   }
-  return 0;
+  return updated;
 }
 
 char buffer[NETWORK_LSA_SIZE];
@@ -98,7 +101,6 @@ char receive_network_lsa(Node *graph, LocalNode *this, LSFD *fds) {
   struct sockaddr_in from;
   receive(fds->network_lsa_rec_sock, (void *)buffer, NETWORK_LSA_SIZE,
           (struct sockaddr *)&from);
-  // log_f("LSA from %s", inet_ntoa(from.sin_addr));
   char updated = merge_in_graph(graph, (Node *)buffer);
   // if (updated) {
   //   send_network_lsa_except(graph, this, fds, (long)from.sin_addr.s_addr);

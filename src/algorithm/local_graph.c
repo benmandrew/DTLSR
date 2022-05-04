@@ -37,7 +37,7 @@ char receive_heartbeat(Node *graph, LocalNode *this, LSFD *fds,
   struct sockaddr_in from;
   receive(fds->hb_sock, (void *)hb_buffer, HB_SIZE, (struct sockaddr *)&from);
   // Update node timestamp to now
-  node_update_time(&this->node);
+  // node_update_time(&this->node);
   char updated = register_heartbeat(this, fds, next_hops,
                                     (long)from.sin_addr.s_addr, up_iface);
   // if (updated) {
@@ -118,6 +118,7 @@ char receive_router_lsa(Node *graph, LocalNode *this, LSFD *fds) {
           (struct sockaddr *)&from);
   // log_f("LSA from %s", inet_ntoa(from.sin_addr));
   char updated = merge_in_node(graph, (Node *)router_lsa_buffer);
+  log_f("Receive LSA: %d", updated);
   if (updated) {
     send_router_lsa_except((Node *)router_lsa_buffer, fds,
                            (long)from.sin_addr.s_addr);

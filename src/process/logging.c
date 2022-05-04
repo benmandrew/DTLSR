@@ -1,5 +1,6 @@
 
 #include "process/logging.h"
+
 #include "process/logging_pi.h"
 
 #define LOG_BUF_LEN 80

@@ -1,27 +1,26 @@
 
+#include "algorithm/node.h"
+
 #include <string.h>
 
-#include "algorithm/node.h"
 #include "algorithm/node_pi.h"
 
 void node_init(Node *node, int n) {
-  if (n > MAX_NODE_FAN)
-    abort();
+  if (n > MAX_NODE_FAN) abort();
   node->state = NODE_SEEN;
   node->n_neighbours = n;
   node->timestamp = 0;
 };
 
 char nodes_eq(Node *n1, Node *n2) {
-  char eq = (n1->id == n2->id && n1->state == n2->state);
-  if (!eq || n1->n_neighbours != n2->n_neighbours)
-    return 0;
+  char eq = (n1->id == n2->id && n1->state == n2->state &&
+             n1->n_neighbours == n2->n_neighbours);
+  if (!eq) return 0;
   for (int i = 0; i < n1->n_neighbours; i++) {
     eq &= (n1->neighbour_ids[i] == n2->neighbour_ids[i] &&
            n1->link_statuses[i] == n2->link_statuses[i] &&
            n1->link_metrics[i] == n2->link_metrics[i]);
-    if (!eq)
-      return 0;
+    if (!eq) return 0;
   }
   return eq;
 }

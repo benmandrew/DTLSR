@@ -1,7 +1,8 @@
 
+#include "process/route_control.h"
+
 #include <errno.h>
 
-#include "process/route_control.h"
 #include "process/route_control_pi.h"
 
 struct simple_rt get_simple_rt(struct rtentry *rt) {
@@ -66,7 +67,7 @@ void set_addrs(struct rtentry *route, uint32_t gateway_ip, uint32_t dest_ip) {
   addr->sin_addr.s_addr = dest_ip;
   addr = (struct sockaddr_in *)&route->rt_genmask;
   addr->sin_family = AF_INET;
-  addr->sin_addr.s_addr = inet_addr("255.255.255.0"); // x.x.x.x/24
+  addr->sin_addr.s_addr = inet_addr("255.255.255.0");  // x.x.x.x/24
 }
 
 void set_gateway_route(struct rtentry *route, uint32_t gateway_ip) {
@@ -137,8 +138,8 @@ void filter_next_hops(LocalNode *this, struct hop_dest *next_hops) {
   //     if (next_hops[i].next_hop == -1) {
   //       break;
   //     }
-  //     // Remove neighbours, as these routes should already exist by DefaultRoute
-  //     if (this->node.neighbour_ips[j] == next_hops[i].dest_ip) {
+  //     // Remove neighbours, as these routes should already exist by
+  //     DefaultRoute if (this->node.neighbour_ips[j] == next_hops[i].dest_ip) {
   //       next_hops[i].next_hop = -1;
   //       break;
   //     }

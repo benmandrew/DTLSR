@@ -2,16 +2,16 @@
 #ifndef CAPTURE_H
 #define CAPTURE_H
 
-#include <pcap.h>
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h>
+#include <pcap.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
 
 #include "algorithm/node.h"
 
@@ -42,6 +42,7 @@ void capture_start_iface(char *down_iface, struct hop_dest *next_hops);
 
 void capture_end_iface(char *up_iface, struct hop_dest *next_hops);
 
-void capture_remove_replayed_packets(char *up_iface, struct hop_dest *next_hops);
+void capture_remove_replayed_packets(char *up_iface,
+                                     struct hop_dest *next_hops);
 
 #endif

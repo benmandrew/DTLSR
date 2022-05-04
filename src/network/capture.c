@@ -250,8 +250,7 @@ void capture_start_iface(char *down_iface, struct hop_dest *next_hops) {
 void capture_end_iface(char *up_iface, struct hop_dest *next_hops) {
   // Ignore if this is the first time the links have come up
   // Annoying edge case
-  if (n_down_ifaces == 0)
-    return;
+  if (n_down_ifaces == 0) return;
   for (int i = 0; i < this->node.n_neighbours; i++) {
     if (strcmp(up_iface, down_ifaces[i]) == 0) {
       down_ifaces[i] = NULL;

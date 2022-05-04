@@ -63,13 +63,13 @@ void close_sockets(LSFD *fds) {
 void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds,
                      struct hop_dest *next_hops, int active_fd,
                      char *lsa_send_status, char *graph_updated,
-                     char *start_capture, char *recompute, char *update_routing, char** up_iface) {
+                     char *start_capture, char *recompute, char *update_routing,
+                     char **up_iface) {
   if (active_fd == fds->hb_sock) {
     // Heartbeat receive event
     *graph_updated = receive_heartbeat(graph, this, fds, next_hops, up_iface);
   } else if (active_fd == fds->router_lsa_rec_sock) {
     // LSA receive event
-    // *graph_updated = receive_router_lsa(graph, this, fds);
     receive_router_lsa(graph, this, fds);
   } else if (active_fd == fds->router_lsa_snd_timer.fd) {
     // LSA send event
@@ -110,7 +110,7 @@ int driver(int argc, char **argv) {
   struct hop_dest next_hops[MAX_NODE_NUM];
   memset(next_hops, 0, sizeof(next_hops));
   LocalNode this;
-  char* up_iface = NULL;
+  char *up_iface = NULL;
   graph_init(graph);
   local_node_init(&this, PROTOCOL, CONFIG, HEARTBEAT_TIMEOUT);
   update_global_this(graph, &this);
@@ -123,7 +123,8 @@ int driver(int argc, char **argv) {
   LSFD fds = init_descriptors(&this);
   while (1) {
     int active_fd;
-    char graph_updated = 0, do_send_lsa = 0, start_capture = 0, recompute = 0, update_routing = 0;
+    char graph_updated = 0, do_send_lsa = 0, start_capture = 0, recompute = 0,
+         update_routing = 0;
 #ifdef DTLSR
     capture_packets();
 #endif
@@ -132,8 +133,10 @@ int driver(int argc, char **argv) {
     }
     update_routing_table(&this, next_hops);
     handle_event_fd(graph, &this, &fds, next_hops, active_fd, &do_send_lsa,
-                    &graph_updated, &start_capture, &recompute, &update_routing, &up_iface);
+                    &graph_updated, &start_capture, &recompute, &update_routing,
+                    &up_iface);
     if (do_send_lsa) {
+      log_f("Send LSA");
       local_node_update_metrics(&this, get_now());
       send_router_lsa(&this.node, &fds);
     }
@@ -161,12 +164,12 @@ int main(int argc, char *argv[]) {
   int opt;
   while ((opt = getopt(argc, argv, "d")) != -1) {
     switch (opt) {
-    case 'd':
-      daemonise = 1;
-      break;
-    default:
-      log_f(PROTOCOL " usage: %s [-d]", argv[0]);
-      exit(EXIT_FAILURE);
+      case 'd':
+        daemonise = 1;
+        break;
+      default:
+        log_f(PROTOCOL " usage: %s [-d]", argv[0]);
+        exit(EXIT_FAILURE);
     }
   }
   if (daemonise) {

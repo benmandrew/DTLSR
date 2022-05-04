@@ -64,6 +64,7 @@ void local_node_init(LocalNode *this, char *protocol, char *config,
   int n = parse_n_neighbours(contents);
   int id = get_node_id(protocol);
   *this = node_local_alloc(id, n, hb_timeout);
+  this->node.state = NODE_SEEN;
   // Save start so contents can be freed
   char *start = contents;
   char *saved;

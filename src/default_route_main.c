@@ -35,12 +35,12 @@ int main(int argc, char *argv[]) {
   int opt;
   while ((opt = getopt(argc, argv, "d")) != -1) {
     switch (opt) {
-    case 'd':
-      daemonise = 1;
-      break;
-    default:
-      log_f("defaultroute usage: %s [-d]", argv[0]);
-      exit(EXIT_FAILURE);
+      case 'd':
+        daemonise = 1;
+        break;
+      default:
+        log_f("defaultroute usage: %s [-d]", argv[0]);
+        exit(EXIT_FAILURE);
     }
   }
   if (daemonise) {
