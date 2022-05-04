@@ -20,7 +20,7 @@ START_TEST(test_ls_graph_merge_in_lsa_first) {
   ns2[1].neighbour_ids[1] = 3;
   ns2[1].state = NODE_SEEN;
   // ns2[0].timestamp = 100;
-  char updated = merge_in(ns1, ns2);
+  char updated = merge_in_graph(ns1, ns2);
 
   ck_assert_int_eq(updated, (char)1);
   ck_assert_int_eq(ns1[0].id, 1);
@@ -59,7 +59,7 @@ START_TEST(test_ls_graph_merge_in_lsa_after_hb) {
   ns2[0].state = NODE_OPAQUE;
   ns2[2].state = NODE_OPAQUE;
   // merge
-  char updated = merge_in(ns1, ns2);
+  char updated = merge_in_graph(ns1, ns2);
 
   ck_assert_int_eq(updated, (char)1);
   ck_assert_int_eq(ns1[0].id, 1);

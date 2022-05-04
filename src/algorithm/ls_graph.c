@@ -6,7 +6,7 @@
 #include "algorithm/graph_pi.h"
 #include "algorithm/pathfind.h"
 
-#define LSA_SIZE MAX_NODE_NUM * sizeof(Node)
+#define NETWORK_LSA_SIZE MAX_NODE_NUM * sizeof(Node)
 
 void graph_init(Node *graph) {
   for (int i = 0; i < MAX_NODE_NUM; i++) {
@@ -31,7 +31,7 @@ void update_global_this(Node *graph, LocalNode *this) {
   }
 }
 
-char merge_in(Node *these, Node *others) {
+char merge_in_graph(Node *these, Node *others) {
   char updated = 0;
   for (int i = 0; i < MAX_NODE_NUM; i++) {
     Node *this = &these[i];
@@ -62,40 +62,69 @@ char merge_in(Node *these, Node *others) {
   return updated;
 }
 
-char buffer[LSA_SIZE];
+char merge_in_node(Node *graph, Node *other) {
+  Node *this = &graph[other->id - 1];
+  // Node exists in neither graph, or only exists in our graph,
+  if (other->state == NODE_UNSEEN) {
+    return 0;
+  }
+  // other knows of a node that we have never encountered
+  // other state is either opaque or seen
+  if (this->state == NODE_UNSEEN ||
+      (this->state == NODE_OPAQUE && other->state == NODE_SEEN)) {
+    memcpy(this, other, sizeof(Node));
+    return 1;
+  }
+  // other is a seen node we have also seen, but a more recent version
+  if (other->state == NODE_SEEN && (other->timestamp > this->timestamp)) {
+    if (!nodes_eq(this, other)) {
+      memcpy(this, other, sizeof(Node));
+      return 1;
+    }
+  }
+  // Mark neighbours of the new node as opaque if we haven't already seen them
+  for (int i = 0; i < other->n_neighbours; i++) {
+    int other_neighbour_index = other->neighbour_ids[i] - 1;
+    if (graph[other_neighbour_index].state == NODE_UNSEEN) {
+      graph[other_neighbour_index].state == NODE_OPAQUE;
+    }
+  }
+  return 0;
+}
 
-char receive_lsa(Node *graph, LocalNode *this, LSFD *fds) {
+char buffer[NETWORK_LSA_SIZE];
+
+char receive_network_lsa(Node *graph, LocalNode *this, LSFD *fds) {
   struct sockaddr_in from;
-  receive(fds->lsa_rec_sock, (void *)buffer, LSA_SIZE,
+  receive(fds->network_lsa_rec_sock, (void *)buffer, NETWORK_LSA_SIZE,
           (struct sockaddr *)&from);
   // log_f("LSA from %s", inet_ntoa(from.sin_addr));
-  char updated = merge_in(graph, (Node *)buffer);
-  if (updated) {
-    send_lsa_except(graph, this, fds, (long)from.sin_addr.s_addr);
-  }
+  char updated = merge_in_graph(graph, (Node *)buffer);
+  // if (updated) {
+  //   send_network_lsa_except(graph, this, fds, (long)from.sin_addr.s_addr);
+  // }
   return updated;
 }
 
 // Send LSA to all neighbours except one
-void send_lsa_except(Node *graph, LocalNode *this, LSFD *fds,
-                     long source_addr) {
+void send_network_lsa_except(Node *graph, LocalNode *this, LSFD *fds,
+                             long source_addr) {
   for (int i = 0; i < this->node.n_neighbours; i++) {
     // Skip neighbour from which LSA was originally received
-    if (this->node.neighbour_ips[i] == source_addr)
-      continue;
+    if (this->node.neighbour_ips[i] == source_addr) continue;
     // Populate address struct
     struct sockaddr_in *neighbour_addr =
         (struct sockaddr_in *)&(routes[i].rt_dst);
-    neighbour_addr->sin_port = htons(LSA_PORT);
+    neighbour_addr->sin_port = htons(NETWORK_LSA_PORT);
     int addr_len = sizeof(*neighbour_addr);
     // Send LSA to neighbour
-    sendto(fds->lsa_snd_sock, (const void *)graph, LSA_SIZE, MSG_CONFIRM,
-           (const struct sockaddr *)neighbour_addr, addr_len);
+    sendto(fds->network_lsa_snd_sock, (const void *)graph, NETWORK_LSA_SIZE,
+           MSG_CONFIRM, (const struct sockaddr *)neighbour_addr, addr_len);
   }
 }
 
 // Send LSA to all neighbours
-void send_lsa(Node *graph, LocalNode *this, LSFD *fds) {
+void send_network_lsa(Node *graph, LocalNode *this, LSFD *fds) {
   // zero address matches no neighbours
-  send_lsa_except(graph, this, fds, 0L);
+  send_network_lsa_except(graph, this, fds, 0L);
 }

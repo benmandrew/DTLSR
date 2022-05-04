@@ -6,7 +6,8 @@
 
 #define HB_PORT 45000
 #define HB_SIZE sizeof(int)
-#define LSA_PORT 45001
+#define ROUTER_LSA_PORT 45001
+#define NETWORK_LSA_PORT 45002
 
 #define MS2NS 1e+6
 
@@ -19,7 +20,7 @@
 // How often we send LSAs
 #define LSA_SEND_T (200 * MS2NS)
 // How long after the link comes up that we replay the buffered packets
-#define REPLAY_DELAY_T (5 * MS2NS)
+#define REPLAY_DELAY_T (50 * MS2NS)
 
 #define LOGGING_ACTIVE
 

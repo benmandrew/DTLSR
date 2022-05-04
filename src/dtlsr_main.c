@@ -8,10 +8,10 @@
 
 #ifdef DTLSR
 #define PROTOCOL "dtlsr"
-#define N_AUX_FDS 5
+#define N_AUX_FDS 6
 #else
 #define PROTOCOL "lsr"
-#define N_AUX_FDS 3
+#define N_AUX_FDS 4
 #endif
 
 // Aggregate timer and socket file descriptors into a single array
@@ -22,19 +22,22 @@ void aggregate_fds(LocalNode *this, LSFD *fds, int n_aux_fds) {
     fds->event_fds[i] = this->timers[i].fd;
   }
   fds->event_fds[this->node.n_neighbours] = fds->hb_sock;
-  fds->event_fds[this->node.n_neighbours + 1] = fds->lsa_rec_sock;
-  fds->event_fds[this->node.n_neighbours + 2] = fds->lsa_snd_timer.fd;
+  fds->event_fds[this->node.n_neighbours + 1] = fds->router_lsa_rec_sock;
+  fds->event_fds[this->node.n_neighbours + 2] = fds->router_lsa_snd_timer.fd;
+  fds->event_fds[this->node.n_neighbours + 3] = fds->network_lsa_rec_sock;
 #ifdef DTLSR
-  fds->event_fds[this->node.n_neighbours + 3] = fds->replay_timer.fd;
-  fds->event_fds[this->node.n_neighbours + 4] = fds->recomputation_timer.fd;
+  fds->event_fds[this->node.n_neighbours + 4] = fds->replay_timer.fd;
+  fds->event_fds[this->node.n_neighbours + 5] = fds->recomputation_timer.fd;
 #endif
 }
 
 LSFD init_descriptors(LocalNode *this) {
   LSFD fds;
   fds.hb_sock = get_open_socket(HB_PORT);
-  fds.lsa_rec_sock = get_open_socket(LSA_PORT);
-  fds.lsa_snd_sock = get_socket();
+  fds.router_lsa_rec_sock = get_open_socket(ROUTER_LSA_PORT);
+  fds.router_lsa_snd_sock = get_socket();
+  fds.network_lsa_rec_sock = get_open_socket(NETWORK_LSA_PORT);
+  fds.network_lsa_snd_sock = get_socket();
   // fds.lsa_snd_timer = event_timer_append(0, LSA_SEND_T);
 #ifdef DTLSR
   fds.replay_timer = event_timer_append(0, REPLAY_DELAY_T);
@@ -42,16 +45,19 @@ LSFD init_descriptors(LocalNode *this) {
   fds.recomputation_timer = event_timer_append(0, METRIC_RECOMPUTATION_T);
 #endif
   event_append(fds.hb_sock);
-  event_append(fds.lsa_rec_sock);
+  event_append(fds.router_lsa_rec_sock);
+  event_append(fds.network_lsa_rec_sock);
   aggregate_fds(this, &fds, N_AUX_FDS);
   return fds;
 }
 
 void close_sockets(LSFD *fds) {
   close(fds->hb_sock);
-  close(fds->lsa_rec_sock);
-  close(fds->lsa_snd_sock);
-  event_timer_dealloc(fds->lsa_snd_timer);
+  close(fds->router_lsa_rec_sock);
+  close(fds->router_lsa_snd_sock);
+  close(fds->network_lsa_rec_sock);
+  close(fds->network_lsa_snd_sock);
+  event_timer_dealloc(fds->router_lsa_snd_timer);
 }
 
 void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds,
@@ -61,12 +67,13 @@ void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds,
   if (active_fd == fds->hb_sock) {
     // Heartbeat receive event
     *graph_updated = receive_heartbeat(graph, this, fds, next_hops, up_iface);
-  } else if (active_fd == fds->lsa_rec_sock) {
+  } else if (active_fd == fds->router_lsa_rec_sock) {
     // LSA receive event
-    *graph_updated = receive_lsa(graph, this, fds);
-  } else if (active_fd == fds->lsa_snd_timer.fd) {
+    // *graph_updated = receive_router_lsa(graph, this, fds);
+    receive_router_lsa(graph, this, fds);
+  } else if (active_fd == fds->router_lsa_snd_timer.fd) {
     // LSA send event
-    event_timer_reset(&fds->lsa_snd_timer);
+    event_timer_reset(&fds->router_lsa_snd_timer);
     *lsa_send_status = 1;
 #ifdef DTLSR
   } else if (active_fd == fds->replay_timer.fd) {
@@ -126,16 +133,16 @@ int driver(int argc, char **argv) {
     update_routing_table(&this, next_hops);
     handle_event_fd(graph, &this, &fds, next_hops, active_fd, &do_send_lsa,
                     &graph_updated, &start_capture, &recompute, &update_routing, &up_iface);
+    if (do_send_lsa) {
+      local_node_update_metrics(&this, get_now());
+      send_router_lsa(&this.node, &fds);
+    }
     if (graph_updated || recompute) {
-      // local_node_update_metrics(&this, get_now());
       update_global_this(graph, &this);
       pathfind(graph, this.node.id, next_hops);
     }
     if (update_routing) {
       update_routing_table(&this, next_hops);
-    }
-    if (do_send_lsa) {
-      send_lsa(graph, &this, &fds);
     }
 #ifdef DTLSR
     if (start_capture) {

@@ -26,12 +26,16 @@ struct rtentry *routes;
 typedef struct LSFD {
   // Heartbeat
   int hb_sock;
-  // LSA receiving
-  int lsa_rec_sock;
-  // LSA sending
-  int lsa_snd_sock;
-  // LS sending timer
-  Timer lsa_snd_timer;
+  // Network LSA receiving
+  int network_lsa_rec_sock;
+  // Network LSA sending
+  int network_lsa_snd_sock;
+  // Router LSA receiving
+  int router_lsa_rec_sock;
+  // Router LSA sending
+  int router_lsa_snd_sock;
+  // Router LS sending timer
+  Timer router_lsa_snd_timer;
   // LS metric and pathfinding recomputation
   Timer recomputation_timer;
   // Buffered packet replay delay
@@ -43,18 +47,27 @@ typedef struct LSFD {
 
 void graph_init(Node *graph);
 
-char receive_heartbeat(Node *graph, LocalNode *this, LSFD *fds, struct hop_dest *next_hops, char** up_iface);
+char receive_heartbeat(Node *graph, LocalNode *this, LSFD *fds,
+                       struct hop_dest *next_hops, char **up_iface);
 
 void local_node_update_metrics(LocalNode *this, unsigned long long now);
 
 void update_global_this(Node *graph, LocalNode *this);
 
-char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds, struct hop_dest *next_hops);
+char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds,
+                       struct hop_dest *next_hops);
 
-char receive_lsa(Node *graph, LocalNode *this, LSFD *fds);
+char receive_router_lsa(Node *graph, LocalNode *this, LSFD *fds);
 
-void send_lsa_except(Node *graph, LocalNode *this, LSFD *fds, long source_addr);
+void send_router_lsa_except(Node *node, LSFD *fds, long source_addr);
 
-void send_lsa(Node *graph, LocalNode *this, LSFD *fds);
+void send_router_lsa(Node *node, LSFD *fds);
+
+char receive_network_lsa(Node *graph, LocalNode *this, LSFD *fds);
+
+void send_network_lsa_except(Node *graph, LocalNode *this, LSFD *fds,
+                             long source_addr);
+
+void send_network_lsa(Node *graph, LocalNode *this, LSFD *fds);
 
 #endif
