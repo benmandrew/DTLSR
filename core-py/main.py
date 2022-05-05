@@ -32,7 +32,7 @@ signal.signal(signal.SIGINT, sigint_handler)
 DELAY = 1000 # 1ms
 # DELAY = 100_000 # 200ms
 
-CONFIG_NAME: str = "partition_headless"
+CONFIG_NAME: str = "full_partition_headless"
 FLAP_NODES: Tuple[int, int] = (1, 2)
 FLAP_NODES_OTHER: Tuple[int, int] = (2, 3)
 UP_TIME: float = 5.0

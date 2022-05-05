@@ -65,7 +65,7 @@ char merge_in_graph(Node *these, Node *others) {
 char merge_in_node(Node *graph, Node *other) {
   Node *this = &graph[other->id - 1];
   char updated = 0;
-  // Node exists in neither graph, or only exists in our graph,
+  // Node exists in neither graph, or only exists in our graph
   if (other->state == NODE_UNSEEN) {
     return 0;
   }
@@ -83,7 +83,7 @@ char merge_in_node(Node *graph, Node *other) {
       updated = 1;
     }
   }
-  if (updated) {
+  // if (updated) {
     // Mark neighbours of the new node as opaque if we haven't already seen them
     for (int i = 0; i < other->n_neighbours; i++) {
       int other_neighbour_index = other->neighbour_ids[i] - 1;
@@ -91,7 +91,7 @@ char merge_in_node(Node *graph, Node *other) {
         graph[other_neighbour_index].state = NODE_OPAQUE;
       }
     }
-  }
+  // }
   return updated;
 }
 

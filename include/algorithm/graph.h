@@ -59,9 +59,9 @@ char timeout_heartbeat(Node *graph, LocalNode *this, int active_fd, LSFD *fds,
 
 char receive_router_lsa(Node *graph, LocalNode *this, LSFD *fds);
 
-void send_router_lsa_except(Node *node, LSFD *fds, long source_addr);
+void send_router_lsa_except(Node *this, Node *lsa, LSFD *fds, long source_addr);
 
-void send_router_lsa(Node *node, LSFD *fds);
+void send_router_lsa(Node *this, Node *lsa, LSFD *fds);
 
 char receive_network_lsa(Node *graph, LocalNode *this, LSFD *fds);
 

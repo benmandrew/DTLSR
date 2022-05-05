@@ -139,8 +139,7 @@ char *generate_incoming_filter_exp(LocalNode *this,
     free(outgoing);
   }
   // Filter out DTLSR traffic (heartbeats and LSAs)
-  strcat(incoming, " and ( not ( port 45000 or 45001 ) )");
-  log_f("%s", incoming);
+  strcat(incoming, " and ( not ( port 45000 or 45001 or 45002 ) )");
   return incoming;
 }
 
@@ -298,7 +297,6 @@ char *generate_replay_command(LocalNode *this, char *up_iface,
 void capture_replay_iface(char *up_iface, struct hop_dest *next_hops) {
   FILE *fp;
   char *cmd = generate_replay_command(this, up_iface, next_hops);
-  log_f("%s", cmd);
   fp = popen(cmd, "r");
   if (fp == NULL) {
     log_f("failed to run replay command: %s", cmd);

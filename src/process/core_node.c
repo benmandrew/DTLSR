@@ -1,5 +1,6 @@
 
 #include "process/core_node.h"
+
 #include "process/core_node_pi.h"
 
 #define CONFIG_PATH "/home/ben/projects/dtlsr/configs"
@@ -42,8 +43,7 @@ int get_node_id(char *protocol) { return atoi(read_node_id_str(protocol)); }
 int parse_n_neighbours(char *contents) {
   int n = 0, i = 0;
   while (contents[i] != '\0') {
-    if (contents[i] == '\n')
-      n++;
+    if (contents[i] == '\n') n++;
     i++;
   }
   return n;

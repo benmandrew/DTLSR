@@ -89,25 +89,26 @@ void local_node_update_metrics(LocalNode *this, unsigned long long now) {
 #define ROUTER_LSA_SIZE sizeof(Node)
 
 // Send router LSA to all neighbours except one
-void send_router_lsa_except(Node *node, LSFD *fds, long source_addr) {
-  for (int i = 0; i < node->n_neighbours; i++) {
+void send_router_lsa_except(Node *this, Node *lsa, LSFD *fds,
+                            long source_addr) {
+  for (int i = 0; i < this->n_neighbours; i++) {
     // Skip neighbour from which LSA was originally received
-    if (node->neighbour_ips[i] == source_addr) continue;
+    if (this->neighbour_ips[i] == source_addr) continue;
     // Populate address struct
     struct sockaddr_in *neighbour_addr =
         (struct sockaddr_in *)&(routes[i].rt_dst);
     neighbour_addr->sin_port = htons(ROUTER_LSA_PORT);
     int addr_len = sizeof(*neighbour_addr);
     // Send LSA to neighbour
-    sendto(fds->router_lsa_snd_sock, (const void *)node, ROUTER_LSA_SIZE,
+    sendto(fds->router_lsa_snd_sock, (const void *)lsa, ROUTER_LSA_SIZE,
            MSG_CONFIRM, (const struct sockaddr *)neighbour_addr, addr_len);
   }
 }
 
 // Send router LSA to all neighbours
-void send_router_lsa(Node *node, LSFD *fds) {
+void send_router_lsa(Node *this, Node *lsa, LSFD *fds) {
   // 0.0.0.0 address matches no neighbours (when exact matching)
-  send_router_lsa_except(node, fds, 0L);
+  send_router_lsa_except(this, lsa, fds, 0L);
 }
 
 char router_lsa_buffer[ROUTER_LSA_SIZE];
@@ -116,11 +117,9 @@ char receive_router_lsa(Node *graph, LocalNode *this, LSFD *fds) {
   struct sockaddr_in from;
   receive(fds->router_lsa_rec_sock, (void *)router_lsa_buffer, ROUTER_LSA_SIZE,
           (struct sockaddr *)&from);
-  // log_f("LSA from %s", inet_ntoa(from.sin_addr));
   char updated = merge_in_node(graph, (Node *)router_lsa_buffer);
-  log_f("Receive LSA: %d", updated);
   if (updated) {
-    send_router_lsa_except((Node *)router_lsa_buffer, fds,
+    send_router_lsa_except(&this->node, (Node *)router_lsa_buffer, fds,
                            (long)from.sin_addr.s_addr);
   }
   return updated;

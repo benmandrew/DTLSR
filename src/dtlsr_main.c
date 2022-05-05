@@ -38,7 +38,7 @@ LSFD init_descriptors(LocalNode *this) {
   fds.router_lsa_snd_sock = get_socket();
   fds.network_lsa_rec_sock = get_open_socket(NETWORK_LSA_PORT);
   fds.network_lsa_snd_sock = get_socket();
-  // fds.lsa_snd_timer = event_timer_append(0, LSA_SEND_T);
+  fds.router_lsa_snd_timer = event_timer_append(0, LSA_SEND_T);
 #ifdef DTLSR
   fds.replay_timer = event_timer_append(0, REPLAY_DELAY_T);
   event_timer_disarm(&fds.replay_timer);
@@ -136,11 +136,11 @@ int driver(int argc, char **argv) {
                     &graph_updated, &start_capture, &recompute, &update_routing,
                     &up_iface);
     if (do_send_lsa) {
-      log_f("Send LSA");
       local_node_update_metrics(&this, get_now());
-      send_router_lsa(&this.node, &fds);
+      send_router_lsa(&this.node, &this.node, &fds);
     }
     if (graph_updated || recompute) {
+      local_node_update_metrics(&this, get_now());
       update_global_this(graph, &this);
       pathfind(graph, this.node.id, next_hops);
     }
