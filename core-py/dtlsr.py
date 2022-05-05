@@ -27,6 +27,7 @@ class LSR(CoreService):
   configs: Tuple[str, ...] = ("lsr.id", "lsrboot.sh", )
   startup: Tuple[str, ...] = ("bash lsrboot.sh", )
   validate: Tuple[str, ...] = ("pidof -z lsr", )
+  shutdown: Tuple[str, ...] = ("killall lsr", )
 
   @classmethod
   def generate_config(cls, node: CoreNode, filename: str) -> None:
@@ -63,6 +64,7 @@ class DTLSR(CoreService):
   configs: Tuple[str, ...] = ("dtlsr.id", "dtlsrboot.sh", )
   startup: Tuple[str, ...] = ("bash dtlsrboot.sh", )
   validate: Tuple[str, ...] = ("pidof -z dtlsr", )
+  shutdown: Tuple[str, ...] = ("killall dtlsr", )
 
   @classmethod
   def generate_config(cls, node: CoreNode, filename: str) -> None:
@@ -99,6 +101,7 @@ class Heartbeat(CoreService):
   configs: Tuple[str, ...] = ("hbt.id", "hbtboot.sh", )
   startup: Tuple[str, ...] = ("bash hbtboot.sh", )
   validate: Tuple[str, ...] = ("pidof -z heartbeat", )
+  shutdown: Tuple[str, ...] = ("killall heartbeat", )
 
   @classmethod
   def generate_config(cls, node: CoreNode, filename: str) -> None:

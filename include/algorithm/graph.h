@@ -26,6 +26,10 @@ struct rtentry *routes;
 typedef struct LSFD {
   // Heartbeat
   int hb_sock;
+  // Network LSA request receiving
+  int network_lsa_rec_request_sock;
+  // Network LSA request sending
+  int network_lsa_snd_request_sock;
   // Network LSA receiving
   int network_lsa_rec_sock;
   // Network LSA sending
@@ -65,9 +69,8 @@ void send_router_lsa(Node *this, Node *lsa, LSFD *fds);
 
 char receive_network_lsa(Node *graph, LocalNode *this, LSFD *fds);
 
-void send_network_lsa_except(Node *graph, LocalNode *this, LSFD *fds,
-                             long source_addr);
+void send_network_lsa(Node *graph, LocalNode *this, LSFD *fds, long dest_addr);
 
-void send_network_lsa(Node *graph, LocalNode *this, LSFD *fds);
+void receive_network_lsa_request(Node *graph, LocalNode *this, LSFD *fds);
 
 #endif

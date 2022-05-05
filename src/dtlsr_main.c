@@ -8,10 +8,10 @@
 
 #ifdef DTLSR
 #define PROTOCOL "dtlsr"
-#define N_AUX_FDS 6
+#define N_AUX_FDS 7
 #else
 #define PROTOCOL "lsr"
-#define N_AUX_FDS 4
+#define N_AUX_FDS 5
 #endif
 
 // Aggregate timer and socket file descriptors into a single array
@@ -25,9 +25,10 @@ void aggregate_fds(LocalNode *this, LSFD *fds, int n_aux_fds) {
   fds->event_fds[this->node.n_neighbours + 1] = fds->router_lsa_rec_sock;
   fds->event_fds[this->node.n_neighbours + 2] = fds->router_lsa_snd_timer.fd;
   fds->event_fds[this->node.n_neighbours + 3] = fds->network_lsa_rec_sock;
+  fds->event_fds[this->node.n_neighbours + 4] = fds->network_lsa_rec_request_sock;
 #ifdef DTLSR
-  fds->event_fds[this->node.n_neighbours + 4] = fds->replay_timer.fd;
-  fds->event_fds[this->node.n_neighbours + 5] = fds->recomputation_timer.fd;
+  fds->event_fds[this->node.n_neighbours + 5] = fds->replay_timer.fd;
+  fds->event_fds[this->node.n_neighbours + 6] = fds->recomputation_timer.fd;
 #endif
 }
 
@@ -38,6 +39,8 @@ LSFD init_descriptors(LocalNode *this) {
   fds.router_lsa_snd_sock = get_socket();
   fds.network_lsa_rec_sock = get_open_socket(NETWORK_LSA_PORT);
   fds.network_lsa_snd_sock = get_socket();
+  fds.network_lsa_rec_request_sock = get_open_socket(NETWORK_LSA_REQUEST_PORT);
+  fds.network_lsa_snd_request_sock = get_socket();
   fds.router_lsa_snd_timer = event_timer_append(0, LSA_SEND_T);
 #ifdef DTLSR
   fds.replay_timer = event_timer_append(0, REPLAY_DELAY_T);
@@ -47,6 +50,7 @@ LSFD init_descriptors(LocalNode *this) {
   event_append(fds.hb_sock);
   event_append(fds.router_lsa_rec_sock);
   event_append(fds.network_lsa_rec_sock);
+  event_append(fds.network_lsa_rec_request_sock);
   aggregate_fds(this, &fds, N_AUX_FDS);
   return fds;
 }
@@ -57,6 +61,8 @@ void close_sockets(LSFD *fds) {
   close(fds->router_lsa_snd_sock);
   close(fds->network_lsa_rec_sock);
   close(fds->network_lsa_snd_sock);
+  close(fds->network_lsa_rec_request_sock);
+  close(fds->network_lsa_snd_request_sock);
   event_timer_dealloc(fds->router_lsa_snd_timer);
 }
 
@@ -69,12 +75,18 @@ void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds,
     // Heartbeat receive event
     *graph_updated = receive_heartbeat(graph, this, fds, next_hops, up_iface);
   } else if (active_fd == fds->router_lsa_rec_sock) {
-    // LSA receive event
+    // Router LSA receive event
     receive_router_lsa(graph, this, fds);
   } else if (active_fd == fds->router_lsa_snd_timer.fd) {
-    // LSA send event
+    // Router LSA send event
     event_timer_reset(&fds->router_lsa_snd_timer);
     *lsa_send_status = 1;
+  } else if (active_fd == fds->network_lsa_rec_sock) {
+    // Network LSA request receive event
+    receive_network_lsa(graph, this, fds);
+  } else if (active_fd == fds->network_lsa_rec_request_sock) {
+    // Network LSA request receive event
+    receive_network_lsa_request(graph, this, fds);
 #ifdef DTLSR
   } else if (active_fd == fds->replay_timer.fd) {
     event_timer_disarm(&fds->replay_timer);

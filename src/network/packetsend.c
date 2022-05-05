@@ -7,7 +7,7 @@ int get_open_socket(int port) {
   int fd;
   // Creating socket file descriptor
   if ((fd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-    log_f("Socket creation failed");
+    log_f("socket creation failed");
     exit(EXIT_FAILURE);
   }
   // Accept on any incoming
@@ -17,7 +17,7 @@ int get_open_socket(int port) {
   anyaddr.sin_addr.s_addr = INADDR_ANY;
   anyaddr.sin_port = htons(port);
   if (bind(fd, (struct sockaddr *)&anyaddr, sizeof(anyaddr)) < 0) {
-    log_f("Bind failed");
+    log_f("bind failed");
     exit(EXIT_FAILURE);
   }
   int on = 1;
@@ -28,7 +28,7 @@ int get_open_socket(int port) {
 int get_socket(void) {
   int sockfd;
   if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-    log_f("Socket creation failed");
+    log_f("socket creation failed");
     exit(EXIT_FAILURE);
   }
   return sockfd;

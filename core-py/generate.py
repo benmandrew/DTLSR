@@ -119,13 +119,22 @@ class Configuration:
         print("Unknown type: {}".format(t))
 
   def start_services(self):
-    print("starting services")
     for n in self.ns:
       n.start_services(self.session)
     
   def validate_services(self):
     for n in self.ns:
       n.validate_services(self.session)
+
+  def stop_services_on_node(self, node_id: int):
+    for n in self.ns:
+      if n.id == node_id:
+        n.stop_services(self.session)
+
+  def start_services_on_node(self, node_id: int):
+    for n in self.ns:
+      if n.id == node_id:
+        n.start_services(self.session)
 
 class Node:
   service_map = {
@@ -177,3 +186,11 @@ class Node:
   def validate_services(self, session: Session):
     for s in self.services:
       session.services.validate_service(self.core_node, self.service_map[s])
+
+  def stop_services(self, session: Session):
+    for s in self.services:
+      session.services.stop_service(self.core_node, self.service_map[s])
+
+  def restart_service(self, session: Session):
+    self.stop_services(session)
+    self.start_services(session)

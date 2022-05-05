@@ -35,6 +35,7 @@ DELAY = 1000 # 1ms
 CONFIG_NAME: str = "full_partition_headless"
 FLAP_NODES: Tuple[int, int] = (1, 2)
 FLAP_NODES_OTHER: Tuple[int, int] = (2, 3)
+FLAP_NODE: int = 2
 UP_TIME: float = 5.0
 DOWN_TIME: float = 5.0
 
@@ -98,6 +99,25 @@ def operating_loop_timer_anticorrelated(conf: Configuration) -> None:
       timer_thread = Thread(target=timer, args=[is_up])
       timer_thread.start()
 
+def operating_loop_node_timer(conf: Configuration) -> None:
+  is_up = True
+  timer_thread = Thread(target=timer, args=[is_up])
+  timer_thread.start()
+  while True:
+    if not timer_thread.is_alive():
+      t = time.time()
+      text = None
+      if is_up:
+        text = "[{}] node down".format(t)
+        conf.stop_services_on_node(FLAP_NODE)
+      else:
+        text = "[{}] node up".format(t)
+        conf.start_services_on_node(FLAP_NODE)
+      is_up = not is_up
+      print(text)
+      timer_thread = Thread(target=timer, args=[is_up])
+      timer_thread.start()
+
 # def operating_loop_manual(conf: Configuration) -> None:
 #   up = True
 #   while True:
@@ -129,12 +149,13 @@ def main():
     session.set_state(EventTypes.CONFIGURATION_STATE)
     ## Initialise
     conf = Configuration(CONFIG_NAME, link_up, session, delay_tolerant)
+    print("starting services")
     conf.start_services()
 
     session.instantiate()
 
     # operating_loop_manual(conf)
-    operating_loop_timer(conf)
+    operating_loop_node_timer(conf)
     # operating_loop_timer_anticorrelated(conf)
   except Exception as e:
     try:

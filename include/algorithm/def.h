@@ -8,6 +8,7 @@
 #define HB_SIZE sizeof(int)
 #define ROUTER_LSA_PORT 45001
 #define NETWORK_LSA_PORT 45002
+#define NETWORK_LSA_REQUEST_PORT 45003
 
 #define MS2NS 1e+6
 
