@@ -25,7 +25,8 @@ void aggregate_fds(LocalNode *this, LSFD *fds, int n_aux_fds) {
   fds->event_fds[this->node.n_neighbours + 1] = fds->router_lsa_rec_sock;
   fds->event_fds[this->node.n_neighbours + 2] = fds->router_lsa_snd_timer.fd;
   fds->event_fds[this->node.n_neighbours + 3] = fds->network_lsa_rec_sock;
-  fds->event_fds[this->node.n_neighbours + 4] = fds->network_lsa_rec_request_sock;
+  fds->event_fds[this->node.n_neighbours + 4] =
+      fds->network_lsa_rec_request_sock;
 #ifdef DTLSR
   fds->event_fds[this->node.n_neighbours + 5] = fds->replay_timer.fd;
   fds->event_fds[this->node.n_neighbours + 6] = fds->recomputation_timer.fd;
@@ -83,6 +84,7 @@ void handle_event_fd(Node *graph, LocalNode *this, LSFD *fds,
     *lsa_send_status = 1;
   } else if (active_fd == fds->network_lsa_rec_sock) {
     // Network LSA request receive event
+    log_f("network lsa received");
     receive_network_lsa(graph, this, fds);
   } else if (active_fd == fds->network_lsa_rec_request_sock) {
     // Network LSA request receive event
@@ -117,6 +119,20 @@ void start_capturing(LocalNode *this, int active_fd,
   }
 }
 
+void request_network_lsa(LSFD *fds, int n_neighbours) {
+  // Send network LSA request to every neighbour
+  for (int i = 0; i < n_neighbours; i++) {
+    struct sockaddr_in *neighbour_addr =
+        (struct sockaddr_in *)&(routes[i].rt_dst);
+    neighbour_addr->sin_port = htons(NETWORK_LSA_REQUEST_PORT);
+    int addr_len = sizeof(*neighbour_addr);
+    // Send 'addr_len' just in case 'sendto'
+    // dereferences it even with zero length
+    sendto(fds->network_lsa_snd_request_sock, &addr_len, sizeof(addr_len),
+           MSG_CONFIRM, (const struct sockaddr *)neighbour_addr, addr_len);
+  }
+}
+
 int driver(int argc, char **argv) {
   Node graph[MAX_NODE_NUM];
   struct hop_dest next_hops[MAX_NODE_NUM];
@@ -133,6 +149,9 @@ int driver(int argc, char **argv) {
 #endif
   routes = get_routes(&this);
   LSFD fds = init_descriptors(&this);
+  // If we have crashed and restarted, this requests
+  // the network representation from neighbours
+  request_network_lsa(&fds, this.node.n_neighbours);
   while (1) {
     int active_fd;
     char graph_updated = 0, do_send_lsa = 0, start_capture = 0, recompute = 0,

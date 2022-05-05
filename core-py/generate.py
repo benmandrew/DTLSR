@@ -166,6 +166,8 @@ class Node:
     self.services.append("Heartbeat")
     session.services.set_service(self.core_node.id, "IPForward")
     self.services.append("IPForward")
+    session.services.set_service(self.core_node.id, "DefaultRoute2")
+    self.services.append("DefaultRoute2")
 
   def init_host(self, session: Session):
     session.services.set_service(self.core_node.id, "Heartbeat")

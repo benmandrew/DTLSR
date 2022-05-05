@@ -1,5 +1,5 @@
 
-from io import TextIOWrapper
+import subprocess
 import sys
 from typing import Tuple
 sys.path.insert(0, "/home/ben/projects/core/daemon")
@@ -59,6 +59,11 @@ def timer(is_up: bool):
   else:
     time.sleep(DOWN_TIME)
 
+def disable_ip_forwarding(node_id: int) -> None:
+  subprocess.run(["python3", "../tools/vcmd.py",
+                  "n{}".format(node_id), "sysctl",
+                  "-w", "net.ipv4.ip_forward=0"])
+
 def operating_loop_timer(conf: Configuration) -> None:
   is_up = True
   timer_thread = Thread(target=timer, args=[is_up])
@@ -89,11 +94,13 @@ def operating_loop_timer_anticorrelated(conf: Configuration) -> None:
       if is_up:
         text = "[{}] switch".format(t)
         conf.update_link(FLAP_NODES[0], FLAP_NODES[1], link_down)
-        conf.update_link(FLAP_NODES_OTHER[0], FLAP_NODES_OTHER[1], link_up)
+        conf.update_link(FLAP_NODES_OTHER[0], FLAP_NODES_OTHER[1],
+                         link_up)
       else:
         text = "[{}] switch".format(t)
         conf.update_link(FLAP_NODES[0], FLAP_NODES[1], link_up)
-        conf.update_link(FLAP_NODES_OTHER[0], FLAP_NODES_OTHER[1], link_down)
+        conf.update_link(FLAP_NODES_OTHER[0], FLAP_NODES_OTHER[1],
+                         link_down)
       is_up = not is_up
       print(text)
       timer_thread = Thread(target=timer, args=[is_up])
@@ -110,6 +117,7 @@ def operating_loop_node_timer(conf: Configuration) -> None:
       if is_up:
         text = "[{}] node down".format(t)
         conf.stop_services_on_node(FLAP_NODE)
+        disable_ip_forwarding(FLAP_NODE)
       else:
         text = "[{}] node up".format(t)
         conf.start_services_on_node(FLAP_NODE)
@@ -138,7 +146,8 @@ def main():
   global log
   # log = open("core.log", "w")
   delay_tolerant = False
-  if len(sys.argv) > 1 and  sys.argv[1].lower() in ["delay_tolerant", "dt"]:
+  if (len(sys.argv) > 1 and
+      sys.argv[1].lower() in ["delay_tolerant", "dt"]):
     print("delay-tolerant mode")
     delay_tolerant = True
   try:
@@ -148,7 +157,8 @@ def main():
     session.service_manager.add(dtlsr.DTLSR)
     session.set_state(EventTypes.CONFIGURATION_STATE)
     ## Initialise
-    conf = Configuration(CONFIG_NAME, link_up, session, delay_tolerant)
+    conf = Configuration(CONFIG_NAME, link_up,
+                         session, delay_tolerant)
     print("starting services")
     conf.start_services()
 

@@ -133,7 +133,7 @@ void send_network_lsa(Node *graph, LocalNode *this, LSFD *fds, long dest_addr) {
 void receive_network_lsa_request(Node *graph, LocalNode *this, LSFD *fds) {
   char buf[sizeof(int)];
   struct sockaddr_in from;
-  receive(fds->network_lsa_rec_sock, (void *)buf, sizeof(int),
+  receive(fds->network_lsa_rec_request_sock, (void *)buf, sizeof(int),
           (struct sockaddr *)&from);
   send_network_lsa(graph, this, fds, (long)from.sin_addr.s_addr);
 }

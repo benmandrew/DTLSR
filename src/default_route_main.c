@@ -14,10 +14,10 @@ int driver(int argc, char **argv) {
   // Read neighbours
   local_node_init(&this, PROTOCOL, CONFIG, HEARTBEAT_TIMEOUT);
   struct rtentry *routes = get_routes(&this);
-  if (this.node.n_neighbours > 1) {
-    log_f("host cannot have more than one neighbour");
-    return 1;
-  }
+  // if (this.node.n_neighbours > 1) {
+  //   log_f("host cannot have more than one neighbour");
+  //   return 1;
+  // }
   set_gateway_route(routes, this.node.neighbour_ips[0]);
   log_f("derived route");
   ioctl(ioctl_fd, SIOCADDRT, routes);
