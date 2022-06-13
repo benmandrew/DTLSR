@@ -32,12 +32,12 @@ signal.signal(signal.SIGINT, sigint_handler)
 DELAY = 1000 # 1ms
 # DELAY = 100_000 # 200ms
 
-CONFIG_NAME: str = "full_partition_headless"
+CONFIG_NAME: str = "partition_headless"
 FLAP_NODES: Tuple[int, int] = (1, 2)
 FLAP_NODES_OTHER: Tuple[int, int] = (2, 3)
 FLAP_NODE: int = 2
-UP_TIME: float = 5.0
-DOWN_TIME: float = 5.0
+UP_TIME: float = 3.0
+DOWN_TIME: float = 3.0
 
 link_up = LinkOptions(
     bandwidth=100_000_000_000,
@@ -126,17 +126,17 @@ def operating_loop_node_timer(conf: Configuration) -> None:
       timer_thread = Thread(target=timer, args=[is_up])
       timer_thread.start()
 
-# def operating_loop_manual(conf: Configuration) -> None:
-#   up = True
-#   while True:
-#     input()
-#     if up:
-#       print("link down")
-#       conf.update_link(1, 2, link_down)
-#     else:
-#       print("link up")
-#       conf.update_link(1, 2, link_up)
-#     up = not up
+def operating_loop_manual(conf: Configuration) -> None:
+  up = True
+  while True:
+    input()
+    if up:
+      print("link down")
+      conf.update_link(1, 2, link_down)
+    else:
+      print("link up")
+      conf.update_link(1, 2, link_up)
+    up = not up
 
 def main():
   ## create emulator instance for creating sessions and utility methods
@@ -165,7 +165,8 @@ def main():
     session.instantiate()
 
     # operating_loop_manual(conf)
-    operating_loop_node_timer(conf)
+    # operating_loop_node_timer(conf)
+    operating_loop_timer(conf)
     # operating_loop_timer_anticorrelated(conf)
   except Exception as e:
     try:

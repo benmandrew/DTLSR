@@ -22,7 +22,7 @@ node n1 {
     labelcoords {216.0 261.0}
     interface-peer {eth0 n3}
     interface-peer {eth1 n5}
-    services {DTLSR Heartbeat IPForward}
+    services {DefaultRoute2 DTLSR Heartbeat IPForward}
     interface-peer {eth2 n7}
 }
 
@@ -50,7 +50,7 @@ node n2 {
     labelcoords {592.0 318.0}
     interface-peer {eth0 n6}
     interface-peer {eth1 n4}
-    services {DTLSR Heartbeat IPForward}
+    services {DefaultRoute2 DTLSR Heartbeat IPForward}
     interface-peer {eth2 n8}
 }
 
@@ -146,7 +146,7 @@ node n7 {
     labelcoords {383.0 176.0}
     interface-peer {eth0 n1}
     interface-peer {eth1 n8}
-    services {DTLSR Heartbeat IPForward}
+    services {DefaultRoute2 DTLSR Heartbeat IPForward}
 }
 
 node n8 {
@@ -169,7 +169,7 @@ node n8 {
     labelcoords {439.0 354.0}
     interface-peer {eth0 n7}
     interface-peer {eth1 n2}
-    services {DTLSR Heartbeat IPForward}
+    services {DefaultRoute2 DTLSR Heartbeat IPForward}
 }
 
 link l1 {
