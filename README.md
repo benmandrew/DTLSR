@@ -26,7 +26,7 @@ git checkout release-7.5.2
 DTLSR install.
 ```sh
 git clone git@github.com:benmandrew/DTLSR.git dtlsr
-sudo apt-get install check licpcap-dev tcpreplay net-tools
+sudo apt-get install check libpcap-dev tcpreplay net-tools
 ```
 Copy `dtlsr.py` (located in `core-py/` in `dtlsr`) into `daemon/core/services/` directory in `core`
 
